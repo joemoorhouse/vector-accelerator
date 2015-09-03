@@ -7,10 +7,7 @@ namespace VectorAccelerator
 {
     public abstract class NArrayStorage<T>
     {
-        public NArrayStorage()
-        {
-            throw new NotImplementedException();
-        }
+        public NArrayStorage() { }
         
         public NArrayStorage(int length)
         {
@@ -25,19 +22,21 @@ namespace VectorAccelerator
 
         public NArrayStorage(T[] array)
         {
-            CreateStorage(array);
+            CreateStorage(array, 0, array.Length);
         }
 
         public abstract T this[int index] { get; set; }
 
         protected abstract void CreateStorage(int length);
 
-        protected abstract void CreateStorage(T[] array);
+        protected abstract void CreateStorage(T[] array, int startIndex, int length);
 
         public abstract T First();
 
         public abstract int Length { get; }
 
         public abstract bool Matches(NArrayStorage<T> other);
+
+        public abstract NArrayStorage<T> Slice(int startIndex, int length);
     }
 }

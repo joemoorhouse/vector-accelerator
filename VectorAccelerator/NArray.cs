@@ -4,46 +4,67 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using VectorAccelerator.NArrayStorage;
+using VectorAccelerator.DeferredExecution;
 
 namespace VectorAccelerator
 {
-    public class NAray 
+    public class NArray 
     {
-        public readonly NArrayStorage<double> Storage;
+        private NArrayStorage<double> _storage;
+        
+        public virtual NArrayStorage<double> Storage
+        {
+            get { return _storage; }
+            set { _storage = value; }
+        }
         
         public readonly bool IsScalar;
 
-        public NAray(int length)
+        public NArray(int length)
         {
             Storage = new ManagedStorage<double>(length);
         }
 
-        public NAray(double value)
+        public NArray()
+        {
+        }
+
+        public NArray(NArrayStorage<double> storage)
+        {
+            Storage = storage;
+        }
+
+        public NArray(double value)
         {
             IsScalar = true;
             Storage = new ManagedStorage<double>(value);
         }
 
-        public NAray(double[] array)
+        public NArray(double[] array)
         {
             Storage = new ManagedStorage<double>(array);
         }
 
-        public static NAray CreateLike(NAray a)
+        public NArray Slice(int startIndex, int length)
         {
-            return new NAray(a.Storage.Length);
+            return new NArray(Storage.Slice(startIndex, length));
         }
 
-        public static NAray CreateLike(NAray a, NAray b)
+        public static NArray CreateLike(NArray a)
+        {
+            return new NArray(a.Storage.Length);
+        }
+
+        public static NArray CreateLike(NArray a, NArray b)
         {
             if (a.Storage.Length != b.Storage.Length)
                 throw new ArgumentException("dimensions of a and b do not match");
-            return new NAray(a.Storage.Length);
+            return new NArray(a.Storage.Length);
         }
 
-        public static NAray CreateRandom(int length, Random random)
+        public static NArray CreateRandom(int length, Random random)
         {
-            var newNArray = new NAray(length);
+            var newNArray = new NArray(length);
             // temporary
             var array = (newNArray.Storage as ManagedStorage<double>).Array;
             for (int i = 0; i < length; ++i)
@@ -53,15 +74,15 @@ namespace VectorAccelerator
             return newNArray;
         }
 
-        public static NAray CreateFromEnumerable(IEnumerable<double> enumerable)
+        public static NArray CreateFromEnumerable(IEnumerable<double> enumerable)
         {
             var array = enumerable.ToArray();
-            var newNArray = new NAray(array);
+            var newNArray = new NArray(array);
             // temporary
             return newNArray;
         }
 
-        public static NAray CreateFromEnumerable(IEnumerable<int> enumerable)
+        public static NArray CreateFromEnumerable(IEnumerable<int> enumerable)
         {
             return CreateFromEnumerable(enumerable.Select(i => (double)i));
         }
@@ -71,24 +92,29 @@ namespace VectorAccelerator
             return 0;
         }
 
-        public int Length
+        public virtual int Length
         {
             get { return Storage.Length; } 
         }
 
-        public void Assign(NAray operand)
+        public void Assign(NArray operand)
         {
             ExecutionContext.Executor.Assign(this, operand);
         }
 
-        public void Assign(Func<NAray> operand)
+        public void Assign(Func<NArray> operand)
         {
             ExecutionContext.Executor.Assign(this, operand());
         }
 
-        public static VectorAccelerator.DeferredExecution.DeferredExecutionContext DeferredExecution
+        //public static VectorAccelerator.DeferredExecution.DeferredExecutionContext DeferredExecution
+        //{
+        //    get { return new VectorAccelerator.DeferredExecution.DeferredExecutionContext(); }
+        //}
+
+        public static VectorAccelerator.DeferredExecution.DeferredExecutionContext DeferredExecution(VectorExecutionOptions options)
         {
-            get { return new VectorAccelerator.DeferredExecution.DeferredExecutionContext(); }
+            return new VectorAccelerator.DeferredExecution.DeferredExecutionContext(options);
         }
 
         public override string ToString()
@@ -99,69 +125,69 @@ namespace VectorAccelerator
 
         #region Binary Operators
 
-        public static NAray operator +(NAray operand1, NAray operand2)
+        public static NArray operator +(NArray operand1, NArray operand2)
         {
             return ExecutionContext.Executor.ElementWiseAdd(operand1, operand2);
         }
 
-        public static NAray operator +(NAray operand1, double operand2)
+        public static NArray operator +(NArray operand1, double operand2)
         {
             return ExecutionContext.Executor.ElementWiseAdd(operand1, operand2);
         }
 
-        public static NAray operator +(double operand1, NAray operand2)
+        public static NArray operator +(double operand1, NArray operand2)
         {
             return ExecutionContext.Executor.ElementWiseAdd(operand1, operand2);
         }
 
-        public static NAray operator -(NAray operand1, NAray operand2)
+        public static NArray operator -(NArray operand1, NArray operand2)
         {
             return ExecutionContext.Executor.ElementWiseSubtract(operand1, operand2);
         }
 
-        public static NAray operator -(NAray operand1, double operand2)
+        public static NArray operator -(NArray operand1, double operand2)
         {
             return ExecutionContext.Executor.ElementWiseSubtract(operand1, operand2);
         }
 
-        public static NAray operator -(double operand1, NAray operand2)
+        public static NArray operator -(double operand1, NArray operand2)
         {
             return ExecutionContext.Executor.ElementWiseSubtract(operand1, operand2);
         }
 
-        public static NAray operator *(NAray operand1, NAray operand2)
+        public static NArray operator *(NArray operand1, NArray operand2)
         {
             return ExecutionContext.Executor.ElementWiseMultiply(operand1, operand2);
         }
 
-        public static NAray operator *(NAray operand1, double operand2)
+        public static NArray operator *(NArray operand1, double operand2)
         {
             return ExecutionContext.Executor.ElementWiseMultiply(operand1, operand2);
         }
 
-        public static NAray operator *(double operand1, NAray operand2)
+        public static NArray operator *(double operand1, NArray operand2)
         {
             return ExecutionContext.Executor.ElementWiseMultiply(operand1, operand2);
         }
 
-        public static NAray operator /(NAray operand1, NAray operand2)
+        public static NArray operator /(NArray operand1, NArray operand2)
         {
             return ExecutionContext.Executor.ElementWiseDivide(operand1, operand2);
         }
 
-        public static NAray operator /(NAray operand1, double operand2)
+        public static NArray operator /(NArray operand1, double operand2)
         {
             return ExecutionContext.Executor.ElementWiseDivide(operand1, operand2);
         }
 
-        public static NAray operator /(double operand1, NAray operand2)
+        public static NArray operator /(double operand1, NArray operand2)
         {
             return ExecutionContext.Executor.ElementWiseDivide(operand1, operand2);
         }
 
         #endregion
 
-        public static NAray operator -(NAray operand)
+        public static NArray operator -(NArray operand)
         {
             return ExecutionContext.Executor.ElementWiseNegate(operand);
         }
@@ -173,12 +199,12 @@ namespace VectorAccelerator
         /// <param name="condition"></param>
         /// <param name="ifTrue"></param>
         /// <param name="ifFalse"></param>
-        public void AssignIfElse2(NAray condition, Func<NAray> ifTrue, Func<NAray> ifFalse)
+        public void AssignIfElse2(NArray condition, Func<NArray> ifTrue, Func<NArray> ifFalse)
         {
 
         }
 
-        public void AssignIfElse(NAray condition, NAray ifTrue, NAray ifFalse)
+        public void AssignIfElse(NArray condition, NArray ifTrue, NArray ifFalse)
         {
 
         }

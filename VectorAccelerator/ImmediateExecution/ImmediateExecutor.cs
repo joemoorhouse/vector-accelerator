@@ -11,92 +11,150 @@ namespace VectorAccelerator
 
     public class ImmediateExecutor : IExecutor
     {
-        IImmediateLinearAlgebraProvider _provider = new IntelMKLLinearAlgebraProvider();
+        ILinearAlgebraProvider _provider = new IntelMKLLinearAlgebraProvider();
         
-        public void Assign(NAray operand1, NAray operand2)
+        public void Assign(NArray operand1, NArray operand2)
         {
-            throw new NotImplementedException();
+            operand1 = operand2;
         }
 
         #region Binary Operations
 
-        public NAray ElementWiseAdd(NAray operand1, NAray operand2)
+        public NArray ElementWiseAdd(NArray operand1, NArray operand2)
         {
-            return _provider.Add(operand1, operand2);
+            var result = _provider.CreateLike(operand1);
+            _provider.Add(operand1, operand2, result);
+            return result;
         }
 
-        public NAray ElementWiseAdd(NAray operand1, double operand2)
+        public NArray ElementWiseAdd(NArray operand1, double operand2)
         {
-            return _provider.ScaleOffset(operand1, 1, operand2);
+            var result = _provider.CreateLike(operand1);
+            _provider.ScaleOffset(operand1, 1, operand2, result);
+            return result;
         }
 
-        public NAray ElementWiseAdd(double operand1, NAray operand2)
+        public NArray ElementWiseAdd(double operand1, NArray operand2)
         {
-            return _provider.ScaleOffset(operand2, 1, operand1);
+            var result = _provider.CreateLike(operand2);
+            _provider.ScaleOffset(operand2, 1, operand1, result);
+            return result;
         }
 
-        public NAray ElementWiseSubtract(NAray operand1, NAray operand2)
+        public NArray ElementWiseSubtract(NArray operand1, NArray operand2)
         {
-            return _provider.Subtract(operand1, operand2);
+            var result = _provider.CreateLike(operand1);
+            _provider.Subtract(operand1, operand2, result);
+            return result;
         }
 
-        public NAray ElementWiseSubtract(NAray operand1, double operand2)
+        public NArray ElementWiseSubtract(NArray operand1, double operand2)
         {
-            return _provider.ScaleOffset(operand1, 1, -operand2);
+            var result = _provider.CreateLike(operand1);
+            _provider.ScaleOffset(operand1, 1, -operand2, result);
+            return result;
         }
 
-        public NAray ElementWiseSubtract(double operand1, NAray operand2)
+        public NArray ElementWiseSubtract(double operand1, NArray operand2)
         {
-            return _provider.ScaleOffset(operand2, -1, operand1);
+            var result = _provider.CreateLike(operand2);
+            _provider.ScaleOffset(operand2, -1, operand1, result);
+            return result;
         }
 
-        public NAray ElementWiseMultiply(NAray operand1, NAray operand2)
+        public NArray ElementWiseMultiply(NArray operand1, NArray operand2)
         {
-            return _provider.Multiply(operand1, operand2);
+            var result = _provider.CreateLike(operand1);
+            _provider.Multiply(operand1, operand2, result);
+            return result;
         }
 
-        public NAray ElementWiseMultiply(NAray operand1, double operand2)
+        public NArray ElementWiseMultiply(NArray operand1, double operand2)
         {
-            return _provider.ScaleOffset(operand1, operand2, 0);
+            var result = _provider.CreateLike(operand1);
+            _provider.ScaleOffset(operand1, operand2, 0, result);
+            return result;
         }
 
-        public NAray ElementWiseMultiply(double operand1, NAray operand2)
+        public NArray ElementWiseMultiply(double operand1, NArray operand2)
         {
-            return _provider.ScaleOffset(operand2, operand1, 0);
+            var result = _provider.CreateLike(operand2);
+            _provider.ScaleOffset(operand2, operand1, 0, result);
+            return result;
         }
 
-        public NAray ElementWiseDivide(NAray operand1, NAray operand2)
+        public NArray ElementWiseDivide(NArray operand1, NArray operand2)
         {
-            return _provider.Divide(operand1, operand2);
+            var result = _provider.CreateLike(operand1);
+            _provider.Divide(operand1, operand2, result);
+            return result;
         }
 
-        public NAray ElementWiseDivide(NAray operand1, double operand2)
+        public NArray ElementWiseDivide(NArray operand1, double operand2)
         {
-            return _provider.ScaleOffset(operand1, 1.0 / operand2, 0);
+            var result = _provider.CreateLike(operand1);
+            _provider.ScaleOffset(operand1, 1.0 / operand2, 0, result);
+            return result;
         }
 
-        public NAray ElementWiseDivide(double operand1, NAray operand2)
+        public NArray ElementWiseDivide(double operand1, NArray operand2)
         {
-            return _provider.ScaleOffset(operand2, 1.0 / operand1, 0);
+            var result = _provider.CreateLike(operand2);
+            _provider.ScaleOffset(operand2, 1.0 / operand1, 0, result);
+            return result;
         }
 
         #endregion
 
         #region Unary Operations
 
-        public NAray ElementWiseExp(NAray operand)
+        public NArray ElementWiseNegate(NArray operand)
         {
-            throw new NotImplementedException();
+            var result = _provider.CreateLike(operand);
+            _provider.ScaleOffset(operand, -1.0, 0, result);
+            return result;
         }
 
-        public NAray ElementWiseLog(NAray operand)
+        public NArray ElementWiseExp(NArray operand)
         {
-            throw new NotImplementedException();
+            var result = _provider.CreateLike(operand);
+            _provider.Exp(operand, result);
+            return result;
         }
 
-        public NAray ElementWiseNegate(NAray operand)
+        public NArray ElementWiseLog(NArray operand)
         {
-            throw new NotImplementedException();
+            var result = _provider.CreateLike(operand);
+            _provider.Log(operand, result);
+            return result;
+        }
+
+        public NArray ElementWiseSquareRoot(NArray operand)
+        {
+            var result = _provider.CreateLike(operand);
+            _provider.SquareRoot(operand, result);
+            return result;
+        }
+
+        public NArray ElementWiseInverseSquareRoot(NArray operand)
+        {
+            var result = _provider.CreateLike(operand);
+            _provider.InverseSquareRoot(operand, result);
+            return result;
+        }
+
+        public NArray ElementWiseCumulativeNormal(NArray operand)
+        {
+            var result = _provider.CreateLike(operand);
+            _provider.CumulativeNormal(operand, result);
+            return result;
+        }
+
+        public NArray ElementWiseInverseCumulativeNormal(NArray operand)
+        {
+            var result = _provider.CreateLike(operand);
+            _provider.InverseCumulativeNormal(operand, result);
+            return result;
         }
 
         #endregion

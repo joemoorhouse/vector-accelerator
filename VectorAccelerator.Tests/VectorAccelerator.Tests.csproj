@@ -70,6 +70,13 @@
   <ItemGroup>
     <Compile Include="AcceleratorTestsCPU.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ThrowAwayTests.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\VectorAccelerator\VectorAccelerator.csproj">
+      <Project>{2ba4f945-3704-4c6d-8b1e-7482ab9dd9a8}</Project>
+      <Name>VectorAccelerator</Name>
+    </ProjectReference>
   </ItemGroup>
   <Choose>
     <When Condition="'$(VisualStudioVersion)' == '10.0' And '$(IsCodedUITest)' == 'True'">

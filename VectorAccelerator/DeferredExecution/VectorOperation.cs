@@ -4,12 +4,13 @@ using System.Linq;
 using System.Text;
 using System.Linq.Expressions;
 using System.Reflection;
+using VectorAccelerator.LinearAlgebraProviders;
 
 namespace VectorAccelerator.DeferredExecution
 {
     public class VectorOperation
     {
-        protected List<Expression> _expressions = new List<Expression>();
+        public NArray Result;
     }
 
     /// <summary>
@@ -17,12 +18,12 @@ namespace VectorAccelerator.DeferredExecution
     /// </summary>
     public class BinaryVectorOperation : VectorOperation
     {
-        public readonly NAray Operand1;
-        public readonly NAray Operand2;
-        public readonly NAray Result;
-        public readonly Func<Expression, Expression, BinaryExpression> Operation; 
+        public readonly NArray Operand1;
+        public readonly NArray Operand2;
+        public readonly Action<NArray, NArray, NArray> Operation;
 
-        public BinaryVectorOperation(NAray operand1, NAray operand2, NAray result, Func<Expression, Expression, BinaryExpression> operation)
+        public BinaryVectorOperation(NArray operand1, NArray operand2, NArray result, 
+            Action<NArray, NArray, NArray> operation)
         {
             Operand1 = operand1;
             Operand2 = operand2;
@@ -37,13 +38,13 @@ namespace VectorAccelerator.DeferredExecution
 
         private string OperationString()
         {
-            if (Operation == Expression.Multiply)
+            if (Operation.Method.Name == "Multiply")
                 return "*";
-            else if (Operation == Expression.Add)
+            else if (Operation.Method.Name == "Add")
                 return "+";
-            else if (Operation == Expression.Subtract)
+            else if (Operation.Method.Name == "Subtract")
                 return "-";
-            else if (Operation == Expression.Divide)
+            else if (Operation.Method.Name == "Divide")
                 return "/";
             else return "?";
         }
@@ -51,11 +52,10 @@ namespace VectorAccelerator.DeferredExecution
 
     public class UnaryVectorOperation : VectorOperation
     {
-        public readonly NAray Operand;
-        public readonly NAray Result;
-        public readonly MethodInfo Operation;
+        public readonly NArray Operand;
+        public readonly Action<NArray, NArray> Operation;
 
-        public UnaryVectorOperation(NAray operand, NAray result, MethodInfo operation)
+        public UnaryVectorOperation(NArray operand, NArray result, Action<NArray, NArray> operation)
         {
             Operand = operand;
             Result = result;
@@ -65,12 +65,13 @@ namespace VectorAccelerator.DeferredExecution
 
     public class AssignOperation : VectorOperation
     {
-        public readonly NAray Left;
-        public readonly NAray Right;
+        public readonly NArray Left;
+        public readonly NArray Right;
 
-        public AssignOperation(NAray left, NAray right)
+        public AssignOperation(NArray left, NArray right)
         {
-
+            Left = left;
+            Right = right;
         }
     }
 }

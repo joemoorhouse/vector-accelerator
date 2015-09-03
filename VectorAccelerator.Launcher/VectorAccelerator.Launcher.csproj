@@ -67,6 +67,16 @@
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\VectorAccelerator.Tests\VectorAccelerator.Tests.csproj">
+      <Project>{857f0b20-d443-4ce0-88a0-a4f176e3bcdd}</Project>
+      <Name>VectorAccelerator.Tests</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\VectorAccelerator\VectorAccelerator.csproj">
+      <Project>{2ba4f945-3704-4c6d-8b1e-7482ab9dd9a8}</Project>
+      <Name>VectorAccelerator</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

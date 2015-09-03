@@ -64,31 +64,27 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DeferredExecution\DeferredExecutionContext.cs" />
-    <Compile Include="DeferredExecution\ExpressionBuilder.cs" />
-    <Compile Include="DeferredExecution\CPULibraryScheduler.cs" />
-    <Compile Include="DeferredExecution\DeferredExecutionExecutor.cs" />
+    <Compile Include="DeferredExecution\DeferredPrimitivesExecutor.cs" />
+    <Compile Include="DeferredExecution\ExpressionsBuilder.cs" />
+    <Compile Include="DeferredExecution\ExpressionBuildingExecutor.cs" />
     <Compile Include="DeferredExecution\VectorOperation.cs" />
     <Compile Include="DeferredExecution\VectorOperationRunner.cs" />
-    <Compile Include="Execution.cs" />
+    <Compile Include="Finance.cs" />
     <Compile Include="ImmediateExecution\ImmediateExecutor.cs" />
     <Compile Include="ExecutionContext.cs" />
     <Compile Include="IExecutor.cs" />
     <Compile Include="NArrayStorage.cs" />
-    <Compile Include="Launcher.cs" />
-    <Compile Include="LinearAlgebraProviders\IImmediateLinearAlgebraProvider.cs" />
+    <Compile Include="LinearAlgebraProviders\ILinearAlgebraProvider.cs" />
     <Compile Include="LinearAlgebraProviders\IntelMathKernalLibrary.cs" />
-    <Compile Include="NAray.cs" />
-    <Compile Include="NArrayStorage\ChunkyStorage.cs" />
+    <Compile Include="NArray.cs" />
     <Compile Include="NArrayStorage\ManagedStorage.cs" />
     <Compile Include="NArrayStorage\ArrayPool.cs" />
     <Compile Include="NMath.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="SpecialFunctions.cs" />
     <Compile Include="DeferredExecution\LocalNArray.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="CUDA\" />
-    <Folder Include="Executors\" />
   </ItemGroup>
   <ItemGroup>
     <None Include="CodeTemplates\CUDATemplates.cu" />

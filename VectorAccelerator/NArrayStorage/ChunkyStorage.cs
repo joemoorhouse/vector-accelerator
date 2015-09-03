@@ -14,6 +14,11 @@ namespace VectorAccelerator.NArrayStorage
         int _chunkLength;
         T[][] _storage;
 
+        public int ChunkLength
+        {
+            get { return _chunkLength; }
+        }
+
         public ChunkyStorage(int chunksCount, int chunkLength)
         {
             _storage = new T[chunksCount][];

@@ -8,7 +8,7 @@ namespace VectorAccelerator.DeferredExecution
 {
     public class CPULibraryScheduler
     {
-        ExpressionBuilder _builder;
+        ExpressionsBuilder _builder;
 
         Stack<double[]> _temporaryVectorCache;
 

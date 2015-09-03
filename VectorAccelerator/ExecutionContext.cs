@@ -4,14 +4,21 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using VectorAccelerator.DeferredExecution;
+using VectorAccelerator.NArrayStorage;
+using System.Threading;
 
 namespace VectorAccelerator
 {
+    /// <summary>
+    /// A singleton class such that every thread will see a different instance. This allows
+    /// vector operations to be executed separately on different threads if required.
+    /// </summary>
     internal sealed class ExecutionContext
     {
         #region Singleton
 
-        static readonly ExecutionContext _instance = new ExecutionContext();
+        [ThreadStatic]
+        static ExecutionContext _instance;
 
         static ExecutionContext() { }
 
@@ -19,6 +26,7 @@ namespace VectorAccelerator
         {
             get
             {
+                if (_instance == null) _instance = new ExecutionContext();
                 return _instance;
             }
         }
@@ -26,10 +34,13 @@ namespace VectorAccelerator
         #endregion
 
         IExecutor _executor;
+        ArrayPool _arrayPool = new ArrayPool();
+        string _threadName;
 
         ExecutionContext()
         {
             _executor = new ImmediateExecutor();
+            _threadName = Thread.CurrentThread.Name;
         }
 
         public static IExecutor Executor
@@ -38,13 +49,10 @@ namespace VectorAccelerator
             set { Instance._executor = value; }
         }
 
-        //public static void ExecuteDeferred(Action function)
-        //{
-        //    Instance._executionMode = ExecutionMode.Deferred;
-        //    Instance._deferredExecutionExecutor.StartDeferredExecution();
-        //    function();
-        //    Instance._deferredExecutionExecutor.EndDeferredExecution();
-        //}
+        public static ArrayPool ArrayPool
+        {
+            get { return Instance._arrayPool; }
+        }
     }
 
 }

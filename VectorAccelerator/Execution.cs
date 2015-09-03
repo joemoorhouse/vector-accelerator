@@ -7,7 +7,6 @@ namespace VectorAccelerator
 {
     public static class Execution
     {
-        
         public static void ExecuteDeferred(Action function)
         {
             throw new NotImplementedException();

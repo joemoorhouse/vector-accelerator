@@ -5,6 +5,7 @@ using System.Text;
 using System.Reflection;
 using System.Threading.Tasks;
 using System.Linq.Expressions;
+using VectorAccelerator.LinearAlgebraProviders;
 
 namespace VectorAccelerator.DeferredExecution
 {
@@ -12,32 +13,32 @@ namespace VectorAccelerator.DeferredExecution
     /// The entire kernel is represented as a single BlockExpression. Through this class we add Expressions
     /// progressively and finally create the BlockExpression.
     /// </summary>
-    public class ExpressionBuilder
+    public class ExpressionsBuilder
     {   
         List<Expression> _expressions = new List<Expression>();
-        List<VectorOperation> _vectorOperations = new List<VectorOperation>();
         List<ParameterExpression> _localVariables = new List<ParameterExpression>();
-        Dictionary<NAray, ParameterExpression> _parameters = new Dictionary<NAray, ParameterExpression>();
+        Dictionary<NArray, ParameterExpression> _parameters = new Dictionary<NArray, ParameterExpression>();
         SortedDictionary<double, int> _constantIndices = new SortedDictionary<double, int>();
         List<ConstantExpression> _constants = new List<ConstantExpression>();
+        int _vectorsLength = -1;
 
         public IList<Expression> Expressions { get { return _expressions.AsReadOnly(); } }
 
-        public IList<VectorOperation> VectorOperations { get { return _vectorOperations.AsReadOnly(); } }
+        public IDictionary<NArray, ParameterExpression> Parameters { get { return _parameters; } }
 
-        public IDictionary<NAray, ParameterExpression> Parameters { get { return _parameters; } }
+        public int VectorsLength { get { return _vectorsLength; } }
 
-        public void Assign(NAray operand1, NAray operand2)
+        public void Assign(NArray operand1, NArray operand2)
         {
-            _vectorOperations.Add(new AssignOperation(operand1, operand2));
             _expressions.Add(
                 Expression.Assign(GetNArray(operand1), GetNArray(operand2))
                     );
         }
 
-        public NAray UnaryExpression(NAray operand, Func<Expression, UnaryExpression> operation)
+        public NArray UnaryExpression(NArray operand, Func<Expression, UnaryExpression> operation)
         {
-            NAray result;
+            CheckNArrays(operand);
+            NArray result;
             ParameterExpression parameterExpression;
             NewLocal(out result, out parameterExpression);
             _expressions.Add(
@@ -47,9 +48,10 @@ namespace VectorAccelerator.DeferredExecution
             return result;
         }
 
-        public NAray MethodCallExpression(NAray operand, MethodInfo method)
+        public NArray MethodCallExpression(NArray operand, MethodInfo method)
         {
-            NAray result;
+            CheckNArrays(operand);
+            NArray result;
             ParameterExpression parameterExpression;
             NewLocal(out result, out parameterExpression);
             _expressions.Add(
@@ -59,13 +61,13 @@ namespace VectorAccelerator.DeferredExecution
             return result;
         }
 
-        public NAray BinaryExpression(NAray operand1, NAray operand2, Func<Expression, Expression, BinaryExpression> operation)
+        public NArray BinaryExpression(NArray operand1, NArray operand2, 
+            Func<Expression, Expression, BinaryExpression> operation)
         {
-            NAray result;
+            CheckNArrays(operand1, operand2);
+            NArray result;
             ParameterExpression parameterExpression;
             NewLocal(out result, out parameterExpression);
-
-            _vectorOperations.Add(new BinaryVectorOperation(operand1, operand2, result, operation));
 
             Expression arg1, arg2;
             arg1 = (operand1.IsScalar) ? (Expression)GetConstant(operand1.First()) : (Expression)GetNArray(operand1);
@@ -79,9 +81,9 @@ namespace VectorAccelerator.DeferredExecution
             return result;
         }
 
-        private void NewLocal(out NAray newLocal, out ParameterExpression newLocalExpression)
+        private void NewLocal(out NArray newLocal, out ParameterExpression newLocalExpression)
         {
-            newLocal = new LocalNArray(_localVariables.Count);
+            newLocal = new LocalNArray(_localVariables.Count, _vectorsLength);
             newLocalExpression = Expression.Parameter(typeof(double), "local" + _localVariables.Count);
             _localVariables.Add(newLocalExpression); 
         }
@@ -98,7 +100,7 @@ namespace VectorAccelerator.DeferredExecution
             return _constants[constantIndex];
         }
 
-        private ParameterExpression GetNArray(NAray NArray)
+        private ParameterExpression GetNArray(NArray NArray)
         {
             if (NArray is LocalNArray) // this is a local variable
             {
@@ -113,6 +115,16 @@ namespace VectorAccelerator.DeferredExecution
                     _parameters.Add(NArray, newParameterExpression);
                 }
                 return _parameters[NArray];
+            }
+        }
+
+        private void CheckNArrays(params NArray[] arrays)
+        {
+            if (_vectorsLength == -1) _vectorsLength = arrays.First().Length;
+            foreach (var array in arrays)
+            {
+                if (array.Length != _vectorsLength && !(array is LocalNArray))
+                    throw new ArithmeticException("array length mismatch");
             }
         }
 
