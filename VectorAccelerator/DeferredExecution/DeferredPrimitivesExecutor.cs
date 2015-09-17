@@ -24,6 +24,13 @@ namespace VectorAccelerator.DeferredExecution
 
         public List<VectorOperation> VectorOperations { get { return _vectorOperations; } }
 
+        public string DebugString()
+        {
+            var builder = new StringBuilder();
+            VectorOperations.ForEach(o => builder.Append(o.ToString() + Environment.NewLine));
+            return builder.ToString();
+        }
+
         public void Execute(VectorExecutionOptions options)
         {
             VectorOperationRunner.Execute(this, _provider, options);
@@ -48,93 +55,105 @@ namespace VectorAccelerator.DeferredExecution
 
         public NArray ElementWiseAdd(NArray operand1, NArray operand2)
         {
-            var result = CreateLocalLike(operand1);
-            _vectorOperations.Add(new BinaryVectorOperation(operand1, operand2, result, _provider.Add));
-            return result;
-        }
-
-        public NArray ElementWiseAdd(NArray operand1, double operand2)
-        {
-            var result = CreateLocalLike(operand1);
-            _vectorOperations.Add(new UnaryVectorOperation(operand1, result, 
-                (a, res) =>_provider.ScaleOffset(a, 1, operand2, res)));
-            return result;
-        }
-
-        public NArray ElementWiseAdd(double operand1, NArray operand2)
-        {
-            var result = CreateLocalLike(operand2);
-            _vectorOperations.Add(new UnaryVectorOperation(operand2, result,
-                (a, res) => _provider.ScaleOffset(a, 1, operand1, res)));
+            if (operand1.IsScalar && operand2.IsScalar) return new NArray(operand1.First() + operand2.First());
+            NArray result;
+            if (operand1.IsScalar && !operand2.IsScalar)
+            {
+                result = CreateLocalLike(operand2);
+                _vectorOperations.Add(
+                    new ScaleOffsetOperation(operand2, result, 1, operand1.First(), _provider.ScaleOffset));
+            }
+            else if (!operand1.IsScalar && operand2.IsScalar)
+            {
+                result = CreateLocalLike(operand1);
+                _vectorOperations.Add(
+                    new ScaleOffsetOperation(operand1, result, 1, operand2.First(), _provider.ScaleOffset));
+            }
+            else
+            {
+                result = CreateLocalLike(operand1);
+                _vectorOperations.Add(new BinaryVectorOperation(operand1, operand2, result, _provider.Add));
+            }
             return result;
         }
 
         public NArray ElementWiseSubtract(NArray operand1, NArray operand2)
         {
-            var result = CreateLocalLike(operand1);
-            _vectorOperations.Add(new BinaryVectorOperation(operand1, operand2, result, _provider.Subtract));
-            return result;
-        }
-
-        public NArray ElementWiseSubtract(NArray operand1, double operand2)
-        {
-            var result = CreateLocalLike(operand1);
-            _vectorOperations.Add(new UnaryVectorOperation(operand1, result,
-                (a, res) => _provider.ScaleOffset(a, 1, -operand2, res)));
-            return result;
-        }
-
-        public NArray ElementWiseSubtract(double operand1, NArray operand2)
-        {
-            var result = CreateLocalLike(operand2);
-            _vectorOperations.Add(new UnaryVectorOperation(operand2, result,
-                (a, res) => _provider.ScaleOffset(a, -1, operand1, res)));
+            if (operand1.IsScalar && operand2.IsScalar) return new NArray(operand1.First() - operand2.First());
+            NArray result;
+            if (operand1.IsScalar && !operand2.IsScalar)
+            {
+                result = CreateLocalLike(operand2);
+                _vectorOperations.Add(
+                    new ScaleOffsetOperation(operand2, result, -1, operand1.First(), _provider.ScaleOffset));
+            }
+            else if (!operand1.IsScalar && operand2.IsScalar)
+            {
+                result = CreateLocalLike(operand1);
+                _vectorOperations.Add(
+                    new ScaleOffsetOperation(operand1, result, 1, -operand2.First(), _provider.ScaleOffset));
+            }
+            else
+            {
+                result = CreateLocalLike(operand1);
+                _vectorOperations.Add(new BinaryVectorOperation(operand1, operand2, result, _provider.Subtract));
+            }
             return result;
         }
 
         public NArray ElementWiseMultiply(NArray operand1, NArray operand2)
         {
-            var result = CreateLocalLike(operand1);
-            _vectorOperations.Add(new BinaryVectorOperation(operand1, operand2, result, _provider.Multiply));
-            return result;
-        }
-
-        public NArray ElementWiseMultiply(NArray operand1, double operand2)
-        {
-            var result = CreateLocalLike(operand1);
-            _vectorOperations.Add(new UnaryVectorOperation(operand1, result,
-                (a, res) => _provider.ScaleOffset(a, operand2, 0, res)));
-            return result;
-        }
-
-        public NArray ElementWiseMultiply(double operand1, NArray operand2)
-        {
-            var result = CreateLocalLike(operand2);
-            _vectorOperations.Add(new UnaryVectorOperation(operand2, result,
-                (a, res) => _provider.ScaleOffset(a, operand1, 0, res)));
+            if (operand1.IsScalar && operand2.IsScalar) return new NArray(operand1.First() * operand2.First());
+            NArray result;
+            if (operand1.IsScalar && !operand2.IsScalar)
+            {
+                result = CreateLocalLike(operand2);
+                _vectorOperations.Add(
+                    new ScaleOffsetOperation(operand2, result, operand1.First(), 0, _provider.ScaleOffset));
+            }
+            else if (!operand1.IsScalar && operand2.IsScalar)
+            {
+                result = CreateLocalLike(operand1);
+                _vectorOperations.Add(
+                    new ScaleOffsetOperation(operand1, result, operand2.First(), 0, _provider.ScaleOffset));
+            }
+            else
+            {
+                result = CreateLocalLike(operand1);
+                _vectorOperations.Add(new BinaryVectorOperation(operand1, operand2, result, _provider.Multiply));
+            }
             return result;
         }
 
         public NArray ElementWiseDivide(NArray operand1, NArray operand2)
         {
-            var result = CreateLocalLike(operand1);
-            _vectorOperations.Add(new BinaryVectorOperation(operand1, operand2, result, _provider.Divide));
-            return result;
-        }
+            if (operand1.IsScalar && operand2.IsScalar) return new NArray(operand1.First() / operand2.First());
+            NArray result;
+            if (operand1.IsScalar && !operand2.IsScalar)
+            {
+                result = CreateLocalLike(operand2);
+                // special case, we invert and multiply for efficiency
+                // invert
+                _vectorOperations.Add(new UnaryVectorOperation(operand2, result, _provider.Inverse));
 
-        public NArray ElementWiseDivide(NArray operand1, double operand2)
-        {
-            var result = CreateLocalLike(operand1);
-            _vectorOperations.Add(new UnaryVectorOperation(operand1, result,
-                (a, res) => _provider.ScaleOffset(a, 1.0 / operand2, 0, res)));
-            return result;
-        }
+                // and then multiply
+                _vectorOperations.Add(
+                    new ScaleOffsetOperation(operand1, result, operand1.First(), 0, _provider.ScaleOffset));
+            }
+            else if (!operand1.IsScalar && operand2.IsScalar)
+            {
+                result = CreateLocalLike(operand1);
+                _vectorOperations.Add(
+                    new ScaleOffsetOperation(operand1, result, 1.0 / operand2.First(), 0, _provider.ScaleOffset));
 
-        public NArray ElementWiseDivide(double operand1, NArray operand2)
-        {
-            var result = CreateLocalLike(operand2);
-            _vectorOperations.Add(new UnaryVectorOperation(operand2, result,
-                (a, res) => _provider.ScaleOffset(a, 1.0 / operand1, 0, res)));
+                //_vectorOperations.Add(new UnaryVectorOperation(operand1, result,
+                //(a, res) => _provider.ScaleOffset(a, 1.0 / operand2.First(), 0, res)));
+            }
+            else
+            {
+                result = CreateLocalLike(operand1);
+                _vectorOperations.Add(new BinaryVectorOperation(operand1, operand2, result, _provider.Divide));
+            }
             return result;
         }
 
@@ -150,48 +169,42 @@ namespace VectorAccelerator.DeferredExecution
         public NArray ElementWiseExp(NArray operand)
         {
             var result = CreateLocalLike(operand);
-            _vectorOperations.Add(new UnaryVectorOperation(operand, result,
-                (a, res) => _provider.Exp(a, res)));
+            _vectorOperations.Add(new UnaryVectorOperation(operand, result, _provider.Exp));
             return result;
         }
 
         public NArray ElementWiseLog(NArray operand)
         {
             var result = CreateLocalLike(operand);
-            _vectorOperations.Add(new UnaryVectorOperation(operand, result,
-                (a, res) => _provider.Log(a, res)));
+            _vectorOperations.Add(new UnaryVectorOperation(operand, result, _provider.Log));
             return result;
         }
 
         public NArray ElementWiseSquareRoot(NArray operand)
         {
             var result = CreateLocalLike(operand);
-            _vectorOperations.Add(new UnaryVectorOperation(operand, result,
-                (a, res) => _provider.SquareRoot(a, res)));
+            _vectorOperations.Add(new UnaryVectorOperation(operand, result, _provider.SquareRoot));
             return result;
         }
 
         public NArray ElementWiseInverseSquareRoot(NArray operand)
         {
             var result = CreateLocalLike(operand);
-            _vectorOperations.Add(new UnaryVectorOperation(operand, result,
-                (a, res) => _provider.InverseSquareRoot(a, res)));
+            _vectorOperations.Add(new UnaryVectorOperation(operand, result, _provider.InverseSquareRoot));
             return result;
         }
 
         public NArray ElementWiseCumulativeNormal(NArray operand)
         {
             var result = CreateLocalLike(operand);
-            _vectorOperations.Add(new UnaryVectorOperation(operand, result,
-                (a, res) => _provider.Exp(a, res)));
+            _vectorOperations.Add(new UnaryVectorOperation(operand, result, _provider.CumulativeNormal));
             return result;
         }
 
         public NArray ElementWiseInverseCumulativeNormal(NArray operand)
         {
             var result = CreateLocalLike(operand);
-            _vectorOperations.Add(new UnaryVectorOperation(operand, result,
-                (a, res) => _provider.Exp(a, res)));
+            _vectorOperations.Add(new UnaryVectorOperation(operand, result, _provider.InverseCumulativeNormal));
             return result;
         }
 

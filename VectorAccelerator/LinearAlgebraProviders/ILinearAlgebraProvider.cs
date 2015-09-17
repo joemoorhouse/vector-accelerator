@@ -15,6 +15,8 @@ namespace VectorAccelerator.LinearAlgebraProviders
 
         void Divide(NArray a, NArray b, NArray result);
 
+        void Inverse(NArray a, NArray result);
+
         void Exp(NArray a, NArray result);
 
         void Log(NArray a, NArray result);
@@ -37,5 +39,16 @@ namespace VectorAccelerator.LinearAlgebraProviders
         void ScaleOffset(NArray a, double scale, double offset, NArray result);
 
         NArray CreateLike(NArray a);
+
+        IRandomNumberGenerator CreateRandomNumberGenerator(RandomNumberGeneratorType type, int seed);
+    }
+
+    public enum RandomNumberGeneratorType { MRG32K3A = 3145728 };
+
+    public interface IRandomNumberGenerator : IDisposable
+    {
+        double NextNormal();
+
+        void NormalVector(double[] normals);
     }
 }

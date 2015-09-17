@@ -14,27 +14,11 @@ namespace VectorAccelerator
 
         NArray ElementWiseAdd(NArray operand1, NArray operand2);
 
-        NArray ElementWiseAdd(NArray operand1, double operand2);
-
-        NArray ElementWiseAdd(double operand1, NArray operand2);
-
         NArray ElementWiseSubtract(NArray operand1, NArray operand2);
-
-        NArray ElementWiseSubtract(NArray operand1, double operand2);
-
-        NArray ElementWiseSubtract(double operand1, NArray operand2);
 
         NArray ElementWiseMultiply(NArray operand1, NArray operand2);
 
-        NArray ElementWiseMultiply(NArray operand1, double operand2);
-
-        NArray ElementWiseMultiply(double operand1, NArray operand2);
-
         NArray ElementWiseDivide(NArray operand1, NArray operand2);
-
-        NArray ElementWiseDivide(NArray operand1, double operand2);
-
-        NArray ElementWiseDivide(double operand1, NArray operand2);
 
         #endregion
 
@@ -53,6 +37,10 @@ namespace VectorAccelerator
         NArray ElementWiseCumulativeNormal(NArray operand);
 
         NArray ElementWiseInverseCumulativeNormal(NArray operand);
+
+        //NArray FillRandom()
+
+        //NArray Index(NArray<int> operand);
 
         #endregion
     }

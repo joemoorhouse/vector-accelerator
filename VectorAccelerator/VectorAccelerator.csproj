@@ -73,10 +73,12 @@
     <Compile Include="ImmediateExecution\ImmediateExecutor.cs" />
     <Compile Include="ExecutionContext.cs" />
     <Compile Include="IExecutor.cs" />
+    <Compile Include="LinearAlgebraProviders\IntelMKLRandomNumberGenerator.cs" />
     <Compile Include="NArrayStorage.cs" />
     <Compile Include="LinearAlgebraProviders\ILinearAlgebraProvider.cs" />
     <Compile Include="LinearAlgebraProviders\IntelMathKernalLibrary.cs" />
     <Compile Include="NArray.cs" />
+    <Compile Include="NArrayStorage\ChunkyStorage.cs" />
     <Compile Include="NArrayStorage\ManagedStorage.cs" />
     <Compile Include="NArrayStorage\ArrayPool.cs" />
     <Compile Include="NMath.cs" />

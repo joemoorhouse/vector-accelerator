@@ -69,7 +69,11 @@
   </Choose>
   <ItemGroup>
     <Compile Include="AcceleratorTestsCPU.cs" />
+    <Compile Include="InterpolationTest.cs" />
+    <Compile Include="Checks\CheckApplicationLevelThreadingMKL.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SimpleCounterpartyRiskTest.cs" />
+    <Compile Include="TestHelpers.cs" />
     <Compile Include="ThrowAwayTests.cs" />
   </ItemGroup>
   <ItemGroup>

@@ -11,6 +11,16 @@ namespace VectorAccelerator.DeferredExecution
     public class VectorOperation
     {
         public NArray Result;
+
+        public virtual VectorOperation Clone(Func<NArray, NArray> transform)
+        {
+            return new VectorOperation() { Result = transform(Result) };
+        }
+
+        public virtual IList<NArray> Operands()
+        {
+            return null;
+        }
     }
 
     /// <summary>
@@ -48,6 +58,16 @@ namespace VectorAccelerator.DeferredExecution
                 return "/";
             else return "?";
         }
+
+        public override VectorOperation Clone(Func<NArray, NArray> transform)
+        {
+            return new BinaryVectorOperation(transform(Operand1), transform(Operand2), transform(Result), Operation);
+        }
+
+        public override IList<NArray> Operands()
+        {
+            return new List<NArray> { Operand1, Operand2 };
+        }
     }
 
     public class UnaryVectorOperation : VectorOperation
@@ -61,6 +81,65 @@ namespace VectorAccelerator.DeferredExecution
             Result = result;
             Operation = operation;
         }
+
+        public override string ToString()
+        {
+            return string.Join(" ", Result.ToString(), "=", Operation.Method.Name, "(" + Operand.ToString() + ")");
+        }
+
+        private string OperationString()
+        {
+            if (Operation.Method.Name == "Multiply")
+                return "*";
+            else if (Operation.Method.Name == "Add")
+                return "+";
+            else if (Operation.Method.Name == "Subtract")
+                return "-";
+            else if (Operation.Method.Name == "Divide")
+                return "/";
+            else return "?";
+        }
+
+        public override VectorOperation Clone(Func<NArray, NArray> transform)
+        {
+            return new UnaryVectorOperation(transform(Operand), transform(Result), Operation);
+        }
+
+        public override IList<NArray> Operands()
+        {
+            return new List<NArray> { Operand };
+        }
+    }
+
+    public class ScaleOffsetOperation : UnaryVectorOperation
+    {
+        public readonly double Scale;
+        public readonly double Offset;
+        
+        public ScaleOffsetOperation(NArray operand, NArray result, double scale, double offset,
+            Action<NArray, double, double, NArray> scaleOffsetOperation)
+            : base(operand, result, (op, res) => scaleOffsetOperation(op, scale, offset, res))
+        {
+            Scale = scale;
+            Offset = offset;
+        }
+
+        public ScaleOffsetOperation(NArray operand, NArray result, double scale, double offset,
+            Action<NArray, NArray> scaleOffsetOperation) : base(operand, result, scaleOffsetOperation)
+        {
+            Scale = scale;
+            Offset = offset;
+        }
+
+        public override string ToString()
+        {
+            return string.Join(" ", Result.ToString(), "=", Scale.ToString(), "*", Operand.ToString(), "+", Offset.ToString());
+        }
+
+        public override VectorOperation Clone(Func<NArray, NArray> transform)
+        {
+            return new ScaleOffsetOperation(transform(Operand), transform(Result), Scale, Offset, Operation);
+        }
     }
 
     public class AssignOperation : VectorOperation
@@ -72,6 +151,11 @@ namespace VectorAccelerator.DeferredExecution
         {
             Left = left;
             Right = right;
+        }
+
+        public override string ToString()
+        {
+            return string.Join(" ", Left.ToString(), "=", Right.ToString());
         }
     }
 }

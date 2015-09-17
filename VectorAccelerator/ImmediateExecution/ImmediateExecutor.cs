@@ -22,85 +22,87 @@ namespace VectorAccelerator
 
         public NArray ElementWiseAdd(NArray operand1, NArray operand2)
         {
-            var result = _provider.CreateLike(operand1);
-            _provider.Add(operand1, operand2, result);
-            return result;
-        }
-
-        public NArray ElementWiseAdd(NArray operand1, double operand2)
-        {
-            var result = _provider.CreateLike(operand1);
-            _provider.ScaleOffset(operand1, 1, operand2, result);
-            return result;
-        }
-
-        public NArray ElementWiseAdd(double operand1, NArray operand2)
-        {
-            var result = _provider.CreateLike(operand2);
-            _provider.ScaleOffset(operand2, 1, operand1, result);
+            NArray result;
+            if (operand1.IsScalar && !operand2.IsScalar)
+            {
+                result = _provider.CreateLike(operand2);
+                _provider.ScaleOffset(operand2, 1, operand1.First(), result);
+            }
+            else if (!operand1.IsScalar && operand2.IsScalar)
+            {
+                result = _provider.CreateLike(operand1);
+                _provider.ScaleOffset(operand1, 1, operand2.First(), result);
+            }
+            else 
+            {
+                result = _provider.CreateLike(operand1);
+                _provider.Add(operand1, operand2, result);
+            }
             return result;
         }
 
         public NArray ElementWiseSubtract(NArray operand1, NArray operand2)
         {
-            var result = _provider.CreateLike(operand1);
-            _provider.Subtract(operand1, operand2, result);
-            return result;
-        }
-
-        public NArray ElementWiseSubtract(NArray operand1, double operand2)
-        {
-            var result = _provider.CreateLike(operand1);
-            _provider.ScaleOffset(operand1, 1, -operand2, result);
-            return result;
-        }
-
-        public NArray ElementWiseSubtract(double operand1, NArray operand2)
-        {
-            var result = _provider.CreateLike(operand2);
-            _provider.ScaleOffset(operand2, -1, operand1, result);
+            NArray result;
+            if (operand1.IsScalar && !operand2.IsScalar)
+            {
+                result = _provider.CreateLike(operand2);
+                _provider.ScaleOffset(operand2, -1, operand1.First(), result);
+            }
+            else if (!operand1.IsScalar && operand2.IsScalar)
+            {
+                result = _provider.CreateLike(operand1);
+                _provider.ScaleOffset(operand1, 1, -operand2.First(), result);
+            }
+            else
+            {
+                result = _provider.CreateLike(operand1);
+                _provider.Subtract(operand1, operand2, result);
+            }
             return result;
         }
 
         public NArray ElementWiseMultiply(NArray operand1, NArray operand2)
         {
-            var result = _provider.CreateLike(operand1);
-            _provider.Multiply(operand1, operand2, result);
-            return result;
-        }
-
-        public NArray ElementWiseMultiply(NArray operand1, double operand2)
-        {
-            var result = _provider.CreateLike(operand1);
-            _provider.ScaleOffset(operand1, operand2, 0, result);
-            return result;
-        }
-
-        public NArray ElementWiseMultiply(double operand1, NArray operand2)
-        {
-            var result = _provider.CreateLike(operand2);
-            _provider.ScaleOffset(operand2, operand1, 0, result);
+            NArray result;
+            if (operand1.IsScalar && !operand2.IsScalar)
+            {
+                result = _provider.CreateLike(operand2);
+                _provider.ScaleOffset(operand2, operand1.First(), 0, result);
+            }
+            else if (!operand1.IsScalar && operand2.IsScalar)
+            {
+                result = _provider.CreateLike(operand1);
+                _provider.ScaleOffset(operand1, operand2.First(), 0, result);
+            }
+            else
+            {
+                result = _provider.CreateLike(operand1);
+                _provider.Multiply(operand1, operand2, result);
+            }
             return result;
         }
 
         public NArray ElementWiseDivide(NArray operand1, NArray operand2)
         {
-            var result = _provider.CreateLike(operand1);
-            _provider.Divide(operand1, operand2, result);
-            return result;
-        }
-
-        public NArray ElementWiseDivide(NArray operand1, double operand2)
-        {
-            var result = _provider.CreateLike(operand1);
-            _provider.ScaleOffset(operand1, 1.0 / operand2, 0, result);
-            return result;
-        }
-
-        public NArray ElementWiseDivide(double operand1, NArray operand2)
-        {
-            var result = _provider.CreateLike(operand2);
-            _provider.ScaleOffset(operand2, 1.0 / operand1, 0, result);
+            NArray result;
+            if (operand1.IsScalar && !operand2.IsScalar)
+            {
+                // special case, we invert and multiply for efficiency
+                result = _provider.CreateLike(operand2);
+                _provider.Inverse(operand2, result);
+                _provider.ScaleOffset(result, operand1.First(), 0, result);
+            }
+            else if (!operand1.IsScalar && operand2.IsScalar)
+            {
+                result = _provider.CreateLike(operand1);
+                _provider.ScaleOffset(operand1, 1.0 / operand2.First(), 0, result);
+            }
+            else
+            {
+                result = _provider.CreateLike(operand1);
+                _provider.Divide(operand1, operand2, result);
+            }
             return result;
         }
 

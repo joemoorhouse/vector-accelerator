@@ -12,6 +12,7 @@ namespace VectorAccelerator.NArrayStorage
     public class ChunkyStorage<T> : NArrayStorage<T>
     {
         int _chunkLength;
+        int _length;
         T[][] _storage;
 
         public int ChunkLength
@@ -23,6 +24,7 @@ namespace VectorAccelerator.NArrayStorage
         {
             _storage = new T[chunksCount][];
             _chunkLength = chunkLength;
+            _length = chunksCount * chunkLength;
         }
 
         public void SetChunk(int chunkIndex, T[] chunkStorage)
@@ -30,6 +32,16 @@ namespace VectorAccelerator.NArrayStorage
             if (chunkStorage.Length != _chunkLength)
                 throw new ArgumentException("length of array mismatch", "chunkStorage");
             _storage[chunkIndex] = chunkStorage;
+        }
+
+        public NArrayStorage<T> Slice(int chunkIndex)
+        {
+            return new ManagedStorage<T>(_storage[chunkIndex], 0, _chunkLength);
+        }
+
+        public override NArrayStorage<T> Slice(int startIndex, int length)
+        {
+            throw new NotImplementedException();
         }
 
         public T[] GetChunk(int chunkIndex)
@@ -42,14 +54,14 @@ namespace VectorAccelerator.NArrayStorage
             throw new NotImplementedException();
         }
 
-        protected override void CreateStorage(T[] array)
+        protected override void CreateStorage(T[] array, int startIndex, int length)
         {
             throw new NotImplementedException();
         }
 
         public override int Length
         {
-            get { throw new NotImplementedException(); }
+            get { return _length; }
         }
 
         public override T this[int index]

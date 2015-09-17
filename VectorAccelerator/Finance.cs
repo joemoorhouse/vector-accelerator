@@ -8,7 +8,7 @@ namespace VectorAccelerator
     public class Finance
     {
         public static NArray BlackScholes(double putCallFactor, NArray forward, double strike,
-            double volatility, double deltaTime)
+            NArray volatility, double deltaTime)
         {
             NArray d1, d2;
             if (deltaTime == 0) return putCallFactor * (forward - strike);
@@ -20,11 +20,11 @@ namespace VectorAccelerator
             
             return putCallFactor * (forward * nd1 - strike * nd2);
         }
-        
-        public static void BlackScholesD1D2Parameters(NArray forward, double strike, double volatility,
+
+        public static void BlackScholesD1D2Parameters(NArray forward, double strike, NArray volatility,
             double deltaTime, out NArray d1, out NArray d2)
         {
-            double volMultSqrtDTime = volatility * Math.Sqrt(deltaTime);
+            var volMultSqrtDTime = volatility * Math.Sqrt(deltaTime);
 
             d1 = (NMath.Log(forward / strike) + (0.5 * volatility * volatility * deltaTime))
                 / volMultSqrtDTime;

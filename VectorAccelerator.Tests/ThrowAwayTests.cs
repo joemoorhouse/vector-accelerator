@@ -10,8 +10,16 @@ using VectorAccelerator.LinearAlgebraProviders;
 
 namespace VectorAccelerator.Tests
 {
-    class ThrowAwayTests
+    public class ThrowAwayTests
     {
+        [TestMethod]
+        public void GenericVersion()
+        {
+            var a = new NArray<double>(1000);
+            var b = new NArray<double>(1000);
+            var c = a * b + 6;
+        }
+        
         [TestMethod]
         public void TestMKLWithNETThreads()
         {

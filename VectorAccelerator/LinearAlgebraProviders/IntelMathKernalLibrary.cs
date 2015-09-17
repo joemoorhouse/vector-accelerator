@@ -12,27 +12,36 @@ namespace VectorAccelerator.LinearAlgebraProviders
         CblasRowMajor = 101,    /* row-major arrays */
         CblasColMajor = 102     /* column-major arrays */
     };
+
     public enum CBLAS_TRANSPOSE
     {
         CblasNoTrans = 111,     /* trans='N' */
         CblasTrans = 112,       /* trans='T' */
         CblasConjTrans = 113    /* trans='C' */
     };
+
     public enum CBLAS_UPLO
     {
         CblasUpper = 121,       /* uplo ='U' */
         CblasLower = 122        /* uplo ='L' */
     };
+
     public enum CBLAS_DIAG
     {
         CblasNonUnit = 131,     /* diag ='N' */
         CblasUnit = 132         /* diag ='U' */
     };
+
     public enum CBLAS_SIDE
     {
         CblasLeft = 141,        /* side ='L' */
         CblasRight = 142        /* side ='R' */
     }; 
+
+    public enum VMLAccuracy
+    {
+        LowAccuracy = 1, HighAccuracy = 2, EnhancedPerformanceAccuracy = 3 
+    }
     
     public delegate void VectorVectorOperation(double[] a, int aStartIndex,
         double[] b, int bStartIndex,
@@ -63,6 +72,11 @@ namespace VectorAccelerator.LinearAlgebraProviders
         public void Divide(NArray a, NArray b, NArray result)
         {
             VectorVectorOperation(a, b, result, IntelMathKernalLibrary.Divide);
+        }
+
+        public void Inverse(NArray a, NArray result)
+        {
+            VectorOperation(a, result, IntelMathKernalLibrary.Inverse);
         }
 
         public void Exp(NArray a, NArray result)
@@ -102,6 +116,11 @@ namespace VectorAccelerator.LinearAlgebraProviders
             GetArray(a, out aArray, out aStart);
             GetArray(result, out resultArray, out resultStart);
             IntelMathKernalLibrary.ConstantAddMultiply(aArray, aStart, scale, offset, resultArray, resultStart, result.Length);
+        }
+
+        public IRandomNumberGenerator CreateRandomNumberGenerator(RandomNumberGeneratorType type, int seed)
+        {
+            return new IntelMKLRandomNumberGenerator(type, seed);
         }
 
         public NArray CreateLike(NArray a)
@@ -181,6 +200,11 @@ namespace VectorAccelerator.LinearAlgebraProviders
 
         [DllImport("mkl_rt.dll", CallingConvention = CallingConvention.Cdecl,
             ExactSpelling = true, SetLastError = false)]
+        internal static extern int vdInv(int n,
+            double* a, double* y);
+
+        [DllImport("mkl_rt.dll", CallingConvention = CallingConvention.Cdecl,
+            ExactSpelling = true, SetLastError = false)]
         internal static extern int vdExp(int n,
             double* a, double* y);
 
@@ -213,6 +237,10 @@ namespace VectorAccelerator.LinearAlgebraProviders
             ExactSpelling = true, SetLastError = false)]
         internal static extern int cblas_daxpy(int n,
             double a, double* x, int inc_x, double[] y, int inc_y);
+
+        [DllImport("mkl_rt.dll", CallingConvention = CallingConvention.Cdecl,
+            ExactSpelling = true, SetLastError = false)]
+        public static extern int vmlSetMode(ref int mode);
 
         [DllImport("mkl_rt.dll", CallingConvention = CallingConvention.Cdecl,
             ExactSpelling = true, SetLastError = false)]
@@ -326,6 +354,13 @@ namespace VectorAccelerator.LinearAlgebraProviders
             CallUnsafe(a, aStartIndex, b, bStartIndex, y, yStartIndex, length, vdDiv);
         }
 
+        public static void Inverse(double[] a, int aStartIndex,
+            double[] y, int yStartIndex,
+            int length)
+        {
+            CallUnsafe(a, aStartIndex, y, yStartIndex, length, vdInv);
+        }
+
         public static void Exp(double[] a, int aStartIndex,
             double[] y, int yStartIndex,
             int length)
@@ -398,6 +433,20 @@ namespace VectorAccelerator.LinearAlgebraProviders
             int transposeB = shouldTransposeB ? (int)CBLAS_TRANSPOSE.CblasTrans : (int)CBLAS_TRANSPOSE.CblasNoTrans;
             int status = cblas_dgemm((int)CBLAS_ORDER.CblasRowMajor, transposeA, transposeB, rowsA, colsB,
                 colsA, 1.0, A, A.GetLength(1), B, B.GetLength(1), 0.0, C, C.GetLength(1));
+        }
+
+        public static void SetAccuracyMode(VMLAccuracy accuracy)
+        {
+            int intAccuracy = (int)accuracy;
+            vmlSetMode(ref intAccuracy);
+        }
+
+        public static void SetSequential()
+        {
+            int mode = 1; // 0 = threaded; 1 = sequential 
+            mkl_set_threading_layer(ref mode);
+            int nThreads = 1;
+            mkl_set_num_threads(ref nThreads);
         }
     }
 }
