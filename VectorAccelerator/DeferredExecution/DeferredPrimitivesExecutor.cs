@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using VectorAccelerator.Distributions;
 using VectorAccelerator.LinearAlgebraProviders;
 
 namespace VectorAccelerator.DeferredExecution
@@ -13,7 +14,7 @@ namespace VectorAccelerator.DeferredExecution
     /// </summary>
     public class DeferredPrimitivesExecutor : IExecutor
     {
-        List<VectorOperation> _vectorOperations = new List<VectorOperation>();
+        List<NArrayOperation> _vectorOperations = new List<NArrayOperation>();
         ILinearAlgebraProvider _provider = new IntelMKLLinearAlgebraProvider();
         List<LocalNArray> _localVariables = new List<LocalNArray>();
         int _vectorLength = -1;
@@ -22,7 +23,7 @@ namespace VectorAccelerator.DeferredExecution
 
         public List<LocalNArray> LocalVariables { get { return _localVariables; } }
 
-        public List<VectorOperation> VectorOperations { get { return _vectorOperations; } }
+        public List<NArrayOperation> VectorOperations { get { return _vectorOperations; } }
 
         public string DebugString()
         {
@@ -46,7 +47,13 @@ namespace VectorAccelerator.DeferredExecution
             if (_vectorLength == -1) _vectorLength = array.Length;
             if (array.Length != _vectorLength)
                 throw new ArgumentException("length mismatch", "array");
-            var localArray = new LocalNArray(_localVariables.Count, _vectorLength);
+
+            return CreateLocalOfLength(_vectorLength);
+        }
+
+        private LocalNArray CreateLocalOfLength(int length)
+        {
+            var localArray = new LocalNArray(_localVariables.Count, length);
             _localVariables.Add(localArray);
             return localArray;
         }
@@ -206,6 +213,32 @@ namespace VectorAccelerator.DeferredExecution
             var result = CreateLocalLike(operand);
             _vectorOperations.Add(new UnaryVectorOperation(operand, result, _provider.InverseCumulativeNormal));
             return result;
+        }
+
+        public void Add(NArray operand1, NArray operand2)
+        {
+            if (operand1.Length != operand2.Length) throw new ArgumentException("length mismatch");
+           
+            _vectorOperations.Add(new BinaryVectorOperation(operand1, operand2, operand1, _provider.Add));
+        }
+
+        public IDisposable CreateRandomNumberStream(RandomNumberGeneratorType type, int seed)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void FillRandom(ContinuousDistribution distribution, NArray operand)
+        {
+
+        }
+
+        public NArray Index(NArrayInt indices)
+        {
+            if (_vectorLength == -1) _vectorLength = indices.Length;
+            if (indices.Length != _vectorLength)
+                throw new ArgumentException("length mismatch", "array");
+
+            return CreateLocalOfLength(_vectorLength);
         }
 
         #endregion

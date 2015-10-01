@@ -4,162 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Runtime.InteropServices;
 using VectorAccelerator.NArrayStorage;
+using VectorAccelerator.Distributions;
 
 namespace VectorAccelerator.LinearAlgebraProviders
-{
-    public enum CBLAS_ORDER
-    {
-        CblasRowMajor = 101,    /* row-major arrays */
-        CblasColMajor = 102     /* column-major arrays */
-    };
-
-    public enum CBLAS_TRANSPOSE
-    {
-        CblasNoTrans = 111,     /* trans='N' */
-        CblasTrans = 112,       /* trans='T' */
-        CblasConjTrans = 113    /* trans='C' */
-    };
-
-    public enum CBLAS_UPLO
-    {
-        CblasUpper = 121,       /* uplo ='U' */
-        CblasLower = 122        /* uplo ='L' */
-    };
-
-    public enum CBLAS_DIAG
-    {
-        CblasNonUnit = 131,     /* diag ='N' */
-        CblasUnit = 132         /* diag ='U' */
-    };
-
-    public enum CBLAS_SIDE
-    {
-        CblasLeft = 141,        /* side ='L' */
-        CblasRight = 142        /* side ='R' */
-    }; 
-
-    public enum VMLAccuracy
-    {
-        LowAccuracy = 1, HighAccuracy = 2, EnhancedPerformanceAccuracy = 3 
-    }
-    
-    public delegate void VectorVectorOperation(double[] a, int aStartIndex,
-        double[] b, int bStartIndex,
-        double[] y, int yStartIndex,
-        int length);
-
-    public delegate void VectorOperation(double[] a, int aStartIndex,
-        double[] y, int yStartIndex,
-        int length);
-
-    public class IntelMKLLinearAlgebraProvider : ILinearAlgebraProvider
-    {   
-        public void Add(NArray a, NArray b, NArray result)
-        {
-            VectorVectorOperation(a, b, result, IntelMathKernalLibrary.Add);
-        }
-
-        public void Subtract(NArray a, NArray b, NArray result)
-        {
-            VectorVectorOperation(a, b, result, IntelMathKernalLibrary.Subtract);
-        }
-
-        public void Multiply(NArray a, NArray b, NArray result)
-        {
-            VectorVectorOperation(a, b, result, IntelMathKernalLibrary.Multiply);
-        }
-
-        public void Divide(NArray a, NArray b, NArray result)
-        {
-            VectorVectorOperation(a, b, result, IntelMathKernalLibrary.Divide);
-        }
-
-        public void Inverse(NArray a, NArray result)
-        {
-            VectorOperation(a, result, IntelMathKernalLibrary.Inverse);
-        }
-
-        public void Exp(NArray a, NArray result)
-        {
-            VectorOperation(a, result, IntelMathKernalLibrary.Exp);
-        }
-
-        public void Log(NArray a, NArray result)
-        {
-            VectorOperation(a, result, IntelMathKernalLibrary.Log);
-        }
-
-        public void SquareRoot(NArray a, NArray result)
-        {
-            VectorOperation(a, result, IntelMathKernalLibrary.SquareRoot);
-        }
-
-        public void InverseSquareRoot(NArray a, NArray result)
-        {
-            VectorOperation(a, result, IntelMathKernalLibrary.InverseSquareRoot);
-        }
-
-        public void CumulativeNormal(NArray a, NArray result)
-        {
-            VectorOperation(a, result, IntelMathKernalLibrary.CumulativeNormal);
-        }
-
-        public void InverseCumulativeNormal(NArray a, NArray result)
-        {
-            VectorOperation(a, result, IntelMathKernalLibrary.InverseCumulativeNormal);
-        }
-
-        public void ScaleOffset(NArray a, double scale, double offset, NArray result)
-        {
-            double[] aArray, resultArray;
-            int aStart, resultStart;
-            GetArray(a, out aArray, out aStart);
-            GetArray(result, out resultArray, out resultStart);
-            IntelMathKernalLibrary.ConstantAddMultiply(aArray, aStart, scale, offset, resultArray, resultStart, result.Length);
-        }
-
-        public IRandomNumberGenerator CreateRandomNumberGenerator(RandomNumberGeneratorType type, int seed)
-        {
-            return new IntelMKLRandomNumberGenerator(type, seed);
-        }
-
-        public NArray CreateLike(NArray a)
-        {
-            return NArray.CreateLike(a);
-        }
-
-        public void VectorVectorOperation(NArray a, NArray b, NArray result, VectorVectorOperation operation)
-        {
-            double[] aArray, bArray, resultArray;
-            int aStart, bStart, resultStart;
-            GetArray(a, out aArray, out aStart);
-            GetArray(b, out bArray, out bStart);
-            GetArray(result, out resultArray, out resultStart);
-            operation(aArray, aStart, bArray, bStart, resultArray, resultStart, result.Length);
-        }
-
-        public void VectorOperation(NArray a, NArray result, VectorOperation operation)
-        {
-            double[] aArray, resultArray;
-            int aStart, resultStart;
-            GetArray(a, out aArray, out aStart);
-            GetArray(result, out resultArray, out resultStart);
-            operation(aArray, aStart, resultArray, resultStart, result.Length);
-        }
-
-        private void GetArray(NArray vector, out double[] array, out int startIndex)
-        {
-            var managedStorage = vector.Storage as ManagedStorage<double>;
-            if (managedStorage == null)
-            {
-                throw new ArgumentException("storage not managed or mismatching.");
-            }
-            array = managedStorage.Array;
-            startIndex = managedStorage.ArrayStart;
-        }
-    }
-    
-    public unsafe static class IntelMathKernalLibrary
+{    
+    public unsafe static class IntelMathKernelLibrary
     {
         [DllImport("mkl_rt.dll", CallingConvention = CallingConvention.Cdecl,
             ExactSpelling = true, SetLastError = false)]
@@ -262,7 +111,7 @@ namespace VectorAccelerator.LinearAlgebraProviders
             ExactSpelling = true, SetLastError = false)]
         public static extern int mkl_set_threading_layer(ref int layer);
 
-        static IntelMathKernalLibrary()
+        static IntelMathKernelLibrary()
         {
             // if necessary, can set threading mode here. Most commonly threading would be done
             // at higher level than MKL call (i.e. with .NET threads), in which case we want sequential mode.
@@ -448,5 +297,41 @@ namespace VectorAccelerator.LinearAlgebraProviders
             int nThreads = 1;
             mkl_set_num_threads(ref nThreads);
         }
+    }
+
+    public enum CBLAS_ORDER
+    {
+        CblasRowMajor = 101,    /* row-major arrays */
+        CblasColMajor = 102     /* column-major arrays */
+    };
+
+    public enum CBLAS_TRANSPOSE
+    {
+        CblasNoTrans = 111,     /* trans='N' */
+        CblasTrans = 112,       /* trans='T' */
+        CblasConjTrans = 113    /* trans='C' */
+    };
+
+    public enum CBLAS_UPLO
+    {
+        CblasUpper = 121,       /* uplo ='U' */
+        CblasLower = 122        /* uplo ='L' */
+    };
+
+    public enum CBLAS_DIAG
+    {
+        CblasNonUnit = 131,     /* diag ='N' */
+        CblasUnit = 132         /* diag ='U' */
+    };
+
+    public enum CBLAS_SIDE
+    {
+        CblasLeft = 141,        /* side ='L' */
+        CblasRight = 142        /* side ='R' */
+    };
+
+    public enum VMLAccuracy
+    {
+        LowAccuracy = 1, HighAccuracy = 2, EnhancedPerformanceAccuracy = 3
     }
 }

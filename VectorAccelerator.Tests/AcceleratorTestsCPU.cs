@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using VectorAccelerator.NArrayStorage;
 using System.Threading.Tasks;
+using VectorAccelerator.Distributions;
 using VectorAccelerator.LinearAlgebraProviders;
 
 namespace VectorAccelerator.Tests
@@ -16,7 +17,7 @@ namespace VectorAccelerator.Tests
         [TestMethod]
         public void SimpleSpeedTest()
         {
-            IntelMathKernalLibrary.SetAccuracyMode(VMLAccuracy.LowAccuracy);
+            IntelMathKernelLibrary.SetAccuracyMode(VMLAccuracy.LowAccuracy);
             
             int length = 1024 * 5;
 
@@ -95,65 +96,52 @@ namespace VectorAccelerator.Tests
         [TestMethod]
         public void TestBlackScholes()
         {
-            using (var random = new IntelMKLRandomNumberGenerator(RandomNumberGeneratorType.MRG32K3A, 111))
+            using (var randomStream = new RandomNumberStream(RandomNumberGeneratorType.MRG32K3A, 111))
             {
+                var normalDistribution = new Normal(randomStream, 0, 1);
+                
                 double deltaT = 1;
                 double r = 0.1;
                 double vol = 0.3;
 
-                var variates = NArray.CreateRandom(5000, random);
-                NArray optionPrices = null;
-                var watch = new Stopwatch(); watch.Start();
-
                 var options = new ParallelOptions();
                 options.MaxDegreeOfParallelism = 1;
-                Parallel.For(0, 1000, (i) =>
-                {
-                    //variates = NArray.CreateRandom(5000, random);
 
-                    var logStockPrice = Math.Log(100)
-                        + variates * Math.Sqrt(deltaT) * vol + (r - 0.5 * vol * vol) * deltaT;
-                    var stockPrices = NMath.Exp(logStockPrice);
-
-                    optionPrices = Finance.BlackScholes(-1, stockPrices, 90, 0.2, 1);
-                });
-                Console.WriteLine("Baseline threaded");
-                Console.WriteLine(watch.ElapsedMilliseconds); watch.Restart();
-
+                var variates = NArray.CreateRandom(5000, normalDistribution);
+                NArray optionPrices = NArray.CreateLike(variates);
+                var watch = new Stopwatch(); watch.Start();
+                
                 Parallel.For(0, 1000, options, (i) =>
                 {
-                    //variates = NArray.CreateRandom(5000, random);
-
+                    optionPrices = NArray.CreateLike(variates);
                     var logStockPrice = Math.Log(100)
                         + variates * Math.Sqrt(deltaT) * vol + (r - 0.5 * vol * vol) * deltaT;
                     var stockPrices = NMath.Exp(logStockPrice);
 
-                    optionPrices = Finance.BlackScholes(-1, stockPrices, 90, 0.2, 1);
+                    optionPrices.Assign(Finance.BlackScholes(-1, stockPrices, 90, 0.2, 1));
                 });
                 Console.WriteLine("Baseline sequential");
-                Console.WriteLine(watch.ElapsedMilliseconds);
-
-                //variates = NArray.CreateRandom(5000, random);
-                NArray optionPrices2 = NArray.CreateLike(variates);
-                watch.Restart();
-                Parallel.For(0, 1000, (i) =>
-                {
-                    using (NArray.DeferredExecution())
-                    {
-                        var logStockPrice = Math.Log(100)
-                            + variates * Math.Sqrt(deltaT) * vol + (r - 0.5 * vol * vol) * deltaT;
-                        var stockPrices = NMath.Exp(logStockPrice);
-
-                        optionPrices2.Assign(Finance.BlackScholes(-1, stockPrices, 90, 0.2, 1));
-                    }
-                });
-                Console.WriteLine("Deferred threaded");
-                Console.WriteLine(CheckitString((optionPrices.Storage as ManagedStorage<double>).Array, (optionPrices2.Storage as ManagedStorage<double>).Array));
                 Console.WriteLine(watch.ElapsedMilliseconds); watch.Restart();
 
+                Parallel.For(0, 1000, (i) =>
+                {
+                    optionPrices = NArray.CreateLike(variates);
+                    var logStockPrice = Math.Log(100)
+                        + variates * Math.Sqrt(deltaT) * vol + (r - 0.5 * vol * vol) * deltaT;
+                    var stockPrices = NMath.Exp(logStockPrice);
+
+                    optionPrices.Assign(Finance.BlackScholes(-1, stockPrices, 90, 0.2, 1));
+                });
+                Console.WriteLine("Baseline threaded");
+                Console.WriteLine(watch.ElapsedMilliseconds); 
+
+                NArray optionPrices2 = NArray.CreateLike(variates);
+
+                watch.Restart();
                 var vectorOptions = new DeferredExecution.VectorExecutionOptions() { MultipleThreads = true };
                 Parallel.For(0, 1000, options, (i) =>
                 {
+                    optionPrices2 = NArray.CreateLike(variates);
                     using (NArray.DeferredExecution())
                     {
                         var logStockPrice = Math.Log(100)
@@ -164,9 +152,25 @@ namespace VectorAccelerator.Tests
                     }
                 });
                 Console.WriteLine("Deferred sequential");
+                Console.WriteLine(watch.ElapsedMilliseconds);
                 Console.WriteLine(CheckitString((optionPrices.Storage as ManagedStorage<double>).Array, (optionPrices2.Storage as ManagedStorage<double>).Array));
-                Console.WriteLine(watch.ElapsedMilliseconds); 
-                //var test = prices.First();
+                watch.Restart();
+
+                Parallel.For(0, 1000, (i) =>
+                {
+                    optionPrices2 = NArray.CreateLike(variates);
+                    using (NArray.DeferredExecution())
+                    {
+                        var logStockPrice = Math.Log(100)
+                            + variates * Math.Sqrt(deltaT) * vol + (r - 0.5 * vol * vol) * deltaT;
+                        var stockPrices = NMath.Exp(logStockPrice);
+
+                        optionPrices2.Assign(Finance.BlackScholes(-1, stockPrices, 90, 0.2, 1));
+                    }
+                });
+                Console.WriteLine("Deferred threaded");
+                Console.WriteLine(watch.ElapsedMilliseconds); watch.Restart();
+                Console.WriteLine(CheckitString((optionPrices.Storage as ManagedStorage<double>).Array, (optionPrices2.Storage as ManagedStorage<double>).Array));
             }
         }
 

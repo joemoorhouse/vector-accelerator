@@ -18,7 +18,7 @@ namespace VectorAccelerator.DeferredExecution
     {
         public static void Execute(DeferredPrimitivesExecutor executor, 
             ILinearAlgebraProvider provider, VectorExecutionOptions vectorOptions)
-        {
+        {   
             //Console.WriteLine(executor.DebugString());
             int chunksLength = 1000;
             var arrayPoolStack = ExecutionContext.ArrayPool.GetStack(chunksLength);
@@ -37,10 +37,10 @@ namespace VectorAccelerator.DeferredExecution
 
             var options = new ParallelOptions();
             if (!vectorOptions.MultipleThreads) options.MaxDegreeOfParallelism = 1;
-
+ 
             //for (int i = 0; i < chunkCount; i++)
             var operations = Simplify(executor, provider);
-    
+  
             Parallel.For(0, chunkCount, options, (i) =>
             {
                 int startIndex = i * chunksLength;
@@ -65,6 +65,7 @@ namespace VectorAccelerator.DeferredExecution
                     {
                         result = operation.Result;
                     }
+
                     if (operation is UnaryVectorOperation)
                     {
                         var unaryOperation = operation as UnaryVectorOperation;
@@ -115,7 +116,7 @@ namespace VectorAccelerator.DeferredExecution
             return array is LocalNArray;
         }
 
-        private static IList<VectorOperation> Simplify(DeferredPrimitivesExecutor executor, 
+        private static IList<NArrayOperation> Simplify(DeferredPrimitivesExecutor executor, 
             ILinearAlgebraProvider provider)
         {
             var original = executor.VectorOperations;
@@ -127,7 +128,7 @@ namespace VectorAccelerator.DeferredExecution
             return simplified2;
         }
 
-        private static List<VectorOperation> RemoveUnnecessaryLocals(List<VectorOperation> operations)
+        private static List<NArrayOperation> RemoveUnnecessaryLocals(List<NArrayOperation> operations)
         {
             var assignments = operations.OfType<AssignOperation>().Where(o => IsLocal(o.Right) && !IsLocal(o.Left)).ToList();
             Func<NArray, NArray> transform = a => Transform(a, assignments);
@@ -135,7 +136,7 @@ namespace VectorAccelerator.DeferredExecution
                 .Select(o => o.Clone(transform)).ToList(); 
         }
 
-        private static VectorOperation[] SimplifyScaleOffsets(DeferredPrimitivesExecutor executor, List<VectorOperation> operations, ILinearAlgebraProvider provider)
+        private static NArrayOperation[] SimplifyScaleOffsets(DeferredPrimitivesExecutor executor, List<NArrayOperation> operations, ILinearAlgebraProvider provider)
         {
             // one of the most common patterns is
             // local0 = Na * a0 + b0
@@ -145,7 +146,7 @@ namespace VectorAccelerator.DeferredExecution
             // local1 = Na * [a0 * a1] + [b0 * a1 + b1]
             // this process can then be repeated
 
-            var simplifiedOperations = new VectorOperation[operations.Count];
+            var simplifiedOperations = new NArrayOperation[operations.Count];
             var localDefinitionIndex = new int[executor.LocalVariables.Count]; // the index of the operation at which the local is defined
 
             // Create a look-up of the operation index where a local is defined

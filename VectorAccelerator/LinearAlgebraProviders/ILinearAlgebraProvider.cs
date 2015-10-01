@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using VectorAccelerator.Distributions;
 
 namespace VectorAccelerator.LinearAlgebraProviders
 {
@@ -38,17 +39,18 @@ namespace VectorAccelerator.LinearAlgebraProviders
         /// <returns></returns>
         void ScaleOffset(NArray a, double scale, double offset, NArray result);
 
+        /// <summary>
+        /// Matrix multiply: c = a * b
+        /// </summary>
+        /// <param name="a"></param>
+        /// <param name="b"></param>
+        /// <param name="c"></param>
+        void MatrixMultiply(NArray a, NArray b, NArray c);
+
         NArray CreateLike(NArray a);
 
-        IRandomNumberGenerator CreateRandomNumberGenerator(RandomNumberGeneratorType type, int seed);
-    }
+        IDisposable CreateRandomNumberStream(RandomNumberGeneratorType type, int seed);
 
-    public enum RandomNumberGeneratorType { MRG32K3A = 3145728 };
-
-    public interface IRandomNumberGenerator : IDisposable
-    {
-        double NextNormal();
-
-        void NormalVector(double[] normals);
+        void FillRandom(ContinuousDistribution distribution, NArray values);
     }
 }

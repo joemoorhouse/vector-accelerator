@@ -12,35 +12,15 @@ namespace VectorAccelerator
     public class LocalNArray : NArray
     {
         int _index;
-        int _length;
 
-        public LocalNArray(int index, int length) 
+        public LocalNArray(int index, int length) : base(length)
         {
             _index = index;
-            _length = length;
-        }
-
-        public override NArrayStorage<double> Storage
-        {
-            get
-            {
-                return base.Storage;
-            }
-            set
-            {
-                base.Storage = value;
-                _length = Storage.Length;
-            }
         }
 
         public int Index
         {
             get { return _index; }
-        }
-
-        public override int Length
-        {
-            get { return _length; }
         }
 
         public override string ToString()

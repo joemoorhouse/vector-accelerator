@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using VectorAccelerator.Distributions;
 
 namespace VectorAccelerator
 {    
@@ -38,9 +39,13 @@ namespace VectorAccelerator
 
         NArray ElementWiseInverseCumulativeNormal(NArray operand);
 
-        //NArray FillRandom()
+        void Add(NArray operand1, NArray operand2);
 
-        //NArray Index(NArray<int> operand);
+        IDisposable CreateRandomNumberStream(RandomNumberGeneratorType type, int seed);
+
+        void FillRandom(ContinuousDistribution distribution, NArray operand);
+
+        NArray Index(NArrayInt indices);
 
         #endregion
     }

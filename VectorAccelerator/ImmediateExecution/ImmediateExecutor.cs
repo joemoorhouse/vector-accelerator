@@ -4,6 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using VectorAccelerator.LinearAlgebraProviders;
+using VectorAccelerator.Distributions;
+using VectorAccelerator.NArrayStorage;
 
 namespace VectorAccelerator
 {
@@ -15,7 +17,8 @@ namespace VectorAccelerator
         
         public void Assign(NArray operand1, NArray operand2)
         {
-            operand1 = operand2;
+            var managedStorage = operand2.Storage as ManagedStorage<double>;
+            operand1.Storage = new ManagedStorage<double>((double[])managedStorage.Array.Clone(), managedStorage.ArrayStart, managedStorage.Length);
         }
 
         #region Binary Operations
@@ -156,6 +159,27 @@ namespace VectorAccelerator
         {
             var result = _provider.CreateLike(operand);
             _provider.InverseCumulativeNormal(operand, result);
+            return result;
+        }
+
+        public void Add(NArray operand1, NArray operand2)
+        {
+            _provider.Add(operand1, operand2, operand1);
+        }
+
+        public IDisposable CreateRandomNumberStream(RandomNumberGeneratorType type, int seed)
+        {
+            return _provider.CreateRandomNumberStream(type, seed);
+        }
+
+        public void FillRandom(ContinuousDistribution distribution, NArray operand)
+        {
+            _provider.FillRandom(distribution, operand);
+        }
+
+        public NArray Index(NArrayInt indices)
+        {
+            var result = new NArray(indices.Storage.Length);
             return result;
         }
 

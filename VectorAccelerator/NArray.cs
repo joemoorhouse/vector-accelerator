@@ -6,43 +6,130 @@ using System.Threading.Tasks;
 using VectorAccelerator.NArrayStorage;
 using VectorAccelerator.DeferredExecution;
 using VectorAccelerator.LinearAlgebraProviders;
+using VectorAccelerator.Distributions;
 
 namespace VectorAccelerator
 {
-    public class NArray 
+    public interface IStorageCreator<T>
     {
-        private NArrayStorage<double> _storage;
-        
-        public virtual NArrayStorage<double> Storage
-        {
-            get { return _storage; }
-            set { _storage = value; }
-        }
+        NArrayStorage<T> NewStorage(int rowCount, int columnCount);
+
+        NArrayStorage<T> NewStorage(T[] array);
+
+        NArrayStorage<T> NewStorage(T value);
+    }
+    
+    public abstract class NArray<T>
+    {
+        public readonly int RowCount; // rows of matrix 
+        public readonly int ColumnCount; // columns of matrix
+        public readonly int Length; // length of vector, or total number of elements in matrix
 
         public bool IsScalar { get { return (Length == 1); } }
+        public bool IsVector { get { return RowCount == 1 || ColumnCount == 1; } }
+        
+        protected NArrayStorage<T> _storage;
+
+        public virtual NArrayStorage<T> Storage
+        {
+            get { return _storage; }
+            set 
+            {
+                _storage = value;
+                if (!StorageMatches(_storage)) throw new ArithmeticException("storage mismatch");
+            }
+        }
 
         public NArray(int length)
         {
-            Storage = new ManagedStorage<double>(length);
+            RowCount = Length = length;
+            ColumnCount = 1;
+            _storage = StorageCreator.NewStorage(length, 1);
         }
 
-        public NArray()
+        public NArray(int rowCount, int columnCount)
         {
+            RowCount = rowCount;
+            ColumnCount = columnCount;
+            Length = RowCount * ColumnCount;
+            _storage = StorageCreator.NewStorage(rowCount, columnCount);
         }
 
-        public NArray(NArrayStorage<double> storage)
+        public NArray(T value)
         {
-            Storage = storage;
+            RowCount = ColumnCount = Length = 1;
+            _storage = StorageCreator.NewStorage(value);
         }
 
-        public NArray(double value)
+        public NArray(T[] value)
         {
-            Storage = new ManagedStorage<double>(value);
+            RowCount = Length = value.Length;
+            ColumnCount = 1;
+            _storage = StorageCreator.NewStorage(value);
         }
 
-        public NArray(double[] array)
+        public NArray(NArrayStorage<T> storage)
         {
-            Storage = new ManagedStorage<double>(array);
+            _storage = storage;
+            RowCount = storage.RowCount;
+            ColumnCount = storage.ColumnCount;
+            Length = storage.Length;
+        }
+
+        protected abstract IStorageCreator<T> StorageCreator { get; }
+
+        private bool StorageMatches(NArrayStorage<T> storage)
+        {
+            return storage.RowCount == RowCount && storage.ColumnCount == ColumnCount; 
+        }
+    }
+
+    public enum StorageType { Host, Device, None }
+
+    /// <summary>
+    /// An N-dimensional array of double precision values.
+    /// </summary>
+    public class NArray : NArray<double>
+    {
+        public NArray(int length) : base(length) { }
+
+        public NArray(int rowCount, int columnCount) : base(rowCount, columnCount) { }
+
+        public NArray(double value) : base(value) { }
+
+        public NArray(double[] array) : base(array) { }
+
+        public NArray(NArrayStorage<double> storage) : base(storage) { }
+
+        protected override IStorageCreator<double> StorageCreator
+        {
+            get 
+            {
+                if (this is LocalNArray)
+                {
+                    return new NullStorageCreator<double>();
+                }
+                else
+                {
+                    return new ManagedStorageCreator<double>();
+                }
+            }
+        }
+
+        /// <summary>
+        /// To be used only for debugging
+        /// </summary>
+        public IEnumerable<double> DebugDataView
+        {
+            get 
+            {
+                if (Storage is ManagedStorage<double>)
+                {
+                    var managedStorage = Storage as ManagedStorage<double>;
+                    return managedStorage.Array.Skip(managedStorage.ArrayStart).Take(managedStorage.Length);
+                }
+                else return null;
+            }
         }
 
         public NArray Slice(int startIndex, int length)
@@ -62,33 +149,6 @@ namespace VectorAccelerator
             return new NArray(a.Storage.Length);
         }
 
-        public static NArray CreateRandom(int length, Random random)
-        {
-            var newNArray = new NArray(length);
-            // temporary
-            var array = (newNArray.Storage as ManagedStorage<double>).Array;
-            for (int i = 0; i < length; ++i)
-            {
-                array[i] = random.NextDouble();
-            }
-            return newNArray;
-        }
-
-        public static NArray CreateRandom(int length, IRandomNumberGenerator random)
-        {
-            var newNArray = new NArray(length);
-            // temporary
-            var array = (newNArray.Storage as ManagedStorage<double>).Array;
-            random.NormalVector(array);
-            return newNArray;
-        }
-
-        public void FillNormal(IRandomNumberGenerator random)
-        {
-            var array = (Storage as ManagedStorage<double>).Array;
-            random.NormalVector(array);
-        }
-
         public static NArray CreateFromEnumerable(IEnumerable<double> enumerable)
         {
             var array = enumerable.ToArray();
@@ -105,11 +165,6 @@ namespace VectorAccelerator
         public double First()
         {
             return Storage.First();
-        }
-
-        public virtual int Length
-        {
-            get { return Storage.Length; } 
         }
 
         public void Assign(NArray operand)
@@ -172,6 +227,23 @@ namespace VectorAccelerator
             return ExecutionContext.Executor.ElementWiseNegate(operand);
         }
 
+        public void Add(NArray operand)
+        {
+            ExecutionContext.Executor.Add(this, operand);
+        }
+
+        public static NArray CreateRandom(int length, ContinuousDistribution distribution)
+        {
+            var newNArray = new NArray(length);
+            newNArray.FillRandom(distribution);
+            return newNArray;
+        }
+
+        public void FillRandom(ContinuousDistribution distribution)
+        {
+            ExecutionContext.Executor.FillRandom(distribution, this);
+        }
+
         /// <summary>
         /// If the element i of the boolean 'condition' vector, condition[i] is true, condition[i]
         /// is set to ifTrue[i], otherwise condition[i] is set to ifFalse[i]
@@ -190,147 +262,18 @@ namespace VectorAccelerator
         }
     }
 
-    public class NArray<T> 
+    /// <summary>
+    /// An N-dimensional array of integers.
+    /// </summary>
+    public class NArrayInt : NArray<int>
     {
-        private NArrayStorage<T> _storage;
-        
-        public virtual NArrayStorage<T> Storage
+        public NArrayInt(int length)
+            : base(length) { }
+
+        protected override IStorageCreator<int> StorageCreator
         {
-            get { return _storage; }
-            set { _storage = value; }
-        }
-
-        public virtual int Length
-        {
-            get { return Storage.Length; }
-        }
-
-        public bool IsScalar { get { return (Length == 1); } }
-
-        public NArray(int length)
-        {
-            Storage = new ManagedStorage<T>(length);
-        }
-
-        public NArray()
-        {
-        }
-
-        public NArray(NArrayStorage<T> storage)
-        {
-            Storage = storage;
-        }
-
-        public NArray(T value)
-        {
-            Storage = new ManagedStorage<T>(value);
-        }
-
-        public NArray(T[] array)
-        {
-            Storage = new ManagedStorage<T>(array);
-        }
-        
-        public NArray<T> this[NArray<int> indices]
-        {
-            get { return new NArray<T>(); }
-        }
-
-        public NArray<T> Slice(int startIndex, int length)
-        {
-            return new NArray<T>(Storage.Slice(startIndex, length));
-        }
-
-        public static NArray<T> CreateLike(NArray<T> a)
-        {
-            return new NArray<T>(a.Storage.Length);
-        }
-
-        public static NArray<T> CreateLike(NArray<T> a, NArray<T> b)
-        {
-            if (a.Storage.Length != b.Storage.Length)
-                throw new ArgumentException("dimensions of a and b do not match");
-            return new NArray<T>(a.Storage.Length);
-        }
-
-        public void FillNormal(IRandomNumberGenerator random)
-        {
-            var array = (Storage as ManagedStorage<T>).Array;
-            //random.NormalVector(array);
-        }
-
-        public static NArray<T> CreateFromEnumerable(IEnumerable<T> enumerable)
-        {
-            var array = enumerable.ToArray();
-            var newNArray = new NArray<T>(array);
-            // temporary
-            return newNArray;
-        }
-
-
-        public T First()
-        {
-            return Storage.First();
-        }
-
-        public void Assign(NArray<T> operand)
-        {
-            //ExecutionContext.Executor.Assign(this, operand);
-        }
-
-        public void Assign(Func<NArray<T>> operand)
-        {
-            //ExecutionContext.Executor.Assign(this, operand());
-        }
-
-        public static VectorAccelerator.DeferredExecution.DeferredExecutionContext DeferredExecution()
-        {
-            return DeferredExecution(new VectorExecutionOptions());
-        }
-
-        public static VectorAccelerator.DeferredExecution.DeferredExecutionContext DeferredExecution(VectorExecutionOptions options)
-        {
-            return new VectorAccelerator.DeferredExecution.DeferredExecutionContext(options);
-        }
-
-        public override string ToString()
-        {
-            if (IsScalar) return Storage.First().ToString();
-            else return string.Format("NArray[{0}]", Length);
-        }
-
-        #region Binary Operators
-
-        public static implicit operator NArray<T>(T value)
-        {
-            return new NArray<T>(value);
-        }
-
-        public static NArray<T> operator +(NArray<T> operand1, NArray<T> operand2)
-        {
-            return new NArray<T>();
-        }
-
-        public static NArray<T> operator -(NArray<T> operand1, NArray<T> operand2)
-        {
-            return new NArray<T>();
-        }
-
-        public static NArray<T> operator *(NArray<T> operand1, NArray<T> operand2)
-        {
-            return new NArray<T>();
-        }
-
-        public static NArray<T> operator /(NArray<T> operand1, NArray<T> operand2)
-        {
-            return new NArray<T>();
-        }
-
-        #endregion
-
-        public static NArray<T> operator -(NArray<T> operand)
-        {
-            return new NArray<T>();
+            get { throw new NotImplementedException(); }
         }
     }
+
 }

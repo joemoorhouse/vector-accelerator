@@ -6,20 +6,13 @@ using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using VectorAccelerator.NArrayStorage;
 using System.Threading.Tasks;
+using VectorAccelerator.Distributions;
 using VectorAccelerator.LinearAlgebraProviders;
 
 namespace VectorAccelerator.Tests
 {
     public class ThrowAwayTests
-    {
-        [TestMethod]
-        public void GenericVersion()
-        {
-            var a = new NArray<double>(1000);
-            var b = new NArray<double>(1000);
-            var c = a * b + 6;
-        }
-        
+    {   
         [TestMethod]
         public void TestMKLWithNETThreads()
         {
@@ -29,7 +22,7 @@ namespace VectorAccelerator.Tests
             int threading = 1;
             //IntelMathKernalLibrary.mkl_set_threading_layer(ref threading);
             //IntelMathKernalLibrary.mkl_set_dynamic(ref dynamic);
-            IntelMathKernalLibrary.mkl_set_num_threads(ref threads);
+            IntelMathKernelLibrary.mkl_set_num_threads(ref threads);
 
             var x = new double[512];
             var y = new double[512];
@@ -49,7 +42,7 @@ namespace VectorAccelerator.Tests
                 for (int i = 0; i < 20; ++i)
                 {
                     for (int k = 0; k < 10; ++k)
-                        IntelMathKernalLibrary.Exp(x, 0, y, 0, 256);
+                        IntelMathKernelLibrary.Exp(x, 0, y, 0, 256);
                 }
             }
             watch.Stop();
@@ -60,7 +53,7 @@ namespace VectorAccelerator.Tests
                 Parallel.For(0, 20, (i) =>
                 {
                     for (int k = 0; k < 10; ++k)
-                        IntelMathKernalLibrary.Exp(x, 0, y, 0, 256);
+                        IntelMathKernelLibrary.Exp(x, 0, y, 0, 256);
                 });
             }
             watch.Stop();
@@ -72,7 +65,7 @@ namespace VectorAccelerator.Tests
                 for (int i = 0; i < 20; ++i)
                 {
                     for (int k = 0; k < 10; ++k)
-                        IntelMathKernalLibrary.Exp(x, 0, y, 0, 256);
+                        IntelMathKernelLibrary.Exp(x, 0, y, 0, 256);
                 }
             }
             watch.Stop();
@@ -105,23 +98,23 @@ namespace VectorAccelerator.Tests
             watch = new Stopwatch();
             watch.Start();
 
-            IntelMathKernalLibrary.mkl_set_num_threads(ref threads);
-            IntelMathKernalLibrary.MatrixMultiply(a, b, c);
+            IntelMathKernelLibrary.mkl_set_num_threads(ref threads);
+            IntelMathKernelLibrary.MatrixMultiply(a, b, c);
 
             Console.WriteLine(watch.ElapsedMilliseconds);
 
             watch.Restart();
 
             threads = 1;
-            IntelMathKernalLibrary.mkl_set_num_threads(ref threads);
-            IntelMathKernalLibrary.MatrixMultiply(a, b, c);
+            IntelMathKernelLibrary.mkl_set_num_threads(ref threads);
+            IntelMathKernelLibrary.MatrixMultiply(a, b, c);
 
             Console.WriteLine(watch.ElapsedMilliseconds);
 
             watch.Restart();
             threads = 2;
-            IntelMathKernalLibrary.mkl_set_num_threads(ref threads);
-            IntelMathKernalLibrary.MatrixMultiply(a, b, c);
+            IntelMathKernelLibrary.mkl_set_num_threads(ref threads);
+            IntelMathKernelLibrary.MatrixMultiply(a, b, c);
 
             Console.WriteLine(watch.ElapsedMilliseconds);
 
@@ -132,10 +125,10 @@ namespace VectorAccelerator.Tests
                 options.MaxDegreeOfParallelism = setting;
                 threads = setting;
                 //int dynamic = 0;
-                IntelMathKernalLibrary.mkl_set_num_threads(ref threads);
+                IntelMathKernelLibrary.mkl_set_num_threads(ref threads);
                 //VectorAccelerator.LinearAlgebraProviders.IntelMathKernalLibrary.mkl_set_dynamic(ref dynamic);
-                Console.WriteLine(IntelMathKernalLibrary.mkl_get_max_threads());
-                Console.WriteLine(IntelMathKernalLibrary.mkl_get_dynamic());
+                Console.WriteLine(IntelMathKernelLibrary.mkl_get_max_threads());
+                Console.WriteLine(IntelMathKernelLibrary.mkl_get_dynamic());
 
                 AcceleratorTestsCPU.Timeit(() =>
                 {
@@ -145,7 +138,7 @@ namespace VectorAccelerator.Tests
                         //result[i] = IntelMathKernalLibrary.Dot(
                         //    input1, 0, input2, 0, input1.Length);
 
-                        IntelMathKernalLibrary.MatrixMultiply(a, b, c);
+                        IntelMathKernelLibrary.MatrixMultiply(a, b, c);
 
                         //double temp = 1;
                         //for (int j = i; j < 1000000; ++j)

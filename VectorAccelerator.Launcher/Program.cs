@@ -16,10 +16,19 @@ namespace VectorAccelerator.Launcher
             var test2 = new SimpleCounterpartyRiskTest();
             var test3 = new CheckApplicationLevelThreadingMKL();
             var test4 = new ThrowAwayTests();
-            test4.GenericVersion();
-            //test3.CumulativeNormalTest();
+            var test5 = new DistributionTests();
+            var test6 = new SpeedComparison();
 
-            //test2.OptionPricingTest();
+            // good tests:
+            //test3.TranscendentalFunctionTest();
+            //test.TestBlackScholes();
+
+            test2.OptionPricingTest();
+
+            //test6.OptionPricingTest();
+            //test5.TestRandomNumberGeneration();
+            
+
             //test.TestBlackScholes();
             //test.SimpleSpeedTest();
             //test.TestMKLWithNETThreads();

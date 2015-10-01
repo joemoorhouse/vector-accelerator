@@ -2,10 +2,12 @@
 using System.Linq;
 using VectorAccelerator;
 using System.Diagnostics;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using VectorAccelerator.NArrayStorage;
 using System.Threading.Tasks;
+using VectorAccelerator.Distributions;
 using VectorAccelerator.LinearAlgebraProviders;
 using VectorAccelerator.DeferredExecution;
 
@@ -17,63 +19,127 @@ namespace VectorAccelerator.Tests
         [TestMethod]
         public void OptionPricingTest()
         {
-            IntelMathKernalLibrary.SetAccuracyMode(VMLAccuracy.LowAccuracy);
-            IntelMathKernalLibrary.SetSequential();
-
-            using (var random = new IntelMKLRandomNumberGenerator(RandomNumberGeneratorType.MRG32K3A, 111))
+            IntelMathKernelLibrary.SetAccuracyMode(VMLAccuracy.LowAccuracy);
+            IntelMathKernelLibrary.SetSequential();
+            using (var randomStream = new RandomNumberStream(RandomNumberGeneratorType.MRG32K3A, 111))
             {
-                
+                var normalDistribution = new Normal(randomStream, 0, 1);
+
                 var vectorOptions = new VectorExecutionOptions() { MultipleThreads = true };
 
-                var watch = new Stopwatch(); watch.Start();
+                var watch = new Stopwatch();
 
-                for (int i = 0; i < 1; ++i)
-                {
-                    var optionPrices = new NArray(5000);
-                    CalculatePVs(random, optionPrices);
-                }
-                Console.WriteLine(watch.ElapsedMilliseconds); watch.Restart();
+                watch.Start();
+                var optionPrices = Value(normalDistribution);
+                Console.WriteLine(String.Format("Start-up: {0}ms", watch.ElapsedMilliseconds)); 
 
-                Parallel.For(0, 1, (i) =>
-                {
-                    var optionPrices = new NArray(5000);
-                    CalculatePVs(random, optionPrices);
-                });
-                Console.WriteLine(watch.ElapsedMilliseconds); watch.Restart();
+                randomStream.Reset();
 
-                for (int i = 0; i < 1; ++i)
-                {
-                    var optionPrices2 = new NArray(5000);
-                    using (NArray.DeferredExecution(vectorOptions))
-                    {
-                        CalculatePVs(random, optionPrices2);
-                    }
-                }
+                watch.Restart();
+                optionPrices = Value(normalDistribution);
+                Console.WriteLine(String.Format("Threaded, deferred 1: {0}ms", watch.ElapsedMilliseconds)); 
 
-                Console.WriteLine(watch.ElapsedMilliseconds); watch.Restart();
+                randomStream.Reset();
+
+                watch.Restart();
+                var optionPricesDeferred = Value(normalDistribution);
+                Console.WriteLine(String.Format("Threaded, deferred 2: {0}ms", watch.ElapsedMilliseconds)); watch.Restart();
                 
-                
-                //Console.WriteLine(TestHelpers.CheckitString(optionPrices, optionPrices2));
+                Console.WriteLine(TestHelpers.CheckitString(optionPrices, optionPricesDeferred));
             }
         }
 
-        private void CalculatePVs(IRandomNumberGenerator random, NArray optionPrices)
+        private NArray Value(Normal normalDistribution)
         {
             double deltaT = 1;
             double r = 0.1;
             double vol = 0.3;
 
-            var variates = NArray.CreateRandom(optionPrices.Length, random);
+            int vectorLength = 5000;
+            var optionPrices = new NArray(vectorLength);
+
+            var variates = NArray.CreateRandom(optionPrices.Length, normalDistribution);
 
             var logStockPrice = Math.Log(100)
                 + variates * Math.Sqrt(deltaT) * vol + (r - 0.5 * vol * vol) * deltaT;
             
             var forwardStockPrices = NMath.Exp(logStockPrice + r * deltaT);
 
-            for (double k = 80; k < 81; ++k)
+            // now create deals
+            var strikes = Enumerable.Range(0, 1000).Select(i => 80 + 5.0 / 1000).ToArray();
+            var deals = strikes.Select(s =>
+                new Deal() { Strike = s, ForwardStockPrices = (i) => { return forwardStockPrices; } })
+                .ToList();
+
+            return AggregateValuations(deals, vectorLength);
+        }
+
+        public delegate NArray Spot(int index);
+        public delegate NArray Curve(int index, double tenor);
+
+        public class Deal
+        {
+            public Spot ForwardStockPrices;
+
+            public double Strike;
+
+            public NArray Price(int timeIndex)
             {
-                optionPrices += Finance.BlackScholes(-1, forwardStockPrices, 90, 0.2, 1);
+                return Finance.BlackScholes(-1, ForwardStockPrices(timeIndex), Strike, 0.2, 1);
             }
         }
+        
+        /// <summary>
+        /// A very customisable aggregation routine
+        /// </summary>
+        /// <param name="deals"></param>
+        /// <param name="vectorLength"></param>
+        /// <returns></returns>
+        private NArray AggregateValuations(IList<Deal> deals, int vectorLength)
+        {
+            object lockObject = new object();
+            var rangePartitioner = Partitioner.Create(0, deals.Count);
+
+            var sum = new NArray(vectorLength);
+
+            var options = new ParallelOptions();// { MaxDegreeOfParallelism = 2 };
+
+            Parallel.ForEach(
+                // input intervals
+              rangePartitioner,
+
+              options,
+
+              // local initial partial result
+              () => new NArray(vectorLength),
+
+              // loop body for each interval
+              (range, loopState, initialValue) =>
+              {
+                  var partialSum = initialValue;
+                  for (int i = range.Item1; i < range.Item2; i++)
+                  {
+                      using (NArray.DeferredExecution())
+                      {
+                          partialSum.Add(deals[i].Price(0));
+                      }
+                  }
+                  return partialSum;
+              },
+
+              // final step of each local context
+              (localPartialSum) =>
+              {
+                  // using a lock to enforce serial access to shared result
+                  lock (lockObject)
+                  {
+                      sum.Add(localPartialSum);
+                  }
+              });
+            
+            return sum;
+        }    
+
+        public enum PutCall { Put, Call }
     }
 }

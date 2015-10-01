@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using VectorAccelerator.NArrayStorage;
 using System.Threading.Tasks;
+using VectorAccelerator.Distributions;
 using VectorAccelerator.LinearAlgebraProviders;
 
 namespace VectorAccelerator.Tests.Checks
@@ -16,15 +17,20 @@ namespace VectorAccelerator.Tests.Checks
     [TestClass]
     public class CheckApplicationLevelThreadingMKL
     {
+        /// <summary>
+        /// A test of MKL threading
+        /// </summary>
         [TestMethod]
-        public void CumulativeNormalTest()
+        public void TranscendentalFunctionTest()
         {
-            IntelMathKernalLibrary.SetSequential();
-            
-            using (var random = new IntelMKLRandomNumberGenerator(RandomNumberGeneratorType.MRG32K3A, 111))
+            IntelMathKernelLibrary.SetSequential();
+
+            using (var randomStream = new RandomNumberStream(RandomNumberGeneratorType.MRG32K3A, 111))
             {
+                var normalDistribution = new Normal(randomStream, 0, 1);
+                
                 var a = new NArray(5000);
-                a.FillNormal(random);
+                a.FillRandom(normalDistribution);
 
                 var watch = new Stopwatch(); watch.Start();
 
@@ -32,7 +38,7 @@ namespace VectorAccelerator.Tests.Checks
 
                 Parallel.For(0, 100, options, (i) =>
                 {
-                    DoWork(a, random);
+                    DoWork(a, normalDistribution);
                 });
 
                 var baseline = watch.ElapsedMilliseconds;
@@ -42,7 +48,7 @@ namespace VectorAccelerator.Tests.Checks
 
                 Parallel.For(0, 100, (i) =>
                 {
-                    DoWork(a, random);
+                    DoWork(a, normalDistribution);
                 });
 
                 var baselineThreaded = watch.ElapsedMilliseconds;
@@ -52,7 +58,7 @@ namespace VectorAccelerator.Tests.Checks
 
                 Parallel.For(0, 100, options, (i) =>
                     {
-                        DoWorkInPlace(a, random);
+                        DoWorkInPlace(a, normalDistribution);
                     });
 
                 var oneThread = watch.ElapsedMilliseconds;
@@ -62,7 +68,7 @@ namespace VectorAccelerator.Tests.Checks
 
                 Parallel.For(0, 100, (i) =>
                     {
-                        DoWorkInPlace(a, random);
+                        DoWorkInPlace(a, normalDistribution);
                     });
 
                 var multipleThreads = watch.ElapsedMilliseconds;
@@ -73,7 +79,7 @@ namespace VectorAccelerator.Tests.Checks
 
                 Parallel.For(0, 100, options, (i) =>
                 {
-                    DoWorkDeferred(a, random);
+                    DoWorkDeferred(a, normalDistribution);
                 });
 
                 var deferred = watch.ElapsedMilliseconds;
@@ -83,7 +89,7 @@ namespace VectorAccelerator.Tests.Checks
 
                 Parallel.For(0, 100, (i) =>
                 {
-                    DoWorkDeferred(a, random);
+                    DoWorkDeferred(a, normalDistribution);
                 });
 
                 var deferredMultipleThreads = watch.ElapsedMilliseconds;
@@ -93,9 +99,9 @@ namespace VectorAccelerator.Tests.Checks
             }
         }
 
-        private void DoWork(NArray a, IRandomNumberGenerator random)
+        private void DoWork(NArray a, Normal normalDistribution)
         {
-            // This will do compute limited work that we would expect to task parallelize well
+            // This will do compute-limited work that we would expect to task parallelize well
             var result = NArray.CreateLike(a);
             result.Assign(a);
             for (int j = 0; j < 100; ++j)
@@ -106,20 +112,19 @@ namespace VectorAccelerator.Tests.Checks
             }
         }
 
-        private void DoWorkInPlace(NArray a, IRandomNumberGenerator random)
+        private void DoWorkInPlace(NArray a, Normal normalDistribution)
         {
-            // This will do compute limited work that we would expect to task parallelize well
+            // This will do compute-limited work that we would expect to task parallelize well
             var result = NArray.CreateLike(a);
             result.Assign(a);
             for (int j = 0; j < 100; ++j)
             {
-                //result.FillNormal(random);
-                IntelMathKernalLibrary.Exp(GetArray(result), 0, GetArray(result), 0, result.Length);
-                IntelMathKernalLibrary.Log(GetArray(result), 0, GetArray(result), 0, result.Length);
+                IntelMathKernelLibrary.Exp(GetArray(result), 0, GetArray(result), 0, result.Length);
+                IntelMathKernelLibrary.Log(GetArray(result), 0, GetArray(result), 0, result.Length);
             }
         }
 
-        private void DoWorkDeferred(NArray a, IRandomNumberGenerator random, bool threaded = false)
+        private void DoWorkDeferred(NArray a, Normal normalDistribution, bool threaded = false)
         {
             // A version where assignment happens, but we defer execution.
             var result = NArray.CreateLike(a);
@@ -131,7 +136,6 @@ namespace VectorAccelerator.Tests.Checks
             {
                 using (NArray.DeferredExecution(options))
                 {
-                    //result.FillNormal(random);
                     var temp = NMath.Exp(result);
                     result.Assign(NMath.Log(temp));
                 }

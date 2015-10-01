@@ -4,20 +4,33 @@ using System.Linq;
 using System.Text;
 
 namespace VectorAccelerator.NArrayStorage
-{
+{    
     public class ManagedStorage<T> : NArrayStorage<T>
     {
         T[] _storage;
         int _storageStart = 0;
-        int _length;
 
-        public ManagedStorage(T value) : base(value) { }
+        public ManagedStorage(T value) : base(1)
+        {
+            CreateStorage(value);
+        }
 
-        public ManagedStorage(int length) : base(length) { }
+        public ManagedStorage(int length) : base(length) 
+        {
+            CreateStorage(Length);
+        }
 
-        public ManagedStorage(T[] array) : base(array) { }
+        public ManagedStorage(int rowCount, int columnCount) : base(rowCount * columnCount)
+        {
+            CreateStorage(Length);
+        }
 
-        public ManagedStorage(T[] array, int startIndex, int length)
+        public ManagedStorage(T[] array) : base(array.Length) 
+        {
+            CreateStorage(array, 0, array.Length);
+        }
+
+        public ManagedStorage(T[] array, int startIndex, int length) : base(length)
         {
             CreateStorage(array, startIndex, length);
         }
@@ -38,27 +51,26 @@ namespace VectorAccelerator.NArrayStorage
             get { return _storageStart; }
         }
 
-        protected override void CreateStorage(int length)
+        private void CreateStorage(int length)
         {
             _storage = new T[length];
-            _length = length;
         }
 
-        protected override void CreateStorage(T[] array, int startIndex, int length)
+        private void CreateStorage(T value)
+        {
+            _storage = new T[1];
+            _storage[0] = value;
+        }
+
+        private void CreateStorage(T[] array, int startIndex, int length)
         {
             _storage = array;
             _storageStart = startIndex;
-            _length = length;
         }
 
         public override T First()
         {
             return _storage[0];
-        }
-
-        public override int Length
-        {
-            get { return _length; }
         }
 
         public override bool Matches(NArrayStorage<T> other)
@@ -71,6 +83,42 @@ namespace VectorAccelerator.NArrayStorage
         public override NArrayStorage<T> Slice(int startIndex, int length)
         {
             return new ManagedStorage<T>(_storage, startIndex, length);
+        }
+    }
+
+    public class ManagedStorageCreator<T> : IStorageCreator<T>
+    {
+        public NArrayStorage<T> NewStorage(int rowCount, int columnCount)
+        {
+            return new ManagedStorage<T>(rowCount, columnCount);
+        }
+
+        public NArrayStorage<T> NewStorage(T[] array)
+        {
+            return new ManagedStorage<T>(array);
+        }
+
+        public NArrayStorage<T> NewStorage(T value)
+        {
+            return new ManagedStorage<T>(value);
+        }
+    }
+
+    public class NullStorageCreator<T> : IStorageCreator<T>
+    {
+        public NArrayStorage<T> NewStorage(int rowCount, int columnCount)
+        {
+            return null;
+        }
+
+        public NArrayStorage<T> NewStorage(T[] array)
+        {
+            return null;
+        }
+
+        public NArrayStorage<T> NewStorage(T value)
+        {
+            return null;
         }
     }
 }
