@@ -15,6 +15,73 @@ namespace VectorAccelerator.Tests
             // end up with vectors of variates. Put each one through interpolation.
         }
         
+
+        public void ConditionalExample()
+        {
+            int length = 1000;
+            NArray x = NArray.CreateFromEnumerable(Enumerable.Range(0, length).Select(i => (double)i / length));
+
+            var y = x > 0.5;
+
+            //x[y] = 6;
+
+            //var subset = x[y];
+
+            //var y = x[x > 0.5];
+        }
+
+
+        public void VectorBinarySearch()
+        {
+            int length = 1000;
+            var values = NArray.CreateFromEnumerable(Enumerable.Range(0, length).Select(i => (double)i / length + 0.5));
+            NArray x = NArray.CreateFromEnumerable(Enumerable.Range(0, length).Select(i => (double)i / length));
+            NArray y = NArray.CreateFromEnumerable(Enumerable.Range(0, length).Select(i => 5 + (double)i / length));
+
+            var left = NArrayInt.CreateConstantLike(0, values);
+            var right = NArrayInt.CreateConstantLike(x.Length - 1, values);
+            var mid = (left + right) >> 1;
+
+            //// we are going to stop when right - left = 1
+            //// for the vector version, we cannot allow the break condition to be different for different
+            //// vector elements
+
+            int elements = x.Length - 1;
+
+            while (elements > 1)
+            {
+                var active = (right - left) > 1;
+                var midValue = x[mid];
+
+                right.Assign(
+                    () => midValue >= values && active,
+                    () => mid);
+                
+                // in theory we could also write: 
+                //right[midValue >= values && active] = mid;
+                // A conditional in a CUDA kernel would cause the evaluation of both branches 
+                // But we can be more efficient on CPU (e.g. VML mask vector indexing)
+
+
+                //right.Assign()
+
+                 // asign partial
+            
+                //    left[midValue < value && active] = mid;
+            //    mid = left + right >> 1;
+            //    elements >> 1;
+            }
+
+            //while ((right - left) > 1)
+            //{
+            //    if (x[mid] >= value)
+            //        right = mid;
+            //    else
+            //        left = mid;
+            //    mid = (left + right) >> 1;
+            //}
+        }
+
         public void StandardFormInterpolateTest()
         {
             // knot-points:

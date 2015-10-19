@@ -8,13 +8,13 @@ namespace VectorAccelerator.DeferredExecution
     /// <summary>
     /// Unary operation that scales and offsets the operand to obtain a new vector.
     /// </summary>
-    public class ScaleOffsetOperation : UnaryVectorOperation
+    public class ScaleOffsetOperation<T> : UnaryVectorOperation<T>
     {
-        public readonly double Scale;
-        public readonly double Offset;
+        public readonly T Scale;
+        public readonly T Offset;
 
-        public ScaleOffsetOperation(NArray operand, NArray result, double scale, double offset,
-            Action<NArray, double, double, NArray> scaleOffsetOperation)
+        public ScaleOffsetOperation(NArray<T> operand, NArray<T> result, T scale, T offset,
+            Action<NArray<T>, T, T, NArray<T>> scaleOffsetOperation)
             : base(operand, result, (op, res) => scaleOffsetOperation(op, scale, offset, res))
         {
             Scale = scale;
@@ -26,8 +26,8 @@ namespace VectorAccelerator.DeferredExecution
             get { return true; }
         }
 
-        public ScaleOffsetOperation(NArray operand, NArray result, double scale, double offset,
-            Action<NArray, NArray> scaleOffsetOperation)
+        public ScaleOffsetOperation(NArray<T> operand, NArray<T> result, T scale, T offset,
+            Action<NArray<T>, NArray<T>> scaleOffsetOperation)
             : base(operand, result, scaleOffsetOperation)
         {
             Scale = scale;
@@ -39,9 +39,9 @@ namespace VectorAccelerator.DeferredExecution
             return string.Join(" ", Result.ToString(), "=", Scale.ToString(), "*", Operand.ToString(), "+", Offset.ToString());
         }
 
-        public override NArrayOperation Clone(Func<NArray, NArray> transform)
+        public override NArrayOperation<T> Clone(Func<NArray<T>, NArray<T>> transform)
         {
-            return new ScaleOffsetOperation(transform(Operand), transform(Result), Scale, Offset, Operation);
+            return new ScaleOffsetOperation<T>(transform(Operand), transform(Result), Scale, Offset, Operation);
         }
     }
 }

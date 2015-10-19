@@ -5,7 +5,7 @@ using System.Text;
 
 namespace VectorAccelerator.DeferredExecution.VectorOperations
 {
-    class FillRandomOperation : NArrayOperation
+    class FillRandomOperation<T> : NArrayOperation<T>
     {
         public override bool IsVectorOperation
         {

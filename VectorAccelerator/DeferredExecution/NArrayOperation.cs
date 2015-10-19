@@ -10,19 +10,22 @@ namespace VectorAccelerator.DeferredExecution
 {
     public class NArrayOperation
     {
-        public NArray Result;
-
         /// <summary>
         /// Whether this operation is a vector operation (i.e. can be split into smaller vector operations)
         /// </summary>
         public virtual bool IsVectorOperation { get { return false; } }
+    }
 
-        public virtual NArrayOperation Clone(Func<NArray, NArray> transform)
+    public class NArrayOperation<T> : NArrayOperation
+    {
+        public NArray<T> Result;
+
+        public virtual NArrayOperation<T> Clone(Func<NArray<T>, NArray<T>> transform)
         {
-            return new NArrayOperation() { Result = transform(Result) };
+            return new NArrayOperation<T>() { Result = transform(Result) };
         }
 
-        public virtual IList<NArray> Operands()
+        public virtual IList<NArray<T>> Operands()
         {
             return null;
         }

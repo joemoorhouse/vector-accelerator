@@ -5,7 +5,7 @@ using System.Text;
 
 namespace VectorAccelerator.DeferredExecution
 {
-    public class MatrixMultiplyOperation : NArrayOperation
+    public class MatrixMultiplyOperation : NArrayOperation<double>
     {
         public readonly NArray Operand1;
         public readonly NArray Operand2;

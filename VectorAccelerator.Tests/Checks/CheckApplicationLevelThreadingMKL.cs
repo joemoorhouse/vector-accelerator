@@ -107,6 +107,7 @@ namespace VectorAccelerator.Tests.Checks
             for (int j = 0; j < 100; ++j)
             {
                 //result.FillNormal(random);
+
                 var temp = NMath.Exp(result);
                 result.Assign(NMath.Log(temp));
             }

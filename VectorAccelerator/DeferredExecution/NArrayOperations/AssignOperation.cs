@@ -5,12 +5,12 @@ using System.Text;
 
 namespace VectorAccelerator.DeferredExecution
 {
-    public class AssignOperation : NArrayOperation
+    public class AssignOperation<T> : NArrayOperation<T>
     {
-        public readonly NArray Left;
-        public readonly NArray Right;
+        public readonly NArray<T> Left;
+        public readonly NArray<T> Right;
 
-        public AssignOperation(NArray left, NArray right)
+        public AssignOperation(NArray<T> left, NArray<T> right)
         {
             Left = left;
             Right = right;

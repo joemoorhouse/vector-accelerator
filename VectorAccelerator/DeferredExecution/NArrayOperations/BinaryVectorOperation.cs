@@ -8,14 +8,14 @@ namespace VectorAccelerator.DeferredExecution
     /// <summary>
     /// Operation with two vector operands that returns a new vector.
     /// </summary>
-    public class BinaryVectorOperation : NArrayOperation
+    public class BinaryVectorOperation<T> : NArrayOperation<T>
     {
-        public readonly NArray Operand1;
-        public readonly NArray Operand2;
-        public readonly Action<NArray, NArray, NArray> Operation;
+        public readonly NArray<T> Operand1;
+        public readonly NArray<T> Operand2;
+        public readonly Action<NArray<T>, NArray<T>, NArray<T>> Operation;
 
-        public BinaryVectorOperation(NArray operand1, NArray operand2, NArray result,
-            Action<NArray, NArray, NArray> operation)
+        public BinaryVectorOperation(NArray<T> operand1, NArray<T> operand2, NArray<T> result,
+            Action<NArray<T>, NArray<T>, NArray<T>> operation)
         {
             Operand1 = operand1;
             Operand2 = operand2;
@@ -46,14 +46,14 @@ namespace VectorAccelerator.DeferredExecution
             else return "?";
         }
 
-        public override NArrayOperation Clone(Func<NArray, NArray> transform)
+        public override NArrayOperation<T> Clone(Func<NArray<T>, NArray<T>> transform)
         {
-            return new BinaryVectorOperation(transform(Operand1), transform(Operand2), transform(Result), Operation);
+            return new BinaryVectorOperation<T>(transform(Operand1), transform(Operand2), transform(Result), Operation);
         }
 
-        public override IList<NArray> Operands()
+        public override IList<NArray<T>> Operands()
         {
-            return new List<NArray> { Operand1, Operand2 };
+            return new List<NArray<T>> { Operand1, Operand2 };
         }
     }
 }

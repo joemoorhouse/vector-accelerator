@@ -8,12 +8,13 @@ namespace VectorAccelerator.DeferredExecution
     /// <summary>
     /// Operation with a single vector operand that returns a new vector.
     /// </summary>
-    public class UnaryVectorOperation : NArrayOperation
+    public class UnaryVectorOperation<T> : NArrayOperation<T>
     {
-        public readonly NArray Operand;
-        public readonly Action<NArray, NArray> Operation;
+        public readonly NArray<T> Operand;
+        public readonly Action<NArray<T>, NArray<T>> Operation;
+        //public readonly UnaryElementWiseOperation 
 
-        public UnaryVectorOperation(NArray operand, NArray result, Action<NArray, NArray> operation)
+        public UnaryVectorOperation(NArray<T> operand, NArray<T> result, Action<NArray<T>, NArray<T>> operation)
         {
             Operand = operand;
             Result = result;
@@ -43,14 +44,14 @@ namespace VectorAccelerator.DeferredExecution
             else return "?";
         }
 
-        public override NArrayOperation Clone(Func<NArray, NArray> transform)
+        public override NArrayOperation<T> Clone(Func<NArray<T>, NArray<T>> transform)
         {
-            return new UnaryVectorOperation(transform(Operand), transform(Result), Operation);
+            return new UnaryVectorOperation<T>(transform(Operand), transform(Result), Operation);
         }
 
-        public override IList<NArray> Operands()
+        public override IList<NArray<T>> Operands()
         {
-            return new List<NArray> { Operand };
+            return new List<NArray<T>> { Operand };
         }
     }
 }

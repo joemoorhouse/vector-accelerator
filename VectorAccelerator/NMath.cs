@@ -11,34 +11,45 @@ namespace VectorAccelerator
     {
         public static NArray Exp(NArray operand)
         {
-            return ExecutionContext.Executor.ElementWiseExp(operand);
+            return ExecutionContext.Executor.UnaryElementWiseOperation(operand, UnaryElementWiseOperation.Exp) as NArray;
         }
 
         public static NArray Log(NArray operand)
         {
-            return ExecutionContext.Executor.ElementWiseLog(operand);
+            return ExecutionContext.Executor.UnaryElementWiseOperation(operand, UnaryElementWiseOperation.Log) as NArray;
         }
 
         public static NArray CumulativeNormal(NArray operand)
         {
-            return ExecutionContext.Executor.ElementWiseCumulativeNormal(operand);
+            return ExecutionContext.Executor.UnaryElementWiseOperation(operand, UnaryElementWiseOperation.CumulativeNormal) as NArray;
         }
 
         public static NArray InverseCumulativeNormal(NArray operand)
         {
-            return ExecutionContext.Executor.ElementWiseInverseCumulativeNormal(operand);
+            return ExecutionContext.Executor.UnaryElementWiseOperation(operand, UnaryElementWiseOperation.InverseCumulativeNormal) as NArray;
         }
 
         public static NArray Sqrt(NArray operand)
         {
-            return ExecutionContext.Executor.ElementWiseSquareRoot(operand);
+            return ExecutionContext.Executor.UnaryElementWiseOperation(operand, UnaryElementWiseOperation.SquareRoot) as NArray;
         }
 
         public static NArray InvSqrt(NArray operand)
         {
-            return ExecutionContext.Executor.ElementWiseInverseSquareRoot(operand);
+            return ExecutionContext.Executor.UnaryElementWiseOperation(operand, UnaryElementWiseOperation.InverseSquareRoot) as NArray;
         }
-        //public static While(NArray predicta)
+
+        public static void MatrixMultiply(NArray a, NArray b, NArray c)
+        {
+            
+        }
+
+        public static NArray<T> CreateNArray<T>(NArrayStorage<T> storage)
+        {
+            if (typeof(T) == typeof(double)) return new NArray(storage as NArrayStorage<double>) as NArray<T>;
+            //else if (typeof(T) == typeof(int)) return new NArrayInt(storage as NArrayStorage<int>) as NArray<T>;
+            else return null;
+        }
     }
 
     public static class NExtensions

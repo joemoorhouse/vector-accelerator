@@ -18,12 +18,16 @@ namespace VectorAccelerator.Launcher
             var test4 = new ThrowAwayTests();
             var test5 = new DistributionTests();
             var test6 = new SpeedComparison();
+            var test7 = new InterpolationTest();
+
+            test7.VectorBinarySearch();
 
             // good tests:
             //test3.TranscendentalFunctionTest();
-            //test.TestBlackScholes();
+            test.TestBlackScholes();
+            //test2.OptionPricingTest();
 
-            test2.OptionPricingTest();
+
 
             //test6.OptionPricingTest();
             //test5.TestRandomNumberGeneration();

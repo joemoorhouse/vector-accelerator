@@ -19,6 +19,10 @@ namespace VectorAccelerator.Tests
         [TestMethod]
         public void OptionPricingTest()
         {
+            var a = new NArray(Enumerable.Range(0, 10).Select(i => (double)i).ToArray());
+            var b = new NArray(Enumerable.Range(0, 10).Select(i => (double)i * 2).ToArray());
+            var c = 5 - b;
+            var check = c.First();
             IntelMathKernelLibrary.SetAccuracyMode(VMLAccuracy.LowAccuracy);
             IntelMathKernelLibrary.SetSequential();
             using (var randomStream = new RandomNumberStream(RandomNumberGeneratorType.MRG32K3A, 111))

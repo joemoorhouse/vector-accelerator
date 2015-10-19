@@ -27,7 +27,7 @@ namespace VectorAccelerator
 
         public bool IsScalar { get { return (Length == 1); } }
         public bool IsVector { get { return RowCount == 1 || ColumnCount == 1; } }
-        
+
         protected NArrayStorage<T> _storage;
 
         public virtual NArrayStorage<T> Storage
@@ -76,11 +76,50 @@ namespace VectorAccelerator
             Length = storage.Length;
         }
 
-        protected abstract IStorageCreator<T> StorageCreator { get; }
+        /// <summary>
+        /// To be used only for debugging
+        /// </summary>
+        public IEnumerable<T> DebugDataView
+        {
+            get
+            {
+                if (Storage is ManagedStorage<T>)
+                {
+                    var managedStorage = Storage as ManagedStorage<T>;
+                    return managedStorage.Array.Skip(managedStorage.ArrayStart).Take(managedStorage.Length).ToArray();
+                }
+                else return null;
+            }
+        }
+
+        public T First()
+        {
+            return Storage.First();
+        }
+
+        protected IStorageCreator<T> StorageCreator 
+        { 
+            get 
+            {
+                if (this is ILocalNArray)
+                {
+                    return new NullStorageCreator<T>();
+                }
+                else
+                {
+                    return new ManagedStorageCreator<T>();
+                }
+            }
+        }
 
         private bool StorageMatches(NArrayStorage<T> storage)
         {
             return storage.RowCount == RowCount && storage.ColumnCount == ColumnCount; 
+        }
+
+        public NArray<T> Slice(int startIndex, int length)
+        {
+            return NMath.CreateNArray(Storage.Slice(startIndex, length));
         }
     }
 
@@ -101,51 +140,23 @@ namespace VectorAccelerator
 
         public NArray(NArrayStorage<double> storage) : base(storage) { }
 
-        protected override IStorageCreator<double> StorageCreator
-        {
-            get 
-            {
-                if (this is LocalNArray)
-                {
-                    return new NullStorageCreator<double>();
-                }
-                else
-                {
-                    return new ManagedStorageCreator<double>();
-                }
-            }
-        }
-
-        /// <summary>
-        /// To be used only for debugging
-        /// </summary>
-        public IEnumerable<double> DebugDataView
-        {
-            get 
-            {
-                if (Storage is ManagedStorage<double>)
-                {
-                    var managedStorage = Storage as ManagedStorage<double>;
-                    return managedStorage.Array.Skip(managedStorage.ArrayStart).Take(managedStorage.Length);
-                }
-                else return null;
-            }
-        }
-
-        public NArray Slice(int startIndex, int length)
-        {
-            return new NArray(Storage.Slice(startIndex, length));
-        }
-
         public static NArray CreateLike(NArray a)
         {
             return new NArray(a.Storage.Length);
+        }
+
+        public static NArray<T> CreateLike<T>(NArray a)
+        {
+            if (typeof(T) == typeof(double)) return CreateLike(a) as NArray<T>;
+            else if (typeof(T) == typeof(bool)) return new NArrayBool(a.Storage.Length) as NArray<T>;
+            else throw new ArgumentException();
         }
 
         public static NArray CreateLike(NArray a, NArray b)
         {
             if (a.Storage.Length != b.Storage.Length)
                 throw new ArgumentException("dimensions of a and b do not match");
+            // temporary: move to provider
             return new NArray(a.Storage.Length);
         }
 
@@ -153,18 +164,13 @@ namespace VectorAccelerator
         {
             var array = enumerable.ToArray();
             var newNArray = new NArray(array);
-            // temporary
+            // temporary: move to provider
             return newNArray;
         }
 
         public static NArray CreateFromEnumerable(IEnumerable<int> enumerable)
         {
             return CreateFromEnumerable(enumerable.Select(i => (double)i));
-        }
-
-        public double First()
-        {
-            return Storage.First();
         }
 
         public void Assign(NArray operand)
@@ -175,6 +181,11 @@ namespace VectorAccelerator
         public void Assign(Func<NArray> operand)
         {
             ExecutionContext.Executor.Assign(this, operand());
+        }
+
+        public void Assign(Func<NArrayBool> condition, Func<NArray> operand)
+        {
+            throw new NotImplementedException();
         }
 
         public static VectorAccelerator.DeferredExecution.DeferredExecutionContext DeferredExecution()
@@ -202,29 +213,63 @@ namespace VectorAccelerator
 
         public static NArray operator +(NArray operand1, NArray operand2)
         {
-            return ExecutionContext.Executor.ElementWiseAdd(operand1, operand2);
+            return ExecutionContext.Executor.ElementWiseAdd(operand1, operand2) as NArray;
         }
 
         public static NArray operator -(NArray operand1, NArray operand2)
         {
-            return ExecutionContext.Executor.ElementWiseSubtract(operand1, operand2);
+            return ExecutionContext.Executor.ElementWiseSubtract(operand1, operand2) as NArray;
         }
 
         public static NArray operator *(NArray operand1, NArray operand2)
         {
-            return ExecutionContext.Executor.ElementWiseMultiply(operand1, operand2);
+            return ExecutionContext.Executor.ElementWiseMultiply(operand1, operand2) as NArray; ;
         }
 
         public static NArray operator /(NArray operand1, NArray operand2)
         {
-            return ExecutionContext.Executor.ElementWiseDivide(operand1, operand2);
+            return ExecutionContext.Executor.ElementWiseDivide(operand1, operand2) as NArray; ;
+        }
+
+        #endregion
+
+        #region Relational Operators
+
+        public static NArrayBool operator <(NArray operand1, NArray operand2)
+        {
+            return ExecutionContext.Executor.RelativeOperation(operand1, operand2, RelativeOperator.LessThan);
+        }
+
+        public static NArrayBool operator <=(NArray operand1, NArray operand2)
+        {
+            return ExecutionContext.Executor.RelativeOperation(operand1, operand2, RelativeOperator.LessThanEquals);
+        }
+
+        public static NArrayBool operator ==(NArray operand1, NArray operand2)
+        {
+            return ExecutionContext.Executor.RelativeOperation(operand1, operand2, RelativeOperator.Equals);
+        }
+
+        public static NArrayBool operator !=(NArray operand1, NArray operand2)
+        {
+            return ExecutionContext.Executor.RelativeOperation(operand1, operand2, RelativeOperator.NotEquals);
+        }
+
+        public static NArrayBool operator >=(NArray operand1, NArray operand2)
+        {
+            return ExecutionContext.Executor.RelativeOperation(operand1, operand2, RelativeOperator.GreaterThanEquals);
+        }
+
+        public static NArrayBool operator >(NArray operand1, NArray operand2)
+        {
+            return ExecutionContext.Executor.RelativeOperation(operand1, operand2, RelativeOperator.GreaterThan);
         }
 
         #endregion
 
         public static NArray operator -(NArray operand)
         {
-            return ExecutionContext.Executor.ElementWiseNegate(operand);
+            return ExecutionContext.Executor.ElementWiseNegate(operand) as NArray;
         }
 
         public void Add(NArray operand)
@@ -244,6 +289,16 @@ namespace VectorAccelerator
             ExecutionContext.Executor.FillRandom(distribution, this);
         }
 
+        public NArray this[NArrayInt indices]
+        {
+            get { return ExecutionContext.Executor.Index(this, indices) as NArray; }
+        }
+
+        public NArray this[NArrayBool condition]
+        {
+            set { ExecutionContext.Executor.Assign(this, () => value, () => condition); }
+        }
+
         /// <summary>
         /// If the element i of the boolean 'condition' vector, condition[i] is true, condition[i]
         /// is set to ifTrue[i], otherwise condition[i] is set to ifFalse[i]
@@ -259,20 +314,6 @@ namespace VectorAccelerator
         public void AssignIfElse(NArray condition, NArray ifTrue, NArray ifFalse)
         {
 
-        }
-    }
-
-    /// <summary>
-    /// An N-dimensional array of integers.
-    /// </summary>
-    public class NArrayInt : NArray<int>
-    {
-        public NArrayInt(int length)
-            : base(length) { }
-
-        protected override IStorageCreator<int> StorageCreator
-        {
-            get { throw new NotImplementedException(); }
         }
     }
 
