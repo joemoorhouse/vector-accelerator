@@ -7,14 +7,14 @@ namespace VectorAccelerator.DeferredExecution
 {
     public class DeferredExecutionContext : IDisposable
     {
-        DeferredPrimitivesExecutor _executor;
+        DeferringExecutor _executor;
         IExecutor _previousExecutor;
         VectorExecutionOptions _options;
 
         public DeferredExecutionContext(VectorExecutionOptions options)
         {
             //_executor = new ExpressionBuildingExecutor();
-            _executor = new DeferredPrimitivesExecutor();
+            _executor = new DeferringExecutor();
             _previousExecutor = ExecutionContext.Executor;
             _options = options;
             ExecutionContext.Executor = _executor;

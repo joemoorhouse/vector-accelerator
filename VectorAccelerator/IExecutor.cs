@@ -8,7 +8,7 @@ using VectorAccelerator.Distributions;
 namespace VectorAccelerator
 {    
     public enum RelativeOperator { LessThan, LessThanEquals, Equals, NotEquals, GreaterThanEquals, GreaterThan }
-    
+  
     public interface IExecutor
     {
         /// <summary>
@@ -58,11 +58,15 @@ namespace VectorAccelerator
 
         NArray<T> ElementWiseNegate<T>(NArray<T> operand);
 
-        IDisposable CreateRandomNumberStream(RandomNumberGeneratorType type, int seed);
+        IDisposable CreateRandomNumberStream(StorageLocation location, RandomNumberGeneratorType type, int seed);
 
         void FillRandom(ContinuousDistribution distribution, NArray operand);
 
         NArray<T> Index<T>(NArray<T> operand, NArrayInt indices);
+
+        void CholeskyDecomposition(NArray operand);
+
+        void EigenvalueDecomposition(NArray operand, NArray eigenvectors, NArray eignenvalues);
 
         #endregion
     }

@@ -5,13 +5,16 @@ using System.Text;
 using System.Threading.Tasks;
 using VectorAccelerator.Tests;
 using VectorAccelerator.Tests.Checks;
+using VectorAccelerator.Tests.Financial.CounterpartyCreditRisk;
+using Random = System.Random;
+using System.Diagnostics;
 
 namespace VectorAccelerator.Launcher
 {
     class Program
     {
         static void Main(string[] args)
-        {
+        {   
             var test = new AcceleratorTestsCPU();
             var test2 = new SimpleCounterpartyRiskTest();
             var test3 = new CheckApplicationLevelThreadingMKL();
@@ -19,6 +22,13 @@ namespace VectorAccelerator.Launcher
             var test5 = new DistributionTests();
             var test6 = new SpeedComparison();
             var test7 = new InterpolationTest();
+
+            var test8 = new InterestRateModel();
+            var test9 = new LinearAlgebraTests();
+
+            test9.IntelMKLTests();
+
+            test8.CheckHullWhite();
 
             test7.VectorBinarySearch();
 

@@ -11,8 +11,8 @@ namespace VectorAccelerator.DeferredExecution
     public class UnaryVectorOperation<T> : NArrayOperation<T>
     {
         public readonly NArray<T> Operand;
+        public readonly UnaryElementWiseOperation OperationType;
         public readonly Action<NArray<T>, NArray<T>> Operation;
-        //public readonly UnaryElementWiseOperation 
 
         public UnaryVectorOperation(NArray<T> operand, NArray<T> result, Action<NArray<T>, NArray<T>> operation)
         {

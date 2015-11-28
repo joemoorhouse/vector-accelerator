@@ -15,14 +15,16 @@ namespace VectorAccelerator.Tests
     {
         public void OptionPricingTest()
         {
-            IntelMathKernelLibrary.SetAccuracyMode(VMLAccuracy.HighAccuracy);
+            var location = StorageLocation.Host;
             
-            using (var randomStream = new RandomNumberStream(RandomNumberGeneratorType.MRG32K3A, 111))
+            IntelMathKernelLibrary.SetAccuracyMode(VMLAccuracy.HighAccuracy);
+
+            using (var randomStream = new RandomNumberStream(location, RandomNumberGeneratorType.MRG32K3A, 111))
             {
                 var normalDistribution = new Normal(randomStream, 0, 1);
 
-                var optionPricesVector = new NArray(5000);
-                var optionPricesIndexed = new NArray(5000);
+                var optionPricesVector = new NArray(location, 5000);
+                var optionPricesIndexed = new NArray(location, 5000);
 
                 var variates = NArray.CreateRandom(optionPricesVector.Length, normalDistribution);
 

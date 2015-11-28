@@ -8,24 +8,19 @@ namespace VectorAccelerator.DeferredExecution
     /// <summary>
     /// Operation with two vector operands that returns a new vector.
     /// </summary>
-    public class BinaryVectorOperation<T> : NArrayOperation<T>
+    public abstract class BinaryOperation<T> : NArrayOperation<T>
     {
         public readonly NArray<T> Operand1;
         public readonly NArray<T> Operand2;
         public readonly Action<NArray<T>, NArray<T>, NArray<T>> Operation;
 
-        public BinaryVectorOperation(NArray<T> operand1, NArray<T> operand2, NArray<T> result,
-            Action<NArray<T>, NArray<T>, NArray<T>> operation)
+        public BinaryOperation(NArray<T> operand1, NArray<T> operand2, NArray<T> result,
+            Action<NArray<T>, NArray<T>, NArray<T>> operation = null)
         {
             Operand1 = operand1;
             Operand2 = operand2;
             Result = result;
             Operation = operation;
-        }
-
-        public override bool IsVectorOperation
-        {
-            get { return true; }
         }
 
         public override string ToString()
@@ -46,14 +41,27 @@ namespace VectorAccelerator.DeferredExecution
             else return "?";
         }
 
-        public override NArrayOperation<T> Clone(Func<NArray<T>, NArray<T>> transform)
-        {
-            return new BinaryVectorOperation<T>(transform(Operand1), transform(Operand2), transform(Result), Operation);
-        }
-
         public override IList<NArray<T>> Operands()
         {
             return new List<NArray<T>> { Operand1, Operand2 };
+        }
+    }
+
+    public class BinaryVectorOperation<T> : BinaryOperation<T>
+    {
+        public readonly BinaryElementWiseOperation OperationType;
+
+        public BinaryVectorOperation(NArray<T> operand1, NArray<T> operand2, NArray<T> result,
+            BinaryElementWiseOperation operationType, Action<NArray<T>, NArray<T>, NArray<T>> operation = null)
+            : base(operand1, operand2, result, operation)
+        {
+            OperationType = operationType;
+        }
+
+        public override NArrayOperation<T> Clone(Func<NArray<T>, NArray<T>> transform)
+        {
+            return new BinaryVectorOperation<T>(transform(Operand1), transform(Operand2), transform(Result), 
+                OperationType, Operation);
         }
     }
 }

@@ -18,7 +18,7 @@ namespace VectorAccelerator
     {
         int _index;
 
-        public LocalNArray(int index, int length) : base(length)
+        public LocalNArray(int index, int length) : base(StorageLocation.None, length)
         {
             _index = index;
         }
@@ -42,7 +42,7 @@ namespace VectorAccelerator
         int _index;
 
         public LocalNArrayInt(int index, int length)
-            : base(length)
+            : base(StorageLocation.None, length)
         {
             _index = index;
         }

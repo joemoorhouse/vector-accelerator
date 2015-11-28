@@ -9,6 +9,29 @@ namespace VectorAccelerator.NArrayStorage
     {
         T[] _storage;
         int _storageStart = 0;
+        int _stride = 1;
+
+        public T[] Array
+        {
+            get { return _storage; }
+        }
+
+        internal override T this[int index]
+        {
+            get { return _storage[index]; }
+            set { _storage[index] = value; }
+        }
+
+        internal T this[int row, int column]
+        {
+            get { return _storage[_storageStart + _stride * column + row]; }
+            set { _storage[_storageStart + _stride * column + row] = value; }
+        }
+
+        public int ArrayStart
+        {
+            get { return _storageStart; }
+        }
 
         public ManagedStorage(T value) : base(1)
         {
@@ -20,8 +43,9 @@ namespace VectorAccelerator.NArrayStorage
             CreateStorage(Length);
         }
 
-        public ManagedStorage(int rowCount, int columnCount) : base(rowCount * columnCount)
+        public ManagedStorage(int rowCount, int columnCount) : base(rowCount, columnCount)
         {
+            _stride = rowCount;
             CreateStorage(Length);
         }
 
@@ -35,20 +59,16 @@ namespace VectorAccelerator.NArrayStorage
             CreateStorage(array, startIndex, length);
         }
 
-        public override T this[int index]
+        public ManagedStorage(T[,] array)
+            : base(array.GetLength(0), array.GetLength(1))
         {
-            get { return _storage[index]; }
-            set { _storage[index] = value; }
+            _stride = RowCount;
+            CreateStorage(array);
         }
 
-        public T[] Array
+        public ManagedStorage<T> Clone()
         {
-            get { return _storage; }
-        }
-
-        public int ArrayStart
-        {
-            get { return _storageStart; }
+            return new ManagedStorage<T>((T[])_storage.Clone(), _storageStart, Length);
         }
 
         private void CreateStorage(int length)
@@ -68,57 +88,153 @@ namespace VectorAccelerator.NArrayStorage
             _storageStart = startIndex;
         }
 
-        public override T First()
+        private void CreateStorage(T[,] array)
+        {
+            _storage = new T[array.Length];
+            int index = 0;
+            for (int i = 0; i < RowCount; ++i)
+            {
+                for (int j = 0; j < ColumnCount; ++j)
+                {
+                    _storage[index++] = array[i, j];
+                }
+            }
+        }
+
+        internal override T First()
         {
             return _storage[0];
         }
 
-        public override bool Matches(NArrayStorage<T> other)
+        internal override bool Matches(NArrayStorage<T> other)
         {
             var managedOther = other as ManagedStorage<double>;
             if (managedOther == null) return false;
             return managedOther.Length == Length;
         }
 
-        public override NArrayStorage<T> Slice(int startIndex, int length)
+        internal override NArrayStorage<T> SliceAsReference(int startIndex, int length)
         {
             return new ManagedStorage<T>(_storage, startIndex, length);
         }
-    }
 
-    public class ManagedStorageCreator<T> : IStorageCreator<T>
-    {
-        public NArrayStorage<T> NewStorage(int rowCount, int columnCount)
+        internal override NArrayStorage<T> ColumnAsReference(int columnIndex)
         {
-            return new ManagedStorage<T>(rowCount, columnCount);
+            return new ManagedStorage<T>(_storage, _storageStart + columnIndex * _stride, RowCount);
         }
 
-        public NArrayStorage<T> NewStorage(T[] array)
+        internal override void CopySubMatrixTo(NArrayStorage<T> target, 
+            int sourceRowIndex, int targetRowIndex, int rowCount,
+            int sourceColumnIndex, int targetColumnIndex, int columnCount)
         {
-            return new ManagedStorage<T>(array);
+            var targetManaged = target as ManagedStorage<T>;
+         
+            for (int j = sourceColumnIndex, jj = targetColumnIndex; j < sourceColumnIndex + columnCount; j++, jj++)
+            {
+                System.Array.Copy(_storage, _storageStart + j * _stride + sourceRowIndex, targetManaged._storage, 
+                    targetManaged._storageStart + jj * targetManaged._stride + targetRowIndex, rowCount);
+            }
         }
 
-        public NArrayStorage<T> NewStorage(T value)
+        internal override NArrayStorage<T> Transpose()
         {
-            return new ManagedStorage<T>(value);
-        }
-    }
-
-    public class NullStorageCreator<T> : IStorageCreator<T>
-    {
-        public NArrayStorage<T> NewStorage(int rowCount, int columnCount)
-        {
-            return null;
-        }
-
-        public NArrayStorage<T> NewStorage(T[] array)
-        {
-            return null;
+            AssertIsNotReferenceMatrix(this);
+            var transpose = new ManagedStorage<T>(ColumnCount, RowCount);
+            for (int i = 0; i < RowCount; ++i)
+            {
+                for (int j = 0; j < ColumnCount; ++j)
+                {
+                    transpose[j, i] = this[i, j];
+                }
+            }
+            return transpose;
         }
 
-        public NArrayStorage<T> NewStorage(T value)
+        internal override NArrayStorage<T> Diagonal(int rowCount, int columnCount)
         {
-            return null;
+            int minDimension = Math.Min(rowCount, columnCount);
+            if (this.Length != minDimension)
+            {
+                throw new ArgumentException("diagonalArray must have length equal to the lesser of the row count and column count of matrixToFill");
+            }
+            var diagonal = new ManagedStorage<T>(rowCount, columnCount);
+            for (int i = 0; i < minDimension; ++i)
+            {
+                diagonal[i, i] = this[i];
+            }
+            return diagonal;
+        }
+
+        internal override NArrayStorage<T> Clone(MatrixRegion region = MatrixRegion.All)
+        {
+            if (RowCount != ColumnCount && region != MatrixRegion.All) throw new ArgumentException("only square matrices can be upper or lower triangular");
+            var clone = new ManagedStorage<T>(RowCount, ColumnCount);
+            CopyRegionTo(clone, region);
+            return clone;
+        }
+
+        private void CopyRegionTo(ManagedStorage<T> target, MatrixRegion region)
+        {
+            switch (region)
+            {
+                case MatrixRegion.All:
+                    CopySubMatrixTo(target, 0, 0, RowCount, 0, 0, ColumnCount);
+                    break;
+                case MatrixRegion.LowerTriangle:
+                    for (int i = 0; i < RowCount; ++i)
+                    {
+                        for (int j = 0; j <= i; ++j)
+                        {
+                            target[i, j] = this[i, j];
+                        }
+                    }
+                    break;
+                case MatrixRegion.UpperTriangle:
+                    for (int i = 0; i < RowCount; ++i)
+                    {
+                        for (int j = i; j < ColumnCount; ++j)
+                        {
+                            target[i, j] = this[i, j];
+                        }
+                    }
+                    break;
+                    
+            }
+        }
+
+        private void CopySubRowTo(NArrayStorage<T> target, 
+            int rowIndex, int sourceColumnIndex, int targetColumnIndex, int columnCount)
+        {
+            AssertIsNotReferenceMatrix(this);
+            
+            var targetManaged = target as ManagedStorage<T>;
+
+            AssertIsNotReferenceMatrix(targetManaged);
+
+            // optimisation possible where this and target are both vectors
+            if (this._stride == 1 && targetManaged._stride == 1)
+            {
+                System.Array.Copy(_storage, _storageStart + sourceColumnIndex, targetManaged._storage,
+                    targetManaged._storageStart + targetColumnIndex, columnCount);
+            }
+            else
+            {
+                for (int j = sourceColumnIndex, jj = targetColumnIndex; j < sourceColumnIndex + columnCount; j++, jj++)
+                {
+                    targetManaged._storage[targetManaged._storageStart + targetColumnIndex * _stride]
+                        = _storage[_storageStart + sourceColumnIndex * _stride + rowIndex];
+                }
+            }
+        }
+
+        /// <summary>
+        /// Asset that this matrix
+        /// </summary>
+        /// <param name="storage"></param>
+        private static void AssertIsNotReferenceMatrix(ManagedStorage<T> storage)
+        {
+            if (storage._storageStart != 0 || storage._stride != storage.RowCount)
+                throw Exceptions.OperationNotSupportedForReferenceMatrices();
         }
     }
 }

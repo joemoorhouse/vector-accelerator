@@ -18,9 +18,28 @@ namespace VectorAccelerator.LinearAlgebraProviders
         [DllImport("mkl_rt.dll", CallingConvention = CallingConvention.Cdecl,
             ExactSpelling = true, SetLastError = false)]
         internal static extern int cblas_dgemm(
-            int Order, int TransA, int TransB, int M, int N, int K,
-            double alpha, [In] double[,] A, int lda, [In] double[,] B, int ldb,
-            double beta, [In, Out] double[,] C, int ldc);
+            int order, int transA, int transB, int m, int n, int k,
+            double alpha, double* A, int lda, double* B, int ldb,
+            double beta, double* C, int ldc);
+
+        [DllImport("mkl_rt.dll", CallingConvention = CallingConvention.Cdecl,
+            ExactSpelling = true, SetLastError = false)]
+        internal static extern void DPOTRF(ref char uplo, ref int n, double* A, ref int lda, ref int info);
+
+        /// <summary>
+        /// Eigenvalue decomposition
+        /// </summary>
+        [DllImport("mkl_rt.dll", EntryPoint = "DSYEVR", CallingConvention = CallingConvention.Cdecl)]
+        private static extern void DSYEVR(ref char jobz, ref char range, ref char uplo, ref int n, 
+            double* A, ref int lda, ref double vl, ref double vu, ref int il, ref int iu, 
+            ref double abstol, ref int m, double* w, double* z, ref int ldz, 
+            int[] isuppz, double[] work, ref int lwork, int[] iwork, ref int liwork, ref int info);
+
+        [DllImport("mkl_rt.dll", EntryPoint = "DSYEVR", CallingConvention = CallingConvention.Cdecl)]
+        private static extern void DSYEVR2(ref char jobz, ref char range, ref char uplo, ref int n, 
+            double[] A, ref int lda, ref double vl, ref double vu, ref int il, ref int iu, 
+            ref double abstol, ref int m, double[] w, double[] z, ref int ldz, 
+            int[] isuppz, double[] work, ref int lwork, int[] iwork, ref int liwork, ref int info); 
 
         [DllImport("mkl_rt.dll", CallingConvention = CallingConvention.Cdecl,
             ExactSpelling = true, SetLastError = false)]
@@ -266,22 +285,99 @@ namespace VectorAccelerator.LinearAlgebraProviders
         }
 
         /// <summary>
-        /// C = A * B (* denotes matrix multiplication)
+        /// C = A * B (where '*' denotes matrix multiplication)
         /// </summary>
-        public static void MatrixMultiply(double[,] A, double[,] B, double[,] C, bool shouldTransposeA = false, bool shouldTransposeB = false)
+        public static void MatrixMultiply(ManagedStorage<double> a, ManagedStorage<double> b, ManagedStorage<double> c, 
+            bool aShouldTranspose = false, bool bShouldTranspose = false)
         {
-            int rowsA = shouldTransposeA ? A.GetLength(1) : A.GetLength(0);
-            int colsA = shouldTransposeA ? A.GetLength(0) : A.GetLength(1);
-            int rowsB = shouldTransposeB ? B.GetLength(1) : B.GetLength(0);
-            int colsB = shouldTransposeB ? B.GetLength(0) : B.GetLength(1);
-            int rowsC = C.GetLength(0);
-            int colsC = C.GetLength(1);
-            if (colsA != rowsB) throw new Exception("A and B are not compatible sizes.");
-            if ((rowsC != rowsA) || (colsC != colsB)) throw new Exception("C is incorrectly sized for output.");
-            int transposeA = shouldTransposeA ? (int)CBLAS_TRANSPOSE.CblasTrans : (int)CBLAS_TRANSPOSE.CblasNoTrans;
-            int transposeB = shouldTransposeB ? (int)CBLAS_TRANSPOSE.CblasTrans : (int)CBLAS_TRANSPOSE.CblasNoTrans;
-            int status = cblas_dgemm((int)CBLAS_ORDER.CblasRowMajor, transposeA, transposeB, rowsA, colsB,
-                colsA, 1.0, A, A.GetLength(1), B, B.GetLength(1), 0.0, C, C.GetLength(1));
+            int aRows = aShouldTranspose ? a.ColumnCount : a.RowCount; int aCols = aShouldTranspose ? a.RowCount : a.ColumnCount;
+            int bRows = bShouldTranspose ? b.ColumnCount : b.RowCount; int bCols = bShouldTranspose ? b.RowCount : b.ColumnCount;
+            int cRows = c.RowCount;
+            int cCols = c.ColumnCount;
+            if (aCols != bRows) throw new Exception("A and B are not compatible sizes.");
+            if ((cRows != aRows) || (cCols != bCols)) throw new Exception("C is incorrectly sized for output.");
+            int transposeA = aShouldTranspose ? (int)CBLAS_TRANSPOSE.CblasTrans : (int)CBLAS_TRANSPOSE.CblasNoTrans;
+            int transposeB = bShouldTranspose ? (int)CBLAS_TRANSPOSE.CblasTrans : (int)CBLAS_TRANSPOSE.CblasNoTrans;
+            fixed (double* p_a = &a.Array[a.ArrayStart])
+            {
+                fixed (double* p_b = &b.Array[b.ArrayStart])
+                {
+                    fixed (double* p_c = &c.Array[c.ArrayStart])
+                    {
+                        int status = cblas_dgemm((int)CBLAS_ORDER.CblasColMajor, transposeA, transposeB, aRows, bCols,
+                            aCols, 1.0, p_a, a.RowCount, p_b, b.RowCount, 0.0, p_c, c.RowCount);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Performs Cholesky decomposition of a matrix in place.
+        /// </summary>
+        /// <param name="matrix">The upper triangular part contains symmetric matrix on entry.
+        /// Lower triangular part contains decomposition on exit.</param>
+        /// <param name="positiveSemiDefinite">Whether matrix was positive semi-definite.</param>
+        public static void CholeskyDecomposition(ManagedStorage<double> a,
+            out bool positiveSemiDefinite)
+        {
+            if (a.RowCount != a.ColumnCount) throw new ArgumentException("matrix must be square.");
+            int lda = a.ColumnCount;
+            int info = -1;
+            int n = a.ColumnCount; //subMatrixDimension; // to only transform sub-matrix 
+            char uplo = 'L'; 
+            fixed (double* p_a = &a.Array[a.ArrayStart])
+            {
+                DPOTRF(ref uplo, ref n, p_a, ref lda, ref info);
+            }
+            positiveSemiDefinite = true;
+            if (info != 0) positiveSemiDefinite = false;
+        }
+
+        /// <summary>
+        /// Performs Eigenvalue decomposition.
+        /// </summary>
+        /// <param name="a"></param>
+        /// <param name="eigenvectors"></param>
+        /// <param name="eigenvalues"></param>
+        public static void EigenvalueDecomposition(ManagedStorage<double> a, ManagedStorage<double> eigenvectors,
+            ManagedStorage<double> eigenvalues)
+        {
+            int m = 0, info = 0;
+            int n = a.RowCount; 
+            var aClone = a.Clone();
+
+            int[] isuppz = new int[2 * n];
+
+            char jobz = 'V'; char range = 'A'; char uplo = 'U';
+            double[] work = new double[1];
+            int lwork = -1, liwork = -1;
+            int[] iwork = new int[1];
+            int lda = n; int ldz = n; int il, iu;
+            double vl, vu, abstol; vl = vu = abstol = 0;
+            il = iu = 0;
+
+            fixed (double* p_a = &aClone.Array[aClone.ArrayStart])
+            {
+                fixed (double* p_eigenvectors = &eigenvectors.Array[eigenvectors.ArrayStart])
+                {
+                    fixed (double* p_eigenvalues = &eigenvalues.Array[eigenvalues.ArrayStart])
+                    {
+                        DSYEVR(ref jobz, ref range, ref uplo, ref n, p_a, ref lda, ref vl, ref vu, ref il, ref iu, ref abstol, ref m, 
+                            p_eigenvalues, p_eigenvectors, ref ldz, isuppz, work, ref lwork, iwork, ref liwork, ref info);
+
+                        if (info != 0)
+                        {
+                            throw new Exception("Eigenvalue decomposition error.");
+                        }
+                        lwork = (int)work[0];
+                        work = new double[lwork];
+                        liwork = (int)iwork[0];
+                        iwork = new int[liwork];
+                        DSYEVR(ref jobz, ref range, ref uplo, ref n, p_a, ref lda, ref vl, ref vu, ref il, ref iu, ref abstol, ref m, 
+                            p_eigenvalues, p_eigenvectors, ref ldz, isuppz, work, ref lwork, iwork, ref liwork, ref info);
+                    }
+                }
+            }
         }
 
         public static void SetAccuracyMode(VMLAccuracy accuracy)

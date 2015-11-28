@@ -25,11 +25,13 @@ namespace VectorAccelerator.Tests.Checks
         {
             IntelMathKernelLibrary.SetSequential();
 
-            using (var randomStream = new RandomNumberStream(RandomNumberGeneratorType.MRG32K3A, 111))
+            var location = StorageLocation.Host;
+
+            using (var randomStream = new RandomNumberStream(location, RandomNumberGeneratorType.MRG32K3A, 111))
             {
                 var normalDistribution = new Normal(randomStream, 0, 1);
-                
-                var a = new NArray(5000);
+
+                var a = new NArray(location, 5000);
                 a.FillRandom(normalDistribution);
 
                 var watch = new Stopwatch(); watch.Start();

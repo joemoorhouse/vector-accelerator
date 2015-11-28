@@ -19,13 +19,15 @@ namespace VectorAccelerator.Tests
         [TestMethod]
         public void OptionPricingTest()
         {
-            var a = new NArray(Enumerable.Range(0, 10).Select(i => (double)i).ToArray());
-            var b = new NArray(Enumerable.Range(0, 10).Select(i => (double)i * 2).ToArray());
+            var location = StorageLocation.Host;
+
+            var a = new NArray(location, Enumerable.Range(0, 10).Select(i => (double)i).ToArray());
+            var b = new NArray(location, Enumerable.Range(0, 10).Select(i => (double)i * 2).ToArray());
             var c = 5 - b;
             var check = c.First();
             IntelMathKernelLibrary.SetAccuracyMode(VMLAccuracy.LowAccuracy);
             IntelMathKernelLibrary.SetSequential();
-            using (var randomStream = new RandomNumberStream(RandomNumberGeneratorType.MRG32K3A, 111))
+            using (var randomStream = new RandomNumberStream(location, RandomNumberGeneratorType.MRG32K3A, 111))
             {
                 var normalDistribution = new Normal(randomStream, 0, 1);
 
@@ -60,7 +62,7 @@ namespace VectorAccelerator.Tests
             double vol = 0.3;
 
             int vectorLength = 5000;
-            var optionPrices = new NArray(vectorLength);
+            var optionPrices = new NArray(StorageLocation.Host, vectorLength);
 
             var variates = NArray.CreateRandom(optionPrices.Length, normalDistribution);
 
@@ -104,7 +106,7 @@ namespace VectorAccelerator.Tests
             object lockObject = new object();
             var rangePartitioner = Partitioner.Create(0, deals.Count);
 
-            var sum = new NArray(vectorLength);
+            var sum = new NArray(StorageLocation.Host, vectorLength);
 
             var options = new ParallelOptions();// { MaxDegreeOfParallelism = 2 };
 
@@ -115,7 +117,7 @@ namespace VectorAccelerator.Tests
               options,
 
               // local initial partial result
-              () => new NArray(vectorLength),
+              () => new NArray(StorageLocation.Host, vectorLength),
 
               // loop body for each interval
               (range, loopState, initialValue) =>

@@ -10,12 +10,14 @@ namespace VectorAccelerator.Distributions
         public readonly RandomNumberGeneratorType Type;
         public readonly int Seed;
 
-        public IDisposable _innerStream;
         public IDisposable InnerStream { get { return _innerStream;  } }
 
-        public RandomNumberStream(RandomNumberGeneratorType type, int seed)
+        public StorageLocation Location { get { return _location; } }
+
+        public RandomNumberStream(StorageLocation location, RandomNumberGeneratorType type, int seed)
         {
-            _innerStream = ExecutionContext.Executor.CreateRandomNumberStream(type, seed);
+            _location = location;
+            _innerStream = ExecutionContext.Executor.CreateRandomNumberStream(location, type, seed);
             Type = type;
             Seed = seed;
         }
@@ -23,12 +25,15 @@ namespace VectorAccelerator.Distributions
         public void Reset()
         {
             _innerStream.Dispose();
-            _innerStream = ExecutionContext.Executor.CreateRandomNumberStream(Type, Seed);
+            _innerStream = ExecutionContext.Executor.CreateRandomNumberStream(_location, Type, Seed);
         }
 
         public void Dispose()
         {
             _innerStream.Dispose();
         }
+
+        private IDisposable _innerStream;
+        private StorageLocation _location;
     }
 }

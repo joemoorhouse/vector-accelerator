@@ -7,7 +7,7 @@ namespace VectorAccelerator
 {
     public class NArrayBool : NArray<bool>
     {
-        public NArrayBool(int length) : base(length) { }
+        public NArrayBool(StorageLocation location, int length) : base(location, length) { }
 
         public static NArrayBool operator &(NArrayBool operand1, NArrayBool operand2)
         {

@@ -16,8 +16,8 @@ namespace VectorAccelerator.DeferredExecution
     
     public class VectorOperationRunner
     {
-        public static void Execute(DeferredPrimitivesExecutor executor, 
-            ILinearAlgebraProvider provider, VectorExecutionOptions vectorOptions)
+        public static void Execute(DeferringExecutor executor, 
+            LinearAlgebraProvider provider, VectorExecutionOptions vectorOptions)
         {   
             //Console.WriteLine(executor.DebugString());
             int chunksLength = 1000;
@@ -131,11 +131,11 @@ namespace VectorAccelerator.DeferredExecution
             return array is ILocalNArray;
         }
 
-        private static IList<NArrayOperation> Simplify(DeferredPrimitivesExecutor executor,
-            ILinearAlgebraProvider provider)
+        private static IList<NArrayOperation> Simplify(DeferringExecutor executor,
+            LinearAlgebraProvider provider)
         {
             var operations = new List<NArrayOperation>();
-            operations.AddRange(executor.VectorOperations);
+            operations.AddRange(executor.Operations);
             RemoveUnnecessaryLocals(operations);
             return operations;
         }
@@ -170,7 +170,7 @@ namespace VectorAccelerator.DeferredExecution
             }
         }
 
-        //private static NArrayOperation[] SimplifyScaleOffsets(DeferredPrimitivesExecutor executor, List<NArrayOperation> operations, ILinearAlgebraProvider provider)
+        //private static NArrayOperation[] SimplifyScaleOffsets(Executor executor, List<NArrayOperation> operations, ILinearAlgebraProvider provider)
         //{
         //    // one of the most common patterns is
         //    // local0 = Na * a0 + b0

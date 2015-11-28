@@ -22,11 +22,13 @@ namespace VectorAccelerator.Tests
         
         [TestMethod]
         public void TestRandomNumberGeneration()
-        {            
+        {
+            var location = StorageLocation.Host;
+            
             // We create the stream.
             // This identifies the stream and stores the state or pointer to the state (in the case
             // of IntelMKL, CUDA, etc).
-            using (var randomStream = new RandomNumberStream(RandomNumberGeneratorType.MRG32K3A, 111))
+            using (var randomStream = new RandomNumberStream(location, RandomNumberGeneratorType.MRG32K3A, 111))
             {
                 // We then create a distribution based on the stream.
                 // This stores only specific parameters of the distribution (i.e. mean and standard deviation).
@@ -34,8 +36,8 @@ namespace VectorAccelerator.Tests
                 // which can do this efficiently whilst generating.
                 var normal = new Normal(randomStream, 0, 1);
 
-                var a = new NArray(1000);
-                var b = new NArray(1000);
+                var a = new NArray(location, 1000);
+                var b = new NArray(location, 1000);
 
                 // When we call FillRandom, we need to use a Provider that is appropriate to the stream.
                 a.FillRandom(normal);

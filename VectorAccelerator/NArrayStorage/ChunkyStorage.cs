@@ -36,12 +36,17 @@ namespace VectorAccelerator.NArrayStorage
             _storage[chunkIndex] = chunkStorage;
         }
 
-        public NArrayStorage<T> Slice(int chunkIndex)
+        internal NArrayStorage<T> Slice(int chunkIndex)
         {
             return new ManagedStorage<T>(_storage[chunkIndex], 0, _chunkLength);
         }
 
-        public override NArrayStorage<T> Slice(int startIndex, int length)
+        internal override NArrayStorage<T> SliceAsReference(int startIndex, int length)
+        {
+            throw new NotImplementedException();
+        }
+
+        internal override NArrayStorage<T> ColumnAsReference(int columnIndex)
         {
             throw new NotImplementedException();
         }
@@ -51,7 +56,7 @@ namespace VectorAccelerator.NArrayStorage
             return _storage[chunkIndex];
         }
 
-        public override T this[int index]
+        internal override T this[int index]
         {
             get
             {
@@ -63,12 +68,32 @@ namespace VectorAccelerator.NArrayStorage
             }
         }
 
-        public override bool Matches(NArrayStorage<T> other)
+        internal override bool Matches(NArrayStorage<T> other)
         {
             throw new NotImplementedException();
         }
 
-        public override T First()
+        internal override T First()
+        {
+            throw new NotImplementedException();
+        }
+
+        internal override void CopySubMatrixTo(NArrayStorage<T> target, int sourceRowIndex, int targetRowIndex, int rowCount, int sourceColumnIndex, int targetColumnIndex, int columnCount)
+        {
+            throw new NotImplementedException();
+        }
+
+        internal override NArrayStorage<T> Transpose()
+        {
+            throw new NotImplementedException();
+        }
+
+        internal override NArrayStorage<T> Diagonal(int rowCount, int columnCount)
+        {
+            throw new NotImplementedException();
+        }
+
+        internal override NArrayStorage<T> Clone(MatrixRegion region = MatrixRegion.All)
         {
             throw new NotImplementedException();
         }

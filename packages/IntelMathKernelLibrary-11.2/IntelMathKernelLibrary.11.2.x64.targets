@@ -1,0 +1,15 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <!--
+  ******************************************************************************
+  **               				MKL Library		 	  		                  **
+  ******************************************************************************
+  -->
+  <ItemGroup Condition="'$(MSBuildThisFileDirectory)' != '' And HasTrailingSlash('$(MSBuildThisFileDirectory)')">
+    <MKLLibrary Include="$(MSBuildThisFileDirectory)**\*.dll" />
+    <MKLLibrary Include="$(MSBuildThisFileDirectory)**\*.so" />
+    <Content Include="@(MKLLibrary)">
+      <Link>%(RecursiveDir)%(FileName)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+</Project>

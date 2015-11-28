@@ -7,18 +7,10 @@ namespace VectorAccelerator
 {
     public class NArrayInt : NArray<int>
     {
-        public NArrayInt(int length)
-            : base(length) { }
+        public NArrayInt(StorageLocation location, int length)
+            : base(location, length) { }
 
-        public static NArrayInt CreateConstantLike<T>(int value, NArray<T> array)
-        {
-            return ExecutionContext.Executor.ConstantLike<T>(value, array);
-        }
-
-        public static void Test(NArrayInt a, NArrayInt b)
-        {
-            (new ImmediateExecutor()).ElementWiseAdd<int>(a, b);
-        }
+        public NArrayInt(StorageLocation location, int[] array) : base(location, array) { }
 
         public void Assign(Func<NArrayBool> condition, Func<NArrayInt> operand)
         {   
@@ -35,7 +27,7 @@ namespace VectorAccelerator
 
         public static implicit operator NArrayInt(int value)
         {
-            return new NArrayInt(value);
+            return new NArrayInt(StorageLocation.Host, value);
         }
 
         public static NArrayInt operator +(NArrayInt operand1, NArrayInt operand2)

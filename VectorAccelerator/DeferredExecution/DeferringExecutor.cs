@@ -5,23 +5,18 @@ using System.Text;
 using VectorAccelerator;
 using VectorAccelerator.Distributions;
 using VectorAccelerator.LinearAlgebraProviders;
+using VectorAccelerator.DeferredExecution;
 
-namespace VectorAccelerator.DeferredExecution
+namespace VectorAccelerator
 {
     /// <summary>
     /// One executor is created for each execution scope. 
-    /// All operations within the scope are executed using vector primitives but with efficient use of
-    /// temporary memory.
+    /// If the operations can be deferred for later, more efficient, execution, this is done. Otherwise
+    /// the ImmediateExecutor is used.
     /// </summary>
-    public class DeferredPrimitivesExecutor : BaseExecutor, IExecutor
-    {
-        ILinearAlgebraProvider _provider = new IntelMKLLinearAlgebraProvider();
-        public override ILinearAlgebraProvider Provider
-        {
-            get { return _provider; }
-        }
-        
-        List<NArrayOperation> _vectorOperations = new List<NArrayOperation>();
+    public class DeferringExecutor : BaseExecutor, IExecutor
+    {        
+        List<NArrayOperation> _operations = new List<NArrayOperation>();
         List<ILocalNArray> _localVariables = new List<ILocalNArray>();
         int _vectorLength = -1;
 
@@ -29,19 +24,22 @@ namespace VectorAccelerator.DeferredExecution
 
         public List<ILocalNArray> LocalVariables { get { return _localVariables; } }
 
-        public List<NArrayOperation> VectorOperations { get { return _vectorOperations; } }
+        public List<NArrayOperation> Operations { get { return _operations; } }
 
         public string DebugString()
         {
             var builder = new StringBuilder();
-            VectorOperations.ForEach(o => builder.Append(o.ToString() + Environment.NewLine));
+            Operations.ForEach(o => builder.Append(o.ToString() + Environment.NewLine));
             return builder.ToString();
         }
 
         public void Execute(VectorExecutionOptions options)
         {
-            VectorOperationRunner.Execute(this, _provider, options);
+            throw new NotImplementedException(); // FIX!
+            //VectorOperationRunner.Execute(this, _provider, options);
         }
+
+        #region Deferrable Operations
 
         public override NArray<T> NewNArrayLike<T>(NArray<T> array)
         {
@@ -53,33 +51,30 @@ namespace VectorAccelerator.DeferredExecution
             return CreateLocalLike<S, T>(array) as NArray<S>;
         }
 
+        public void Assign<T>(NArray<T> operand1, NArray<T> operand2)
+        {
+            _operations.Add(new AssignOperation<T>(operand1, operand2));
+        }
+
+        public override void DoUnaryElementWiseOperation<T>(NArray<T> a, NArray<T> result, UnaryElementWiseOperation operation)
+        {
+            _operations.Add(new UnaryVectorOperation<T>(a, result,
+                (op1, r) => ElementWise<T>().UnaryElementWiseOperation(op1, r, operation)));
+        }
+
         public override void DoScaleOffset<T>(NArray<T> a, T scale, T offset, NArray<T> result)
         {
-            _vectorOperations.Add(
+            _operations.Add(
                     new ScaleOffsetOperation<T>(a, result, scale, offset, ElementWise<T>().ScaleOffset));
         }
 
         public override void DoBinaryElementWiseOperation<T>(NArray<T> a, NArray<T> b, NArray<T> result, BinaryElementWiseOperation operation)
         {
-            _vectorOperations.Add(new BinaryVectorOperation<T>(a, b, result, 
+            _operations.Add(new BinaryVectorOperation<T>(a, b, result, operation,
                 (op1, op2, r) => ElementWise<T>().BinaryElementWiseOperation(op1, op2, r, operation)));
         }
 
-        public NArrayBool LogicalOperation(NArrayBool operand1, NArrayBool operand2, LogicalBinaryElementWiseOperation op)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override void DoUnaryElementWiseOperation<T>(NArray<T> a, NArray<T> result, UnaryElementWiseOperation operation)
-        {
-            _vectorOperations.Add(new UnaryVectorOperation<T>(a, result,
-                (op1, r) => ElementWise<T>().UnaryElementWiseOperation(op1, r, operation)));
-        }
-
-        public void Assign<T>(NArray<T> operand1, NArray<T> operand2)
-        {
-            _vectorOperations.Add(new AssignOperation<T>(operand1, operand2));
-        }
+        #endregion
 
         public void Assign<T>(NArray<T> operand1, Func<NArray<T>> operand2, Func<NArrayBool> condition)
         {
@@ -88,31 +83,14 @@ namespace VectorAccelerator.DeferredExecution
             //_vectorOperations.Add(new AssignOperation<T>(operand1, operand2()));
         }
 
-        #region Creation
-
-        public NArrayInt ConstantLike<T>(int constantValue, NArray<T> array)
+        public NArrayBool LogicalOperation(NArrayBool operand1, NArrayBool operand2, LogicalBinaryElementWiseOperation op)
         {
             throw new NotImplementedException();
         }
 
-        #endregion
-
-        private ILocalNArray CreateLocalLike<S, T>(NArray<T> array)
+        public NArrayInt ConstantLike<T>(int constantValue, NArray<T> array)
         {
-            if (_vectorLength == -1) _vectorLength = array.Length;
-            if (array.Length != _vectorLength)
-                throw new ArgumentException("length mismatch", "array");
-
-            return CreateLocalOfLength<S>(_vectorLength);
-        }
-
-        private ILocalNArray CreateLocalOfLength<T>(int length)
-        {
-            ILocalNArray localArray = null;
-            if (typeof(T) == typeof(double)) localArray = new LocalNArray(_localVariables.Count, length);
-            else if (typeof(T) == typeof(int)) localArray = new LocalNArrayInt(_localVariables.Count, length);
-            _localVariables.Add(localArray);
-            return localArray;
+            throw new NotImplementedException();
         }
 
         #region Binary Operations
@@ -158,7 +136,7 @@ namespace VectorAccelerator.DeferredExecution
             throw new NotImplementedException();
         }
 
-        public IDisposable CreateRandomNumberStream(RandomNumberGeneratorType type, int seed)
+        public IDisposable CreateRandomNumberStream(StorageLocation location, RandomNumberGeneratorType type, int seed)
         {
             throw new NotImplementedException();
         }
@@ -177,6 +155,34 @@ namespace VectorAccelerator.DeferredExecution
             return NewNArrayLike<T>(operand);
         }
 
+        public void CholeskyDecomposition(NArray operand)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void EigenvalueDecomposition(NArray operand, NArray eigenvectors, NArray eigenvalues)
+        {
+            throw new NotImplementedException();
+        }
+
         #endregion
+
+        private ILocalNArray CreateLocalLike<S, T>(NArray<T> array)
+        {
+            if (_vectorLength == -1) _vectorLength = array.Length;
+            if (array.Length != _vectorLength)
+                throw new ArgumentException("length mismatch", "array");
+
+            return CreateLocalOfLength<S>(_vectorLength);
+        }
+
+        private ILocalNArray CreateLocalOfLength<T>(int length)
+        {
+            ILocalNArray localArray = null;
+            if (typeof(T) == typeof(double)) localArray = new LocalNArray(_localVariables.Count, length);
+            else if (typeof(T) == typeof(int)) localArray = new LocalNArrayInt(_localVariables.Count, length);
+            _localVariables.Add(localArray);
+            return localArray;
+        }
     }
 }

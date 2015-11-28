@@ -17,13 +17,15 @@ namespace VectorAccelerator.Tests
         [TestMethod]
         public void SimpleSpeedTest()
         {
+            var factory = new NArrayFactory(StorageLocation.Host);
+            
             IntelMathKernelLibrary.SetAccuracyMode(VMLAccuracy.LowAccuracy);
             
             int length = 1024 * 5;
 
-            var a = NArray.CreateFromEnumerable(Enumerable.Range(0, length).Select(i => (double)i / length));
+            var a = factory.CreateFromEnumerable(Enumerable.Range(0, length).Select(i => (double)i / length));
             var a2 = (a.Storage as VectorAccelerator.NArrayStorage.ManagedStorage<double>).Array;
-            var b = NArray.CreateFromEnumerable(Enumerable.Range(3, length).Select(i => (double)i / length));
+            var b = factory.CreateFromEnumerable(Enumerable.Range(3, length).Select(i => (double)i / length));
             var b2 = (b.Storage as VectorAccelerator.NArrayStorage.ManagedStorage<double>).Array;
 
             double[] result = null;
@@ -96,7 +98,9 @@ namespace VectorAccelerator.Tests
         [TestMethod]
         public void TestBlackScholes()
         {
-            using (var randomStream = new RandomNumberStream(RandomNumberGeneratorType.MRG32K3A, 111))
+            var location = StorageLocation.Host;
+
+            using (var randomStream = new RandomNumberStream(location, RandomNumberGeneratorType.MRG32K3A, 111))
             {
                 var normalDistribution = new Normal(randomStream, 0, 1);
                 

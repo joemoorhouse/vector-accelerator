@@ -13,4 +13,13 @@
         }
     }
 
+extern "C" __global__ 
+    void ElementWiseAdd(float* a, float* b, float* result, int n)
+    {
+        size_t tid = blockIdx.x * blockDim.x + threadIdx.x; 
+        if (tid < n) 
+        {
+			result[tid] = a[tid] + b[tid];
+        }
+    }
 	

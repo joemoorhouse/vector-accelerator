@@ -19,8 +19,22 @@ namespace VectorAccelerator
 
     public abstract class BaseExecutor 
     {
-        public abstract ILinearAlgebraProvider Provider { get; }
+        public LinearAlgebraProvider Provider(StorageLocation storageLocation)
+        {
+            return _providers[(int)storageLocation];
+        }
         
+        public LinearAlgebraProvider Provider<T>(params NArray<T>[] operands)
+        {
+            return GetProviderOrThrow(operands);
+        }
+        
+        public BaseExecutor()
+        {
+            _providers = new LinearAlgebraProvider[3];
+            _providers[(int)StorageLocation.Host] = new IntelMKLLinearAlgebraProvider();
+        }
+
         public abstract NArray<T> NewNArrayLike<T>(NArray<T> array);
 
         public abstract NArray<S> NewNArrayLike<S, T>(NArray<T> array);
@@ -35,8 +49,6 @@ namespace VectorAccelerator
         public abstract void DoBinaryElementWiseOperation<T>(NArray<T> a, NArray<T> b, NArray<T> result, BinaryElementWiseOperation operation);
 
         public abstract void DoUnaryElementWiseOperation<T>(NArray<T> a, NArray<T> result, UnaryElementWiseOperation operation);
-
-        //public abstract void DoRelativeElementWiseOperation<T>(NArray<T> a, NArray<T> result, RelativeOperator operation);
 
         public void Convert<T>(int value, out T result)
         {
@@ -68,26 +80,14 @@ namespace VectorAccelerator
             return ElementWise<T>().Divide(a, b);
         }
 
-        public IElementWise<T> ElementWise<T>()
+        public IElementWise<T> ElementWise<T>(params NArray<T>[] operands)
         {
-            return Provider as IElementWise<T>;
+            // check that we can operate on all NArrays (i.e. storage is all on host or all
+            // on device) and then return the appropriate class to perform the (element-wise) 
+            // arithmetic.
+            if (operands.Length == 0) return _providers[(int)StorageLocation.Host] as IElementWise<T>;
+            return GetProviderOrThrow(operands) as IElementWise<T>;
         }
-
-        //public void Assign(NArray operand1, NArray operand2)
-        //{
-        //    var managedStorage = operand2.Storage as ManagedStorage<double>;
-        //    operand1.Storage = new ManagedStorage<double>((double[])managedStorage.Array.Clone(),
-        //        managedStorage.ArrayStart, managedStorage.Length);
-        //}
-
-        //#region Creation
-
-        //public NArrayInt ConstantLike<T>(int constantValue, NArray<T> array)
-        //{
-        //    return new NArrayInt(array.Length, constantValue);
-        //}
-
-        //#endregion
 
         #region Binary Operations
 
@@ -227,19 +227,14 @@ namespace VectorAccelerator
             var result = NewNArrayLike<bool, T>(operand1) as NArrayBool;
             if (operand2.IsScalar)
             {
-                ElementWise<T>().RelativeOperation(operand1, operand2.First(), result, op);
+                ElementWise<T>(operand1).RelativeOperation(operand1, operand2.First(), result, op);
             }
             else
             {
-                ElementWise<T>().RelativeOperation(operand1, operand2, result, op);
+                ElementWise<T>(operand1, operand2).RelativeOperation(operand1, operand2, result, op);
             }
             return result;
         }
-
-        //public void MatrixMultiply(NArray operand1, NArray operand2, NArray result)
-        //{
-        //    _provider.MatrixMultiply(operand1, operand2, result);
-        //}
 
         #endregion
 
@@ -261,27 +256,26 @@ namespace VectorAccelerator
             return result;
         }
 
-        //public void Add(NArray operand1, NArray operand2)
-        //{
-        //    _provider.ElementWiseOperation(operand1, operand2, operand1, ElementWiseOperation.Add);
-        //}
+        private LinearAlgebraProvider GetProviderOrThrow<T>(params NArray<T>[] operands)
+        {
+            var storageLocation = GetStorageLocationOrThrow(operands);
+            return _providers[(int)storageLocation];
+        }
 
-        //public IDisposable CreateRandomNumberStream(RandomNumberGeneratorType type, int seed)
-        //{
-        //    return _provider.CreateRandomNumberStream(type, seed);
-        //}
+        private static StorageLocation GetStorageLocationOrThrow<T>(params NArray<T>[] operands)
+        {
+            var firstType = GetStorageLocation(operands.First());
+            if (operands.Any(o => GetStorageLocation(o) != firstType))
+                throw new ArgumentException("Cannot inter-operate NArrays with storage on Host with NArrays with storage on Device.");
 
-        //public void FillRandom(ContinuousDistribution distribution, NArray operand)
-        //{
-        //    _provider.FillRandom(distribution, operand);
-        //}
+            return firstType;
+        }
 
-        //public NArray Index(NArrayInt indices)
-        //{
-        //    var result = new NArray(indices.Storage.Length);
-        //    return result;
-        //}
+        private static StorageLocation GetStorageLocation<T>(NArray<T> operand)
+        {
+            return NArrayFactory.GetStorageLocation<T>(operand);
+        }
 
-        //#endregion
+        private LinearAlgebraProvider[] _providers;
     }
 }

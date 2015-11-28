@@ -69,9 +69,12 @@
   </Choose>
   <ItemGroup>
     <Compile Include="AcceleratorTestsCPU.cs" />
+    <Compile Include="ConditionalSpeedTest.cs" />
     <Compile Include="DistributionTests.cs" />
+    <Compile Include="Financial\CounterpartyCreditRisk\InterestRateModel.cs" />
     <Compile Include="InterpolationTest.cs" />
     <Compile Include="Checks\CheckApplicationLevelThreadingMKL.cs" />
+    <Compile Include="LinearAlgebraTests.cs" />
     <Compile Include="NonNormalVariateGeneration.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SimpleCounterpartyRiskTest.cs" />
