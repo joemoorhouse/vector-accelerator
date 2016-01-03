@@ -70,6 +70,8 @@ namespace VectorAccelerator.LinearAlgebraProviders
 
         static IntelMKLRandomNumberStream()
         {
+            NativeLibraryHelper.AddLibraryPath();
+
             BRNGMapper = new int[13];
             int increment = 1 << 20;
             int value = increment;

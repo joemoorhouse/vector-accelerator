@@ -14,6 +14,12 @@ namespace RiskEngine.Data
             return provider;
         }
 
-        Dictionary<Type, object> _providers;
+        public T AddCalibrationParametersProvider<T>(T newProvider) where T : class
+        {
+            _providers[typeof(T)] = newProvider;
+            return newProvider;
+        }
+
+        Dictionary<Type, object> _providers = new Dictionary<Type,object>();
     }
 }

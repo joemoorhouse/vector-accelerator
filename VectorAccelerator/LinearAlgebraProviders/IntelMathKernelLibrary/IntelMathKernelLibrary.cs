@@ -22,13 +22,12 @@ namespace VectorAccelerator.LinearAlgebraProviders
             double alpha, double* A, int lda, double* B, int ldb,
             double beta, double* C, int ldc);
 
+        // Cholesky decomposition
         [DllImport("mkl_rt.dll", CallingConvention = CallingConvention.Cdecl,
             ExactSpelling = true, SetLastError = false)]
         internal static extern void DPOTRF(ref char uplo, ref int n, double* A, ref int lda, ref int info);
 
-        /// <summary>
-        /// Eigenvalue decomposition
-        /// </summary>
+        // Eigenvalue decomposition
         [DllImport("mkl_rt.dll", EntryPoint = "DSYEVR", CallingConvention = CallingConvention.Cdecl)]
         private static extern void DSYEVR(ref char jobz, ref char range, ref char uplo, ref int n, 
             double* A, ref int lda, ref double vl, ref double vu, ref int il, ref int iu, 
@@ -39,7 +38,10 @@ namespace VectorAccelerator.LinearAlgebraProviders
         private static extern void DSYEVR2(ref char jobz, ref char range, ref char uplo, ref int n, 
             double[] A, ref int lda, ref double vl, ref double vu, ref int il, ref int iu, 
             ref double abstol, ref int m, double[] w, double[] z, ref int ldz, 
-            int[] isuppz, double[] work, ref int lwork, int[] iwork, ref int liwork, ref int info); 
+            int[] isuppz, double[] work, ref int lwork, int[] iwork, ref int liwork, ref int info);
+
+        [DllImport("mkl_rt.dll", EntryPoint = "LAPACKE_dlasrt", CallingConvention = CallingConvention.Cdecl)]
+        internal static extern int LAPACKE_dlasrt(char id, int n, double* d);
 
         [DllImport("mkl_rt.dll", CallingConvention = CallingConvention.Cdecl,
             ExactSpelling = true, SetLastError = false)]
@@ -132,6 +134,7 @@ namespace VectorAccelerator.LinearAlgebraProviders
 
         static IntelMathKernelLibrary()
         {
+            NativeLibraryHelper.AddLibraryPath();
             // if necessary, can set threading mode here. Most commonly threading would be done
             // at higher level than MKL call (i.e. with .NET threads), in which case we want sequential mode.
             //int mode = 1; // 0 = threaded; 1 = sequential 
@@ -271,15 +274,13 @@ namespace VectorAccelerator.LinearAlgebraProviders
             CallUnsafe(a, aStartIndex, y, yStartIndex, length, vdCdfNormInv);
         }
 
-        public static double Dot(double[] a, int aStartIndex,
-            double[] b, int bStartIndex,
-            int length)
+        public static double Dot(ManagedStorage<double> a, ManagedStorage<double> b)
         {
-            fixed (double* p_a = &a[aStartIndex])
+            fixed (double* p_a = &a.Array[a.ArrayStart])
             {
-                fixed (double* p_b = &b[bStartIndex])
+                fixed (double* p_b = &b.Array[b.ArrayStart])
                 {
-                    return cblas_ddot(length, p_a, 1, p_b, 1);
+                    return cblas_ddot(a.Length, p_a, 1, p_b, 1);
                 }
             }
         }
@@ -377,6 +378,15 @@ namespace VectorAccelerator.LinearAlgebraProviders
                             p_eigenvalues, p_eigenvectors, ref ldz, isuppz, work, ref lwork, iwork, ref liwork, ref info);
                     }
                 }
+            }
+        }
+
+        public static void SortInPlace(ManagedStorage<double> a)
+        {
+            char order = 'I'; // 'D'
+            fixed (double* p_a = &a.Array[a.ArrayStart])
+            {
+                LAPACKE_dlasrt(order, a.Length, p_a);
             }
         }
 

@@ -34,6 +34,24 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>..\bin\x64\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
+    <OutputPath>bin\x64\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
   </ItemGroup>
@@ -58,6 +76,10 @@
     <ProjectReference Include="..\RiskEngine\RiskEngine.csproj">
       <Project>{65ac1200-5cc9-4cdd-b42a-63e5a3519b36}</Project>
       <Name>RiskEngine</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\VectorAccelerator.Plot\VectorAccelerator.Plot.csproj">
+      <Project>{4ca14a12-d924-4a6c-a5d1-fc22cbd4cc37}</Project>
+      <Name>VectorAccelerator.Plot</Name>
     </ProjectReference>
     <ProjectReference Include="..\VectorAccelerator\VectorAccelerator.csproj">
       <Project>{2ba4f945-3704-4c6d-8b1e-7482ab9dd9a8}</Project>

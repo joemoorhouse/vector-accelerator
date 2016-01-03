@@ -6,7 +6,7 @@ using VectorAccelerator.NArrayStorage;
 
 namespace VectorAccelerator
 {
-    class Assertions
+    public class Assertions
     {
         public static void AssertSameShape<T,S>(NArray<T> a, NArray<S> b)
         {
@@ -18,9 +18,20 @@ namespace VectorAccelerator
             if (row.RowCount != 1) throw new ArgumentException("is not a row", paramName);
         }
 
+        public static void AssertIsVectorOfLength(NArray vector, int length, string paramName)
+        {
+            if (!vector.IsVector || vector.Length != length) throw new ArgumentException(
+                string.Format("is not a vector of length {0}", length), paramName);
+        }
+
         public static void AssertIsColumn(NArray column, string paramName)
         {
             if (column.ColumnCount != 1) throw new ArgumentException("is not a column", paramName);
+        }
+
+        public static void AssertVectorsOfEqualLength(NArray a, NArray b)
+        {
+            if (!(a.IsVector && b.IsVector && a.Length == b.Length)) throw new ArgumentException("not equal length vectors");
         }
 
         public static void AssertRowMatchesMatrix(NArray matrix, NArray row, string matrixParam, string rowParam)

@@ -83,6 +83,11 @@ namespace VectorAccelerator
             //_vectorOperations.Add(new AssignOperation<T>(operand1, operand2()));
         }
 
+        public T GetValue<T>(NArray<T> array, int index)
+        {
+            throw new NotImplementedException();
+        }
+
         public NArrayBool LogicalOperation(NArrayBool operand1, NArrayBool operand2, LogicalBinaryElementWiseOperation op)
         {
             throw new NotImplementedException();
@@ -106,6 +111,16 @@ namespace VectorAccelerator
         }
 
         public NArrayBool RelativeOperation(NArray operand1, NArray operand2, RelativeOperator op)
+        {
+            throw new NotImplementedException();
+        }
+
+        public double DotProduct(NArray operand1, NArray operand2)
+        {
+            throw new NotImplementedException();
+        }
+
+        public double Sum(NArray operand)
         {
             throw new NotImplementedException();
         }
@@ -161,6 +176,11 @@ namespace VectorAccelerator
         }
 
         public void EigenvalueDecomposition(NArray operand, NArray eigenvectors, NArray eigenvalues)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void SortInPlace(NArray operand)
         {
             throw new NotImplementedException();
         }

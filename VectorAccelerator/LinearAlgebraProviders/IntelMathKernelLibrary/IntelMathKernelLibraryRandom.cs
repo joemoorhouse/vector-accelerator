@@ -57,6 +57,11 @@ namespace VectorAccelerator.LinearAlgebraProviders
             ExactSpelling = true, SetLastError = false)]
         internal static extern int MKL_Set_Num_Threads(int nThreads);
 
+        static IntelMathKernelLibraryRandom()
+        {
+            NativeLibraryHelper.AddLibraryPath();
+        }
+
         public static void FillNormals(double[] toFill, IntelMKLRandomNumberStream randomStream)
         {
             FillNormals(toFill, randomStream, 0, toFill.Length);

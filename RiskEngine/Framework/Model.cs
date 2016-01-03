@@ -3,31 +3,48 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using VectorAccelerator;
 
 namespace RiskEngine.Framework
-{
-    public interface IModel : IFactor
-    {
-        void Step(double timeStep);
-    }
-    
+{    
     /// <summary>
     /// A Model simulates and stores a single factor (i.e. vector NArray). 
     /// A call to Step updates the stored simulations with the new values.
     /// </summary>
-    public abstract class Model : IFactor
+    public class Model 
     {
-        public NArray Value { get { return _value; } }
+        public string Identifier { get; private set; }
 
-        /// <summary>
-        /// Simulate using the interval provided. 
-        /// </summary>
-        /// <param name="timeStep">Interval from current to next time point.</param>
-        public abstract void Step(TimeInterval timeStep);
+        public Context Context { get; private set; }
 
-        protected NArray _value;
+        public DateTime CurrentTimePoint { get { return _timeIntervals[_currentTimeIndex].Previous; } }
+
+        protected Model() { }
+
+        public static T Create<T>(string identifier, Simulation simulation) where T : Model, new()
+        {
+            var model = new T();
+            model.Identifier = identifier;
+            model.Context = simulation == null ? null : simulation.Context;
+            return model;
+        }
+
+        public virtual void Initialise(Simulation simulation) { }
+
+        public override string ToString()
+        {
+            return this.GetType().Name + ":" + Identifier;
+        }
+
+        internal virtual void StepNext()
+        {
+            _currentTimeIndex++;
+        }
+
+        protected int _currentTimeIndex;
+        protected TimeInterval[] _timeIntervals;
     }
 
-
+    public class DummyModel : Model
+    {
+    }
 }

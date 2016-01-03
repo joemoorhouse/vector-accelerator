@@ -13,5 +13,12 @@ namespace RiskEngine.Framework
         public readonly DateTime Previous;
 
         public readonly DateTime Next;
+
+        public TimeInterval(DateTime previous, DateTime next)
+        {
+            Previous = previous;
+            Next = next;
+            IntervalInYears = (next - previous).Days / 365.25;
+        }
     }
 }

@@ -11,7 +11,7 @@ namespace RiskEngine.Models
     /// <summary>
     /// Mean reverting (Ornstein-Uhlenbeck) process with 0 long-run mean, starting at 0.  
     /// </summary>
-    public class MeanRevertingNormal : Model
+    public class MeanRevertingNormalModel_OLD : SimulatingModel_OLD
     {
         /// <summary>
         /// Volatility
@@ -23,17 +23,17 @@ namespace RiskEngine.Models
         /// </summary>
         public double Lambda { get { return _lambda; } set { _lambda = value; } }
 
-        public MeanRevertingNormal(string identifier, ModelFactory factory)
+        public override void Initialise(Simulation simulation)
         {
-            _normalVariates = factory.CreateDefaultModel<INormalVariates>(identifier);
+            _normalVariates = simulation.DefaultModel<INormalVariates>(Identifier);
         }
 
-        public void Initialise()
+        internal override void Prepare(Context context)
         {
-            _value.Assign(0.0);
+            _value = context.Factory.CreateNArray(context.Settings.SimulationCount, 1);
         }
 
-        public override void Step(TimeInterval timeStep)
+        internal override void Step(TimeInterval timeStep)
         {
             var t = timeStep.IntervalInYears;
             _value.Assign(
@@ -42,9 +42,9 @@ namespace RiskEngine.Models
             );
         }
 
-        public static NArray E(double lambda, double t)
+        public static double E(double lambda, double t)
         {
-            return (1.0 - NMath.Exp(-lambda * t)) / lambda;
+            return (1.0 - Math.Exp(-lambda * t)) / lambda;
         }
 
         private INormalVariates _normalVariates;

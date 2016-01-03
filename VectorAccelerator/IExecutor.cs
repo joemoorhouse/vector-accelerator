@@ -22,6 +22,14 @@ namespace VectorAccelerator
         /// </summary>
         void Assign<T>(NArray<T> operand1, Func<NArray<T>> operand2, Func<NArrayBool> condition);
 
+        /// <summary>
+        /// Return the value at the index. Note that this is in the Executor as it is only allowed under
+        /// certain conditions (i.e. not in deferred modes, where it would prevent vectorised operations)
+        /// </summary>
+        /// <param name="index"></param>
+        /// <returns></returns>
+        T GetValue<T>(NArray<T> array, int index);
+
         #region Creation
 
         NArrayInt ConstantLike<T>(int constantValue, NArray<T> array);
@@ -44,6 +52,8 @@ namespace VectorAccelerator
 
         NArrayBool RelativeOperation<T>(NArray<T> operand1, NArray<T> operand2, RelativeOperator op);
 
+        double DotProduct(NArray a, NArray b);
+
         void MatrixMultiply(NArray operand1, NArray operand2, NArray result);
 
         #endregion
@@ -56,8 +66,6 @@ namespace VectorAccelerator
 
         NArray<int> LeftShift(NArray<int> operand, int shift);
 
-        NArray<T> ElementWiseNegate<T>(NArray<T> operand);
-
         IDisposable CreateRandomNumberStream(StorageLocation location, RandomNumberGeneratorType type, int seed);
 
         void FillRandom(ContinuousDistribution distribution, NArray operand);
@@ -67,6 +75,14 @@ namespace VectorAccelerator
         void CholeskyDecomposition(NArray operand);
 
         void EigenvalueDecomposition(NArray operand, NArray eigenvectors, NArray eignenvalues);
+
+        void SortInPlace(NArray operand);
+
+        #endregion
+
+        #region Reduction
+
+        double Sum(NArray a);
 
         #endregion
     }

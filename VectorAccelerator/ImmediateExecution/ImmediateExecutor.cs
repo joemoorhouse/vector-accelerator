@@ -66,6 +66,11 @@ namespace VectorAccelerator
 
         #endregion
 
+        public T GetValue<T>(NArray<T> array, int index)
+        {
+            return array.Storage[index];
+        }
+
         #region Binary Operations
 
         public void Add(NArray operand1, NArray operand2)
@@ -102,6 +107,11 @@ namespace VectorAccelerator
             return result;
         }
 
+        public double DotProduct(NArray operand1, NArray operand2)
+        {
+            return Provider(operand1, operand2).Dot(operand1, operand2);
+        }
+
         public void MatrixMultiply(NArray operand1, NArray operand2, NArray result)
         {
             Provider(operand1, operand2).MatrixMultiply(operand1, operand2, result);
@@ -136,6 +146,19 @@ namespace VectorAccelerator
         public void EigenvalueDecomposition(NArray operand, NArray eigenvectors, NArray eigenvalues)
         {
             Provider(operand, eigenvectors, eigenvalues).EigenvalueDecomposition(operand, eigenvectors, eigenvalues);
+        }
+
+        public void SortInPlace(NArray operand)
+        {
+            Provider(operand).SortInPlace(operand);
+        }
+
+        #endregion
+        #region Reduction
+
+        public double Sum(NArray operand)
+        {
+            return Provider(operand).Sum(operand);
         }
 
         #endregion

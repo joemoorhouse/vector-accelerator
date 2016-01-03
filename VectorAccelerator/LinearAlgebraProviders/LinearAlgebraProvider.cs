@@ -76,11 +76,17 @@ namespace VectorAccelerator.LinearAlgebraProviders
 
         public abstract void FillRandom(ContinuousDistribution distribution, NArray values);
 
+        public abstract double Dot(NArray a, NArray b);
+
+        public abstract double Sum(NArray a);
+
         public abstract void MatrixMultiply(NArray a, NArray b, NArray c);
 
         public abstract void CholeskyDecomposition(NArray a);
 
         public abstract void EigenvalueDecomposition(NArray a, NArray eigenvectors, NArray eignenvalues);
+
+        public abstract void SortInPlace(NArray a);
 
         public abstract IDisposable CreateRandomNumberStream(RandomNumberGeneratorType type, int seed);
 

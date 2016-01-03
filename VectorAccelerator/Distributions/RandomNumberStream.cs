@@ -14,7 +14,8 @@ namespace VectorAccelerator.Distributions
 
         public StorageLocation Location { get { return _location; } }
 
-        public RandomNumberStream(StorageLocation location, RandomNumberGeneratorType type, int seed)
+        public RandomNumberStream(StorageLocation location, 
+            RandomNumberGeneratorType type = RandomNumberGeneratorType.MRG32K3A, int seed = 111)
         {
             _location = location;
             _innerStream = ExecutionContext.Executor.CreateRandomNumberStream(location, type, seed);

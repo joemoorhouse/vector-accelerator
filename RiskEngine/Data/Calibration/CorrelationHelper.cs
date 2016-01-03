@@ -21,12 +21,13 @@ namespace RiskEngine.Calibration
         public static NArray NearestCorrelationMatrix(NArray candidateMatrix)
         {
             NArray eigenvectors, eigenvalues;
+
             NMath.EigenvalueDecomposition(candidateMatrix, out eigenvectors, out eigenvalues);
 
             // we multiply the columns of eigenvectors by the floored eigenvalues
             var floorValue = 1e-9;
             eigenvalues[eigenvalues < floorValue] = floorValue;
-            var flooredDiagonal = NMath.Diagonal(eigenvalues);
+            var flooredDiagonal = NMath.Diagonal(NMath.Sqrt(eigenvalues));
             var root = eigenvectors * flooredDiagonal;
 
             // next we normalise the rows
@@ -36,7 +37,9 @@ namespace RiskEngine.Calibration
                 root.SetRow(i, row / NMath.Sqrt(row * row.Transpose()));
             }
 
-            return root * root.Transpose();
+            var nearestCorrelation = root * root.Transpose();
+
+            return nearestCorrelation;
         }
     }
 }

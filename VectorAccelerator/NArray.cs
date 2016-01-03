@@ -64,7 +64,7 @@ namespace VectorAccelerator
         public readonly int Length; // length of vector, or total number of elements in matrix
 
         public bool IsScalar { get { return (Length == 1); } }
-        public bool IsVector { get { return RowCount == 1 || ColumnCount == 1; } }
+        public bool IsVector { get { return (Length > 1) && (RowCount == 1 || ColumnCount == 1); } }
         public bool IsMatrix { get { return RowCount > 1 || ColumnCount > 1; } }
 
         protected NArrayStorage<T> _storage;
@@ -142,6 +142,11 @@ namespace VectorAccelerator
         public T First()
         {
             return Storage.First();
+        }
+
+        public T GetValue(int index)
+        {
+            return ExecutionContext.Executor.GetValue(this, index);
         }
 
         private bool StorageMatches(NArrayStorage<T> storage)
@@ -294,7 +299,7 @@ namespace VectorAccelerator
 
         public static NArray operator -(NArray operand)
         {
-            return ExecutionContext.Executor.ElementWiseNegate(operand) as NArray;
+            return ExecutionContext.Executor.UnaryElementWiseOperation(operand, UnaryElementWiseOperation.Negate) as NArray;
         }
 
         public void Add(NArray operand)
@@ -359,6 +364,14 @@ namespace VectorAccelerator
             return column;
         }
 
+        public IEnumerable<NArray> Columns()
+        {
+            for (int i = 0; i < ColumnCount; ++i)
+            {
+                yield return Column(i);
+            }
+        }
+
         public NArray ColumnAsReference(int columnIndex)
         {
             return new NArray(this.Storage.ColumnAsReference(columnIndex));
@@ -377,10 +390,28 @@ namespace VectorAccelerator
             return row;
         }
 
+        public IEnumerable<NArray> Rows(int rowIndex)
+        {
+            for (int i = 0; i < RowCount; ++i)
+            {
+                yield return Row(i);
+            }
+        }
+
         public void SetRow(int rowIndex, NArray row)
         {
             Assertions.AssertRowMatchesMatrix(this, row, "this", "row");
             row.Storage.CopySubMatrixTo(this.Storage, 0, rowIndex, 1, 0, 0, ColumnCount);
+        }
+
+        /// <summary>
+        /// Sums the elements of the array. 
+        /// If running in deferred mode, will perform a reduction (minimising use of intermediate vectors).  
+        /// </summary>
+        /// <returns></returns>
+        public double Sum()
+        {
+            return ExecutionContext.Executor.Sum(this);
         }
 
         /// <summary>

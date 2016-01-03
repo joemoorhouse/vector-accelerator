@@ -333,6 +333,21 @@ namespace VectorAccelerator.LinearAlgebraProviders
             IntelMathKernelLibraryRandom.FillNormals(aArray, stream, aStart, values.Length);
         }
 
+        public override double Dot(NArray a, NArray b)
+        {
+            Assertions.AssertVectorsOfEqualLength(a, b);
+            return IntelMathKernelLibrary.Dot(GetManagedStorage<double>(a), GetManagedStorage<double>(b));
+        }
+
+        public override double Sum(NArray a)
+        {
+            var storage = GetManagedStorage<double>(a);
+            double sum = 0;
+            // no performance optimisation on CPU when doing immediate execution (no MKL 'sum')
+            for (int i = storage.ArrayStart; i < storage.Length; ++i) sum += storage.Array[i];
+            return sum;
+        }
+
         public override void MatrixMultiply(NArray a, NArray b, NArray c)
         {
             IntelMathKernelLibrary.MatrixMultiply(GetManagedStorage<double>(a), GetManagedStorage<double>(b),
@@ -349,6 +364,11 @@ namespace VectorAccelerator.LinearAlgebraProviders
         {
             IntelMathKernelLibrary.EigenvalueDecomposition(GetManagedStorage<double>(a), 
                 GetManagedStorage<double>(eigenvectors), GetManagedStorage<double>(eigenvalues));
+        }
+
+        public override void SortInPlace(NArray a)
+        {
+            IntelMathKernelLibrary.SortInPlace(GetManagedStorage<double>(a));
         }
 
         public override IDisposable CreateRandomNumberStream(RandomNumberGeneratorType type, int seed)

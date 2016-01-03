@@ -48,6 +48,11 @@ namespace VectorAccelerator
             ExecutionContext.Executor.MatrixMultiply(a, b, c);
         }
 
+        public static double Dot(NArray a, NArray b)
+        {
+            return ExecutionContext.Executor.DotProduct(a, b);
+        }
+
         public static NArray CholeskyDecomposition(NArray a)
         {
             var result = a.Clone(MatrixRegion.LowerTriangle);
@@ -83,16 +88,40 @@ namespace VectorAccelerator
             //else if (typeof(T) == typeof(int)) return new NArrayInt(storage as NArrayStorage<int>) as NArray<T>;
             else return null;
         }
-    }
 
-    public static class NMathHostOnly
-    {
-        public static NArray NearestCorrelationMatrix(NArray a)
+        public static double Correlation(NArray a, NArray b)
         {
-            NArray eigenvectors, eigenvalues;
-            NMath.EigenvalueDecomposition(a, out eigenvectors, out eigenvalues);
-            // have not yet implemented efficient slicing on host/device, so make host-only for now
-            return null;
+            var aSum = a.Sum();
+            var bSum = b.Sum();
+            var n = a.Length;
+
+            return (NMath.Dot(a, b) * n - aSum * bSum)
+                / Math.Sqrt((NMath.Dot(a, a) * n - aSum * aSum) * (NMath.Dot(b, b) * n - bSum * bSum));
+        }
+
+        public static IEnumerable<double> Percentiles(NArray a, double[] percentiles)
+        {
+            var clone = a.Clone();
+            SortInPlace(clone);
+            // the ith element is percentile p = 100 * (i + 0.5) / n
+            // i = n * p / 100 - 0.5
+            var fractionalIndices = percentiles.Select(p => clone.Length * p / 100.0 - 0.5);
+            foreach (var fractionalIndex in fractionalIndices)
+            {
+                var lower = (int)fractionalIndex;
+                var weightUpper = fractionalIndex - lower;
+                yield return clone.GetValue(lower) * (1 - weightUpper) + weightUpper * clone.GetValue(lower + 1);
+            }
+        }
+
+        //public static IEnumerable<double> Percentiles(NArray a, params double[] percentiles)
+        //{
+        //    return Percentiles(a, percentiles.ToArray());
+        //}
+
+        public static void SortInPlace(NArray a)
+        {
+            ExecutionContext.Executor.SortInPlace(a);
         }
     }
 
