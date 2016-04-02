@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace VectorAccelerator
 {
-    public interface ILocalNArray
+    public interface ILocalNArray : INArray
     {
         int Index { get; }
     }

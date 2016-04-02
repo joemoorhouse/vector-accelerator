@@ -9,7 +9,7 @@ namespace VectorAccelerator.DeferredExecution
     /// Unary operation that scales and offsets the operand to obtain a new vector.
     /// </summary>
     public class ScaleOffsetOperation<T> : UnaryVectorOperation<T>
-    {
+    {        
         public readonly T Scale;
         public readonly T Offset;
 

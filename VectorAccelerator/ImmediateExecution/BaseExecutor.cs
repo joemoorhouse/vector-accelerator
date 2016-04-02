@@ -6,14 +6,15 @@ using System.Threading.Tasks;
 using VectorAccelerator.LinearAlgebraProviders;
 using VectorAccelerator.Distributions;
 using VectorAccelerator.NArrayStorage;
+using System.Linq.Expressions;
 
 namespace VectorAccelerator
 {
     public enum ExecutionMode { Instant, Deferred }
 
-    public enum BinaryElementWiseOperation { Add, Subtract, Multiply, Divide };
+    //public enum BinaryElementWiseOperation { Add, Subtract, Multiply, Divide };
     
-    public enum UnaryElementWiseOperation { Inverse, Negate, Exp, Log, SquareRoot, InverseSquareRoot, CumulativeNormal, InverseCumulativeNormal };
+    public enum UnaryElementWiseOperation { Inverse, Negate, Exp, Log, SquareRoot, InverseSquareRoot, CumulativeNormal, InverseCumulativeNormal, ScaleOffset };
 
     public enum LogicalBinaryElementWiseOperation { And, Or };
 
@@ -46,7 +47,7 @@ namespace VectorAccelerator
 
         public abstract void DoScaleOffset<T>(NArray<T> a, T scale, T offset, NArray<T> result);
 
-        public abstract void DoBinaryElementWiseOperation<T>(NArray<T> a, NArray<T> b, NArray<T> result, BinaryElementWiseOperation operation);
+        public abstract void DoBinaryElementWiseOperation<T>(NArray<T> a, NArray<T> b, NArray<T> result, ExpressionType operation);
 
         public abstract void DoUnaryElementWiseOperation<T>(NArray<T> a, NArray<T> result, UnaryElementWiseOperation operation);
 
@@ -98,15 +99,15 @@ namespace VectorAccelerator
             {
                 result = NewScalarNArray(Add(operand1.First(), operand2.First()));
             }
-            else if (!operand1.IsScalar && !operand2.IsScalar)
+            else if (!IsScalarConstant(operand1) && !IsScalarConstant(operand2))
             {
                 result = NewNArrayLike(operand1);
-                DoBinaryElementWiseOperation(operand1, operand2, result, BinaryElementWiseOperation.Add);
+                DoBinaryElementWiseOperation(operand1, operand2, result, ExpressionType.Add);
             }
             else
             {
                 T scale; Convert(1, out scale);
-                if (operand1.IsScalar)
+                if (IsScalarConstant(operand1))
                 {
                     result = NewNArrayLike(operand2);
                     DoScaleOffset(operand2, scale, operand1.First(), result);
@@ -123,18 +124,18 @@ namespace VectorAccelerator
         public NArray<T> ElementWiseSubtract<T>(NArray<T> operand1, NArray<T> operand2)
         {
             NArray<T> result = null;
-            if (operand1.IsScalar && operand2.IsScalar)
+            if (IsScalarConstant(operand1) && IsScalarConstant(operand2))
             {
                 result = NewScalarNArray(Subtract(operand1.First(), operand2.First()));
             }
-            else if (!operand1.IsScalar && !operand2.IsScalar)
+            else if (!IsScalarConstant(operand1) && !IsScalarConstant(operand2))
             {
                 result = NewNArrayLike(operand1);
-                DoBinaryElementWiseOperation(operand1, operand2, result, BinaryElementWiseOperation.Subtract);
+                DoBinaryElementWiseOperation(operand1, operand2, result, ExpressionType.Subtract);
             }
             else
             {
-                if (operand1.IsScalar)
+                if (IsScalarConstant(operand1))
                 {
                     result = NewNArrayLike(operand2);
                     T scale; Convert(-1, out scale);
@@ -154,19 +155,19 @@ namespace VectorAccelerator
         public NArray<T> ElementWiseMultiply<T>(NArray<T> operand1, NArray<T> operand2)
         {
             NArray<T> result = null;
-            if (operand1.IsScalar && operand2.IsScalar)
+            if (IsScalarConstant(operand1) && IsScalarConstant(operand2))
             {
                 result = NewScalarNArray(Multiply(operand1.First(), operand2.First()));
             }
-            else if (!operand1.IsScalar && !operand2.IsScalar)
+            else if (!IsScalarConstant(operand1) && !IsScalarConstant(operand2))
             {
-                result = NewNArrayLike(operand1);
-                DoBinaryElementWiseOperation(operand1, operand2, result, BinaryElementWiseOperation.Multiply);
+                result = NewNArrayLike(operand1.Length > operand2.Length ? operand1 : operand2);
+                DoBinaryElementWiseOperation(operand1, operand2, result, ExpressionType.Multiply);
             }
             else
             {
                 T offset; Convert(0, out offset);
-                if (operand1.IsScalar)
+                if (IsScalarConstant(operand1))
                 {
                     result = NewNArrayLike(operand2);
                     DoScaleOffset(operand2, operand1.First(), offset, result);
@@ -183,19 +184,19 @@ namespace VectorAccelerator
         public NArray<T> ElementWiseDivide<T>(NArray<T> operand1, NArray<T> operand2)
         {
             NArray<T> result = null;
-            if (operand1.IsScalar && operand2.IsScalar)
+            if (IsScalarConstant(operand1) && IsScalarConstant(operand2))
             {
                 result = NewScalarNArray(Divide(operand1.First(), operand2.First()));
             }
-            else if (!operand1.IsScalar && !operand2.IsScalar)
+            else if (!IsScalarConstant(operand1) && !IsScalarConstant(operand2))
             {
                 result = NewNArrayLike(operand1);
-                DoBinaryElementWiseOperation(operand1, operand2, result, BinaryElementWiseOperation.Divide);
+                DoBinaryElementWiseOperation(operand1, operand2, result, ExpressionType.Divide);
             }
             else
             {
                 T offset; Convert(0, out offset);
-                if (operand1.IsScalar)
+                if (IsScalarConstant(operand1))
                 {
                     result = NewNArrayLike(operand2);
                     if (typeof(T) == typeof(double))
@@ -274,6 +275,16 @@ namespace VectorAccelerator
         private static StorageLocation GetStorageLocation<T>(NArray<T> operand)
         {
             return NArrayFactory.GetStorageLocation<T>(operand);
+        }
+
+        /// <summary>
+        /// Is the array a scalar that does not act as an independent variable in any differentiation.
+        /// </summary>
+        /// <param name="array"></param>
+        /// <returns></returns>
+        private bool IsScalarConstant<T>(NArray<T> array)
+        {
+            return array.IsScalar && !array.IsIndependentVariable;
         }
 
         private LinearAlgebraProvider[] _providers;

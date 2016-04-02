@@ -5,10 +5,17 @@ using System.Text;
 using System.Threading.Tasks;
 using RiskEngine.Framework;
 using VectorAccelerator;
+using RiskEngine.Factors;
 
 namespace RiskEngine.Models
 {
-    public class MeanRevertingNormalProcess : SingleFactorProcess
+    [ModelAppliesTo(typeof(MeanRevertingNormal))]
+    public class MeanRevertingNormalModel : SnapshotModel<MeanRevertingNormalProcess> { }
+    
+    [ModelAppliesTo(typeof(MeanRevertingNormalPath))]
+    public class MeanRevertingNormalPathModel : PathModel<MeanRevertingNormalProcess> { }
+
+    public class MeanRevertingNormalProcess : Process, IProcess
     {
         public double Sigma { get; set; }
 
@@ -16,15 +23,18 @@ namespace RiskEngine.Models
 
         public override void Initialise(Simulation simulation)
         {
-            _normalVariates = simulation.DefaultModel<INormalVariates>(Identifier);
+            _normalVariates = simulation.RegisterModel<NormalVariates>(Identifier);
+            // defaults values:
+            Sigma = 0.1; 
+            Lambda = 0.05;
         }
 
-        internal override void Prepare(Context context)
+        public override NArray Prepare(Context context)
         {
-            Value = context.Factory.CreateNArray(context.Settings.SimulationCount, 1);
+            return context.Factory.CreateNArray(context.Settings.SimulationCount, 1);
         }
 
-        protected override NArray Step(TimeInterval timeStep, NArray previous)
+        public override NArray Step(TimeInterval timeStep, NArray previous)
         {
             var t = timeStep.IntervalInYears;
             return previous * NMath.Exp(-Lambda * t)
@@ -36,6 +46,6 @@ namespace RiskEngine.Models
             return (1.0 - Math.Exp(-lambda * t)) / lambda;
         }
 
-        INormalVariates _normalVariates;
+        NormalVariates _normalVariates;
     }
 }

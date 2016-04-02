@@ -5,6 +5,7 @@ using System.Text;
 using VectorAccelerator;
 using VectorAccelerator.Distributions;
 using VectorAccelerator.NArrayStorage;
+using System.Linq.Expressions;
 
 namespace VectorAccelerator.LinearAlgebraProviders
 {
@@ -13,21 +14,21 @@ namespace VectorAccelerator.LinearAlgebraProviders
         #region ElementWise
 
         public override void BinaryElementWiseOperation(NArray<double> a, NArray<double> b,
-            NArray<double> result, BinaryElementWiseOperation operation)
+            NArray<double> result, ExpressionType operation)
         {
             VectorVectorOperation vectorVectorOperation = null;
             switch (operation)
             {
-                case VectorAccelerator.BinaryElementWiseOperation.Add: vectorVectorOperation = IntelMathKernelLibrary.Add; break;
-                case VectorAccelerator.BinaryElementWiseOperation.Subtract: vectorVectorOperation = IntelMathKernelLibrary.Subtract; break;
-                case VectorAccelerator.BinaryElementWiseOperation.Multiply: vectorVectorOperation = IntelMathKernelLibrary.Multiply; break;
-                case VectorAccelerator.BinaryElementWiseOperation.Divide: vectorVectorOperation = IntelMathKernelLibrary.Divide; break;
+                case ExpressionType.Add: vectorVectorOperation = IntelMathKernelLibrary.Add; break;
+                case ExpressionType.Subtract: vectorVectorOperation = IntelMathKernelLibrary.Subtract; break;
+                case ExpressionType.Multiply: vectorVectorOperation = IntelMathKernelLibrary.Multiply; break;
+                case ExpressionType.Divide: vectorVectorOperation = IntelMathKernelLibrary.Divide; break;
             }
             VectorVectorOperation(a, b, result, vectorVectorOperation);
         }
 
         public override void BinaryElementWiseOperation(NArray<int> a, NArray<int> b,
-            NArray<int> result, BinaryElementWiseOperation operation)
+            NArray<int> result, ExpressionType operation)
         {
             int[] aArray, bArray, resultArray;
             int aStart, bStart, resultStart;
@@ -35,11 +36,11 @@ namespace VectorAccelerator.LinearAlgebraProviders
             GetArray(b, out bArray, out bStart);
             GetArray(result, out resultArray, out resultStart);
 
-            if (operation == VectorAccelerator.BinaryElementWiseOperation.Add)
+            if (operation == ExpressionType.Add)
             {
                 for (int i = 0; i < result.Length; ++i) resultArray[resultStart + i] = aArray[aStart + i] + bArray[bStart + i];
             }
-            else if (operation == VectorAccelerator.BinaryElementWiseOperation.Subtract)
+            else if (operation == ExpressionType.Subtract)
             {
                 for (int i = 0; i < result.Length; ++i) resultArray[resultStart + i] = aArray[aStart + i] - bArray[bStart + i];
             }

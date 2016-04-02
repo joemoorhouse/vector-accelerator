@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Linq.Expressions;
 
 namespace VectorAccelerator.DeferredExecution
 {
@@ -49,10 +50,10 @@ namespace VectorAccelerator.DeferredExecution
 
     public class BinaryVectorOperation<T> : BinaryOperation<T>
     {
-        public readonly BinaryElementWiseOperation OperationType;
+        public readonly ExpressionType OperationType;
 
         public BinaryVectorOperation(NArray<T> operand1, NArray<T> operand2, NArray<T> result,
-            BinaryElementWiseOperation operationType, Action<NArray<T>, NArray<T>, NArray<T>> operation = null)
+            ExpressionType operationType, Action<NArray<T>, NArray<T>, NArray<T>> operation = null)
             : base(operand1, operand2, result, operation)
         {
             OperationType = operationType;

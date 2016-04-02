@@ -15,4 +15,14 @@ namespace RiskEngine.Framework
             return model.GetType() == this.Type;
         }
     }
+
+    public class FactorKey : IdentifierTypeKey
+    {
+        public FactorKey(string identifier, Type type) : base(identifier, type) { }
+
+        public bool Matches(FactorKey model)
+        {
+            return model.GetType() == this.Type;
+        }
+    }
 }

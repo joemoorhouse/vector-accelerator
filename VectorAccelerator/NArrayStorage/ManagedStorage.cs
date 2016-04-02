@@ -118,7 +118,7 @@ namespace VectorAccelerator.NArrayStorage
             return new ManagedStorage<T>(_storage, startIndex, length);
         }
 
-        internal override NArrayStorage<T> ColumnAsReference(int columnIndex)
+        public override NArrayStorage<T> ColumnAsReference(int columnIndex)
         {
             return new ManagedStorage<T>(_storage, _storageStart + columnIndex * _stride, RowCount);
         }

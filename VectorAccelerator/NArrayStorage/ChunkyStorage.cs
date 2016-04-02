@@ -46,7 +46,7 @@ namespace VectorAccelerator.NArrayStorage
             throw new NotImplementedException();
         }
 
-        internal override NArrayStorage<T> ColumnAsReference(int columnIndex)
+        public override NArrayStorage<T> ColumnAsReference(int columnIndex)
         {
             throw new NotImplementedException();
         }

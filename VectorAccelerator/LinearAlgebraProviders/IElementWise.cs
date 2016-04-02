@@ -2,13 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Linq.Expressions;
 using VectorAccelerator.Distributions;
 
 namespace VectorAccelerator.LinearAlgebraProviders
 {    
     public interface IElementWise<T>
     {
-        void BinaryElementWiseOperation(NArray<T> a, NArray<T> b, NArray<T> result, BinaryElementWiseOperation operation);
+        void BinaryElementWiseOperation(NArray<T> a, NArray<T> b, NArray<T> result, ExpressionType operation);
 
         void UnaryElementWiseOperation(NArray<T> a, NArray<T> result, UnaryElementWiseOperation operation);
 

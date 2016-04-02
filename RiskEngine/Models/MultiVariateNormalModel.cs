@@ -7,13 +7,14 @@ using VectorAccelerator;
 using VectorAccelerator.Distributions;
 using RiskEngine.Framework;
 using RiskEngine.Data;
+using RiskEngine.Factors;
 
 namespace RiskEngine.Models
 {
     /// <summary>
     /// Model that produces random variates sampled from a multivariate normal distribution
     /// </summary>
-    public class MultiVariateNormalModel : MultiFactorProcess
+    public class MultiVariateNormalModel : MultiFactorModel
     {
         public override void Initialise(Simulation simulation)
         {
@@ -22,7 +23,7 @@ namespace RiskEngine.Models
             _normalDistribution = new Normal(randomStream, 0, 1);
         }
 
-        internal override void Prepare(Context context)
+        public override void Prepare(Context context)
         {
             var weightsProvider = context.Data.CalibrationParametersProviderOfType<WeightsProvider>();
             
@@ -36,11 +37,11 @@ namespace RiskEngine.Models
             {
                 _rootCovariance.SetColumn(i, weightsProvider.Value(_factors[i].Identifier));
 
-                _factors[i].Value = _correlated.ColumnAsReference(i);
+                _factors[i].Value.Storage = _correlated.Storage.ColumnAsReference(i);
             }
         }
 
-        protected override void Step(TimeInterval timeStep)
+        public override void StepNext()
         {
             // do not care about timeStep: batches are simply normal variates
             _uncorrelated.FillRandom(_normalDistribution);
@@ -65,6 +66,8 @@ namespace RiskEngine.Models
             {
                 WeightsLength = weightsLength;
             }
+
+            //public double GetCorrelation(string factor1, string factor2)
 
             public override void AddValue(string factor, NArray weights)
             {

@@ -57,37 +57,51 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Attributes\ModelAppliesToAttribute.cs" />
     <Compile Include="Data\Calibration\CalibrationParametersProvider.cs" />
     <Compile Include="Data\Calibration\CorrelationHelper.cs" />
     <Compile Include="Data\Curve.cs" />
     <Compile Include="Data\DataPoint.cs" />
     <Compile Include="Data\DataProvider.cs" />
-    <Compile Include="Factors\IFactor.cs" />
-    <Compile Include="Factors\IInterestRate.cs" />
+    <Compile Include="Factors\DiscountFactorNonCash.cs" />
+    <Compile Include="Factors\ModelInterfaces\IDiscountFactor.cs" />
+    <Compile Include="Factors\ModelInterfaces\IMeanRevertingNormalProcess.cs" />
+    <Compile Include="Factors\MeanRevertingNormal.cs" />
+    <Compile Include="Factors\MeanRevertingNormalPath.cs" />
+    <Compile Include="Factors\NormalVariates.cs" />
     <Compile Include="Framework\Context.cs" />
+    <Compile Include="Framework\Factors\Factor.cs" />
+    <Compile Include="Framework\Factors\PathFactor.cs" />
+    <Compile Include="Framework\Factors\SnapshotFactor.cs" />
+    <Compile Include="Framework\Factory.cs" />
     <Compile Include="Framework\IdentifiedNArray.cs" />
     <Compile Include="Framework\IdentifierTypeKey.cs" />
-    <Compile Include="Framework\Model.cs" />
+    <Compile Include="Framework\Models\EvolvingModel.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Framework\Models\Model.cs" />
     <Compile Include="Framework\ModelKey.cs" />
-    <Compile Include="Framework\MultiFactorProcess.cs" />
-    <Compile Include="Framework\Process.cs" />
+    <Compile Include="Framework\Models\MultiFactorModel.cs" />
+    <Compile Include="Framework\Models\PathModel.cs" />
+    <Compile Include="Framework\Models\SnapshotModel.cs" />
+    <Compile Include="Framework\Models\StoringModel.cs" />
+    <Compile Include="Framework\Pricer.cs" />
     <Compile Include="Framework\ResultsAnalysis\SimulationResult.cs" />
-    <Compile Include="Framework\SimulatingModel_OLD.cs" />
     <Compile Include="Framework\Simulation\NodeGroupKey.cs" />
     <Compile Include="Framework\Simulation\Simulation.cs" />
     <Compile Include="Framework\Simulation\SimulationGraph.cs" />
     <Compile Include="Framework\Simulation\SimulationNode.cs" />
     <Compile Include="Framework\Simulation\SimulationRunner.cs" />
     <Compile Include="Framework\Simulation\SimulationSet.cs" />
-    <Compile Include="Framework\SingleFactorProcess.cs" />
+    <Compile Include="Framework\Models\Process.cs" />
     <Compile Include="Framework\State.cs" />
     <Compile Include="Framework\TimeInterval.cs" />
     <Compile Include="Framework\TimePoints.cs" />
     <Compile Include="Models\LinearGaussianModel.cs" />
     <Compile Include="Models\MeanRevertingNormalProcess.cs" />
     <Compile Include="Models\MultiVariateNormalModel.cs" />
-    <Compile Include="Models\MeanRevertingNormalModel.cs" />
-    <Compile Include="Models\NormalVariatesModel.cs" />
+    <Compile Include="Models\NormalProcess.cs" />
+    <Compile Include="Pricers\FixedCashflowDeal.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

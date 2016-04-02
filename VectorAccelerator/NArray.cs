@@ -57,7 +57,11 @@ namespace VectorAccelerator
         }
     }
 
-    public abstract class NArray<T>
+    public interface INArray
+    {
+    }
+
+    public abstract class NArray<T> : INArray
     {
         public readonly int RowCount; // rows of matrix 
         public readonly int ColumnCount; // columns of matrix
@@ -65,8 +69,14 @@ namespace VectorAccelerator
 
         public bool IsScalar { get { return (Length == 1); } }
         public bool IsVector { get { return (Length > 1) && (RowCount == 1 || ColumnCount == 1); } }
-        public bool IsMatrix { get { return RowCount > 1 || ColumnCount > 1; } }
+        public bool IsMatrix { get { return RowCount > 1 && ColumnCount > 1; } }
+        
+        /// <summary>
+        /// Whether this NArray is an independent variable for the purposes of differentiation
+        /// </summary>
+        public bool IsIndependentVariable { get { return _isIndependentVariable; } set { _isIndependentVariable = value; } }
 
+        protected bool _isIndependentVariable = false;
         protected NArrayStorage<T> _storage;
 
         public virtual NArrayStorage<T> Storage
@@ -188,6 +198,11 @@ namespace VectorAccelerator
         public static NArray CreateLike(NArray a)
         {
             return NArrayFactory.CreateLike(a);
+        }
+
+        public static NArray CreateScalar(double value)
+        {
+            return new NArray(StorageLocation.Host, new double[] { value });
         }
 
         public NArray Clone(MatrixRegion region = MatrixRegion.All)

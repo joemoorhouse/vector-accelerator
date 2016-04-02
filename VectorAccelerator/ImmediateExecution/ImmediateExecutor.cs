@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using VectorAccelerator.LinearAlgebraProviders;
 using VectorAccelerator.Distributions;
 using VectorAccelerator.NArrayStorage;
+using System.Linq.Expressions;
 
 namespace VectorAccelerator
 {
@@ -40,7 +41,7 @@ namespace VectorAccelerator
             ElementWise<T>(a).ScaleOffset(a, scale, offset, result);
         }
 
-        public override void DoBinaryElementWiseOperation<T>(NArray<T> a, NArray<T> b, NArray<T> result, BinaryElementWiseOperation operation)
+        public override void DoBinaryElementWiseOperation<T>(NArray<T> a, NArray<T> b, NArray<T> result, ExpressionType operation)
         {
             ElementWise<T>(a, b, result).BinaryElementWiseOperation(a, b, result, operation);
         }
@@ -75,7 +76,7 @@ namespace VectorAccelerator
 
         public void Add(NArray operand1, NArray operand2)
         {
-            Provider(operand1, operand2).BinaryElementWiseOperation(operand1, operand2, operand1, BinaryElementWiseOperation.Add);
+            Provider(operand1, operand2).BinaryElementWiseOperation(operand1, operand2, operand1, ExpressionType.Add);
         }
 
         public NArray<int> LeftShift(NArray<int> operand, int shift)

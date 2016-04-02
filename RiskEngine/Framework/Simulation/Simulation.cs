@@ -16,16 +16,30 @@ namespace RiskEngine.Framework
         /// Provides data required for the Simulation
         /// </summary>
         public readonly Context Context;
-
-        public T DefaultModel<T>(string identifier) where T : class
+        
+        /// <summary>
+        /// Requests a Factor by Factor type and identifier, i.e. a risk factor or random process.
+        /// Use this when the actal Model to be used should be configurable.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="identifier"></param>
+        /// <returns></returns>
+        public T RegisterFactor<T>(string identifier) where T : class
         {
-            var model = _graph.DefaultModel<T>(identifier, this);
-            return model;
+            var factor = _graph.GetFactor<T>(identifier, this);
+            return factor;
         }
 
-        public T ModelOfType<T>(string identifier) where T : class
+        /// <summary>
+        /// Requests a Model by Model type and identifier. Use this to bypass the Factor abstraction (e.g. when the
+        /// specified Model type is always required).
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="identifier"></param>
+        /// <returns></returns>
+        public T RegisterModel<T>(string identifier) where T : class
         {
-            var model = _graph.ModelOfType<T>(identifier, this);
+            var model = _graph.GetModel<T>(identifier, this);
             return model;
         }
 

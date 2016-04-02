@@ -33,7 +33,7 @@ namespace VectorAccelerator.DeferredExecution
             int chunkCount = length / chunksLength; 
             if (length % chunksLength != 0) chunkCount++;
 
-            AssignNArrayStorage(executor.LocalVariables.OfType<NArray<double>>(), chunkCount, chunksLength);
+            //AssignNArrayStorage(executor.LocalVariables.OfType<NArray<double>>(), chunkCount, chunksLength);
             // and integers too?
 
             var options = new ParallelOptions();
@@ -135,7 +135,7 @@ namespace VectorAccelerator.DeferredExecution
             LinearAlgebraProvider provider)
         {
             var operations = new List<NArrayOperation>();
-            operations.AddRange(executor.Operations);
+            //operations.AddRange(executor.Operations);
             RemoveUnnecessaryLocals(operations);
             return operations;
         }

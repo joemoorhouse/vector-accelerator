@@ -96,8 +96,20 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Assertions.cs" />
+    <Compile Include="DeferredExecution\AlgorithmicDifferentiator.cs" />
     <Compile Include="DeferredExecution\DeferredExecutionContext.cs" />
     <Compile Include="DeferredExecution\DeferredOperations.cs" />
+    <Compile Include="DeferredExecution\Expressions\ConstantExpression.cs" />
+    <Compile Include="DeferredExecution\Expressions\CUDACodeBuilder.cs" />
+    <Compile Include="DeferredExecution\Expressions\LocalNArrayVectorParameterExpression.cs" />
+    <Compile Include="DeferredExecution\Expressions\ReferencingVectorParameterExpression.cs" />
+    <Compile Include="DeferredExecution\Expressions\UnaryMathsExpression.cs" />
+    <Compile Include="DeferredExecution\Expressions\VectorBlockExpression.cs" />
+    <Compile Include="DeferredExecution\Expressions\BlockExpressionBuilder.cs" />
+    <Compile Include="DeferredExecution\Expressions\VectorBlockExpressionRunner.cs" />
+    <Compile Include="DeferredExecution\Expressions\VectorOperationExpression.cs" />
+    <Compile Include="DeferredExecution\Expressions\VectorParameterExpression.cs" />
+    <Compile Include="DeferredExecution\Expressions\ScaleOffsetExpression.cs" />
     <Compile Include="DeferredExecution\NArrayOperations\BinaryNonVectorOperation.cs" />
     <Compile Include="DeferredExecution\DeferringExecutor.cs" />
     <Compile Include="DeferredExecution\NArrayOperation.cs" />

@@ -69,8 +69,13 @@
   </Choose>
   <ItemGroup>
     <Compile Include="AcceleratorTestsCPU.cs" />
+    <Compile Include="Checks\BasicCheckVectorPerformance.cs" />
     <Compile Include="ConditionalSpeedTest.cs" />
+    <Compile Include="DeferredExecutionTests.cs" />
     <Compile Include="DistributionTests.cs" />
+    <Compile Include="ExpressionBuildingTests\BasicExpressionBuildingTests.cs">
+      <ExcludeFromStyleCop>True</ExcludeFromStyleCop>
+    </Compile>
     <Compile Include="Financial\CounterpartyCreditRisk\InterestRateModel.cs" />
     <Compile Include="InterpolationTest.cs" />
     <Compile Include="Checks\CheckApplicationLevelThreadingMKL.cs" />

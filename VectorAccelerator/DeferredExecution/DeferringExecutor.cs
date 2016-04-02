@@ -2,10 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Linq.Expressions;
 using VectorAccelerator;
 using VectorAccelerator.Distributions;
 using VectorAccelerator.LinearAlgebraProviders;
 using VectorAccelerator.DeferredExecution;
+using VectorAccelerator.DeferredExecution.Expressions;
 
 namespace VectorAccelerator
 {
@@ -15,28 +17,18 @@ namespace VectorAccelerator
     /// the ImmediateExecutor is used.
     /// </summary>
     public class DeferringExecutor : BaseExecutor, IExecutor
-    {        
-        List<NArrayOperation> _operations = new List<NArrayOperation>();
-        List<ILocalNArray> _localVariables = new List<ILocalNArray>();
+    {
+        BlockExpressionBuilder _builder = new BlockExpressionBuilder();
+        
         int _vectorLength = -1;
-
         public int VectorsLength { get { return _vectorLength; } }
-
-        public List<ILocalNArray> LocalVariables { get { return _localVariables; } }
-
-        public List<NArrayOperation> Operations { get { return _operations; } }
-
-        public string DebugString()
-        {
-            var builder = new StringBuilder();
-            Operations.ForEach(o => builder.Append(o.ToString() + Environment.NewLine));
-            return builder.ToString();
-        }
 
         public void Execute(VectorExecutionOptions options)
         {
-            throw new NotImplementedException(); // FIX!
-            //VectorOperationRunner.Execute(this, _provider, options);
+            var codeBuilder = new CUDACodeBuilder();
+            var block = _builder.ToBlock();
+            AlgorithmicDifferentiator.Differentiate(block);
+            codeBuilder.GenerateCode(block);
         }
 
         #region Deferrable Operations
@@ -51,27 +43,24 @@ namespace VectorAccelerator
             return CreateLocalLike<S, T>(array) as NArray<S>;
         }
 
-        public void Assign<T>(NArray<T> operand1, NArray<T> operand2)
+        public void Assign<T>(NArray<T> result, NArray<T> a)
         {
-            _operations.Add(new AssignOperation<T>(operand1, operand2));
+            _builder.AddAssign(result, a);
         }
 
         public override void DoUnaryElementWiseOperation<T>(NArray<T> a, NArray<T> result, UnaryElementWiseOperation operation)
         {
-            _operations.Add(new UnaryVectorOperation<T>(a, result,
-                (op1, r) => ElementWise<T>().UnaryElementWiseOperation(op1, r, operation)));
+            _builder.AddUnaryElementWiseOperation(a, result, operation);
         }
 
         public override void DoScaleOffset<T>(NArray<T> a, T scale, T offset, NArray<T> result)
         {
-            _operations.Add(
-                    new ScaleOffsetOperation<T>(a, result, scale, offset, ElementWise<T>().ScaleOffset));
+            _builder.AddScaleOffsetOperation<T>(a, scale, offset, result);
         }
 
-        public override void DoBinaryElementWiseOperation<T>(NArray<T> a, NArray<T> b, NArray<T> result, BinaryElementWiseOperation operation)
+        public override void DoBinaryElementWiseOperation<T>(NArray<T> a, NArray<T> b, NArray<T> result, ExpressionType operation)
         {
-            _operations.Add(new BinaryVectorOperation<T>(a, b, result, operation,
-                (op1, op2, r) => ElementWise<T>().BinaryElementWiseOperation(op1, op2, r, operation)));
+            _builder.AddBinaryElementWiseOperation(a, b, result, operation);
         }
 
         #endregion
@@ -192,17 +181,8 @@ namespace VectorAccelerator
             if (_vectorLength == -1) _vectorLength = array.Length;
             if (array.Length != _vectorLength)
                 throw new ArgumentException("length mismatch", "array");
-
-            return CreateLocalOfLength<S>(_vectorLength);
-        }
-
-        private ILocalNArray CreateLocalOfLength<T>(int length)
-        {
-            ILocalNArray localArray = null;
-            if (typeof(T) == typeof(double)) localArray = new LocalNArray(_localVariables.Count, length);
-            else if (typeof(T) == typeof(int)) localArray = new LocalNArrayInt(_localVariables.Count, length);
-            _localVariables.Add(localArray);
-            return localArray;
+            
+            return _builder.CreateLocalOfLength<T>(_vectorLength);
         }
     }
 }

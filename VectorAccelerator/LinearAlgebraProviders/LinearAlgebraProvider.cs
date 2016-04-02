@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using VectorAccelerator.Distributions;
+using System.Linq.Expressions;
 
 namespace VectorAccelerator.LinearAlgebraProviders
 {
@@ -42,9 +43,9 @@ namespace VectorAccelerator.LinearAlgebraProviders
 
         #region Abstract ElementWise
 
-        public abstract void BinaryElementWiseOperation(NArray<double> a, NArray<double> b, NArray<double> result, BinaryElementWiseOperation operation);
+        public abstract void BinaryElementWiseOperation(NArray<double> a, NArray<double> b, NArray<double> result, ExpressionType operation);
 
-        public abstract void BinaryElementWiseOperation(NArray<int> a, NArray<int> b, NArray<int> result, BinaryElementWiseOperation operation);
+        public abstract void BinaryElementWiseOperation(NArray<int> a, NArray<int> b, NArray<int> result, ExpressionType operation);
 
         public abstract void UnaryElementWiseOperation(NArray<double> a, NArray<double> result, UnaryElementWiseOperation operation);
 

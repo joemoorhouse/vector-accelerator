@@ -7,6 +7,7 @@ using RiskEngine.Calibration;
 using RiskEngine.Models;
 using VectorAccelerator;
 using VectorAccelerator.Distributions;
+using RiskEngine.Factors;
 
 namespace RiskEngine.Tests
 {    
@@ -39,7 +40,7 @@ namespace RiskEngine.Tests
 
             var identifiers = CreateTestWeightsProvider(simulation.Context, WeightsType.Cholesky);
 
-            var factor = simulation.ModelOfType<MeanRevertingNormalProcess>(identifiers[0]);
+            var factor = simulation.RegisterFactor<MeanRevertingNormal>(identifiers[0]);
 
             var runner = simulation.CreateSimulationRunner();
 
@@ -71,9 +72,9 @@ namespace RiskEngine.Tests
 
             var identifiers = CreateTestWeightsProvider(simulation.Context, WeightsType.Returns, weightsCount);
 
-            var factor1 = simulation.ModelOfType<NormalVariatesModel>(identifiers[0]);
-            var factor2 = simulation.ModelOfType<NormalVariatesModel>(identifiers[1]);
-            var factor3 = simulation.ModelOfType<NormalVariatesModel>(identifiers[2]);
+            var factor1 = simulation.RegisterFactor<NormalVariates>(identifiers[0]);
+            var factor2 = simulation.RegisterFactor<NormalVariates>(identifiers[1]);
+            var factor3 = simulation.RegisterFactor<NormalVariates>(identifiers[2]);
 
             var runner = simulation.CreateSimulationRunner();
          

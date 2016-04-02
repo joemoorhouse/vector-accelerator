@@ -21,4 +21,10 @@ namespace RiskEngine.Framework
             IntervalInYears = (next - previous).Days / 365.25;
         }
     }
+
+    public class TimePoint
+    {
+        public readonly DateTime DateTime;
+        public readonly double YearsFromBaseDate;
+    }
 }

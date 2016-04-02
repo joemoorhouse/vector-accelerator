@@ -55,7 +55,7 @@ namespace VectorAccelerator
         /// </summary>
         /// <param name="columnIndex"></param>
         /// <returns></returns>
-        internal abstract NArrayStorage<T> ColumnAsReference(int columnIndex);
+        public abstract NArrayStorage<T> ColumnAsReference(int columnIndex);
 
         /// <summary>
         /// Creates a copy of a sub-matrix, allocating new storage.

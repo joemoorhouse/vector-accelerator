@@ -48,7 +48,9 @@ namespace VectorAccelerator.Tests
 
         public static bool Checkit(IList<double> first, IList<double> second)
         {
-            return (first.Count == second.Count) && !first.Zip(second, (f, s) => (f - s)).Any(d => Math.Abs(d) > 1e-6);
+            if (first.Count != second.Count) return false;
+            var diffs = first.Zip(second, (f, s) => (f - s)).Where(d => Math.Abs(d) > 1e-6);
+            return !diffs.Any();
         }
     }
 }

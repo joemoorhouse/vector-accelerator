@@ -51,7 +51,7 @@ namespace RiskEngine.Framework
                 // this provides another axis for parallelising the code 
                 foreach (var model in set.Models)
                 {
-                    model.Step(interval);
+                    model.StepNext();
                 }
             }
             _currentDateTime = interval.Next;

@@ -33,13 +33,13 @@ namespace VectorAccelerator.Tests
                     VectorForm(variates, optionPricesVector);
                 });
 
-                TestHelpers.Timeit(() =>
-                {
-                    using (NArray.DeferredExecution()) 
-                    {
-                        VectorForm(variates, optionPricesVector);
-                    }                
-                });
+                //TestHelpers.Timeit(() =>
+                //{
+                //    using (NArray.DeferredExecution()) 
+                //    {
+                //        VectorForm(variates, optionPricesVector);
+                //    }                
+                //});
 
                 TestHelpers.Timeit(() =>
                 {
