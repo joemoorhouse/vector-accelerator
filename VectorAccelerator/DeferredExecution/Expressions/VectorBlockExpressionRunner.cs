@@ -20,10 +20,13 @@ namespace VectorAccelerator.DeferredExecution.Expressions
         /// <param name="block"></param>
         /// <param name="provider"></param>
         /// <param name="vectorOptions"></param>
-        public static void RunNonCompiling(VectorBlockExpression block, 
-            LinearAlgebraProvider provider, VectorExecutionOptions vectorOptions)
+        public static void RunNonCompiling(BlockExpressionBuilder _builder, 
+            LinearAlgebraProvider provider, VectorExecutionOptions vectorOptions,
+            NArray[] outputs)
         {
             //Console.WriteLine(executor.DebugString());
+            var block = _builder.ToBlock();
+
             int chunksLength = 1000;
             var arrayPoolStack = ExecutionContext.ArrayPool.GetStack(chunksLength);
 
@@ -32,12 +35,13 @@ namespace VectorAccelerator.DeferredExecution.Expressions
                 arrayPoolStack.Push(new double[chunksLength]);
             }
 
-            int length = block.ArgumentParameters.OfType<NArray<double>>().First().Length;
+            int length = (block.ArgumentParameters.First() as ReferencingVectorParameterExpression<double>)
+                .Array.Length;
 
             int chunkCount = length / chunksLength;
             if (length % chunksLength != 0) chunkCount++;
 
-            //AssignNArrayStorage(executor.LocalVariables.OfType<NArray<double>>(), chunkCount, chunksLength);
+            AssignNArrayStorage(block, outputs, chunkCount, chunksLength, length);
             // and integers too?
 
             var options = new ParallelOptions();
@@ -52,9 +56,10 @@ namespace VectorAccelerator.DeferredExecution.Expressions
                 int vectorLength = Math.Min(chunksLength, length - startIndex);
                 foreach (var operation in block.Operations)
                 {
-                    if (operation.Type == typeof(NArray<double>))
+                    if (operation.Type == typeof(NArray))
                     {
-                        ExecuteSingleVectorOperation<double>(operation, provider,
+                        var newOperation = _builder.SimplifyOperation(operation); // deal with any expressions containing scalars that can be simplified
+                        ExecuteSingleVectorOperation<double>(newOperation, provider,
                             arrayPoolStack, temporaryArrays,
                             vectorLength,
                             i, startIndex);
@@ -85,8 +90,11 @@ namespace VectorAccelerator.DeferredExecution.Expressions
             {
                 result = (operation.Left as LocalNArrayVectorParameterExpression<T>).Array;
                 var chunkyStorage = result.Storage as ChunkyStorage<T>;
-                temporaryArrays.Add(arrayPoolStack.Pop());
-                chunkyStorage.SetChunk(chunkIndex, temporaryArrays.Last());
+                if (chunkyStorage != null)
+                {
+                    temporaryArrays.Add(arrayPoolStack.Pop());
+                    chunkyStorage.SetChunk(chunkIndex, temporaryArrays.Last());
+                }
             }
             else
             {
@@ -97,28 +105,34 @@ namespace VectorAccelerator.DeferredExecution.Expressions
             {
                 var unaryOperation = operation.Right as UnaryMathsExpression;
 
-                (provider as IElementWise<T>).UnaryElementWiseOperation(
-                    Slice<T>(unaryOperation.Operand, chunkIndex, startIndex, vectorLength),
-                    Slice(result, chunkIndex, startIndex, vectorLength),
-                    unaryOperation.UnaryType);
-
-                //var unaryOperation = operation as UnaryVectorOperation<T>;
-
-                //unaryOperation.Operation(Slice(unaryOperation.Operand, chunkIndex, startIndex, vectorLength),
-                //    Slice(result, chunkIndex, startIndex, vectorLength));
+                if (unaryOperation.UnaryType == UnaryElementWiseOperation.ScaleOffset)
+                {
+                    var scaleOffset = unaryOperation as ScaleOffsetExpression<T>;
+                    (provider as IElementWise<T>).ScaleOffset(Slice<T>(unaryOperation.Operand, chunkIndex, startIndex, vectorLength),
+                        scaleOffset.Scale, scaleOffset.Offset,
+                        Slice(result, chunkIndex, startIndex, vectorLength));
+                }
+                else
+                {
+                    (provider as IElementWise<T>).UnaryElementWiseOperation(
+                        Slice<T>(unaryOperation.Operand, chunkIndex, startIndex, vectorLength),
+                        Slice(result, chunkIndex, startIndex, vectorLength),
+                        unaryOperation.UnaryType);
+                }
             }
 
-            if (operation is BinaryVectorOperation<T>)
+            if (operation.Right is BinaryExpression)
             {
-                var binaryOperation = operation as BinaryVectorOperation<T>;
+                var binaryOperation = operation.Right as BinaryExpression;
 
-                binaryOperation.Operation(Slice(binaryOperation.Operand1, chunkIndex, startIndex, vectorLength),
-                    Slice(binaryOperation.Operand2, chunkIndex, startIndex, vectorLength),
-                    Slice(result, chunkIndex, startIndex, vectorLength));
+                (provider as IElementWise<T>).BinaryElementWiseOperation(Slice<T>(binaryOperation.Left, chunkIndex, startIndex, vectorLength),
+                    Slice<T>(binaryOperation.Right, chunkIndex, startIndex, vectorLength),
+                    Slice(result, chunkIndex, startIndex, vectorLength),
+                    binaryOperation.NodeType);
             }
         }
 
-        private static NArray<T> Slice<T>(VectorParameterExpression expression, int chunkIndex, int startIndex, int length)
+        private static NArray<T> Slice<T>(Expression expression, int chunkIndex, int startIndex, int length)
         {
             var referencingExpression = expression as ReferencingVectorParameterExpression<T>;
             if (referencingExpression == null) throw new NotImplementedException("no support for non-referencing expressions");
@@ -127,7 +141,7 @@ namespace VectorAccelerator.DeferredExecution.Expressions
 
         private static NArray<T> Slice<T>(NArray<T> array, int chunkIndex, int startIndex, int length)
         {
-            if (array is ILocalNArray)
+            if (array.Storage is ChunkyStorage<T>)
             {
                 return NMath.CreateNArray<T>((array.Storage as ChunkyStorage<T>).Slice(chunkIndex));
             }
@@ -137,22 +151,32 @@ namespace VectorAccelerator.DeferredExecution.Expressions
             }
         }
 
-        private static void AssignNArrayStorage<T>(IEnumerable<NArray<T>> localNArrays, int chunkCount, int chunksLength)
+        private static void AssignNArrayStorage<T>(VectorBlockExpression block, IEnumerable<NArray<T>> persistingArrays,
+            int chunkCount, int chunksLength, int vectorLength)
         {
-            foreach (var localNArray in localNArrays)
+            var localNArrays = block.LocalParameters.Select(r => (r as ReferencingVectorParameterExpression<T>).Array);
+            var requireChunkyStorage = localNArrays.Except(persistingArrays);
+            var requirePersistingStorage = localNArrays.Intersect(persistingArrays);
+
+            foreach (var localNArray in requireChunkyStorage)
             {
                 localNArray.Storage = new ChunkyStorage<T>(chunkCount, chunksLength);
             }
+
+            foreach (var localNArray in requirePersistingStorage)
+            {
+                localNArray.Storage = new ManagedStorage<T>(vectorLength, 1);
+            }
+        }
+
+        private static NArray<T> GetArray<T>(Expression expression)
+        {
+            return (expression as ReferencingVectorParameterExpression<T>).Array;
         }
 
         private static NArray<T> GetArray<T>(VectorParameterExpression expression)
         {
             return (expression as ReferencingVectorParameterExpression<T>).Array;
-        }
-
-        private static bool IsLocal<T>(NArray<T> array)
-        {
-            return array is ILocalNArray;
         }
     }
 }

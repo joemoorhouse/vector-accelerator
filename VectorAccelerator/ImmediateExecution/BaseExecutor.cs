@@ -14,7 +14,7 @@ namespace VectorAccelerator
 
     //public enum BinaryElementWiseOperation { Add, Subtract, Multiply, Divide };
     
-    public enum UnaryElementWiseOperation { Inverse, Negate, Exp, Log, SquareRoot, InverseSquareRoot, CumulativeNormal, InverseCumulativeNormal, ScaleOffset };
+    public enum UnaryElementWiseOperation { Inverse, Negate, Exp, Log, SquareRoot, InverseSquareRoot, Normal, CumulativeNormal, InverseCumulativeNormal, ScaleOffset };
 
     public enum LogicalBinaryElementWiseOperation { And, Or };
 

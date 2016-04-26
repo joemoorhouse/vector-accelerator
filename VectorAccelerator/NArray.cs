@@ -235,6 +235,11 @@ namespace VectorAccelerator
             return new VectorAccelerator.DeferredExecution.DeferredExecutionContext(options);
         }
 
+        public static IList<NArray> Evaluate(Func<NArray> function, params NArray[] independentVariables)
+        {
+            return VectorAccelerator.DeferredExecution.DeferredExecutionContext.Evaluate(function, independentVariables);
+        }
+
         public override string ToString()
         {
             //if (IsScalar) return Storage.First().ToString();

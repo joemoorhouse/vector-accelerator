@@ -15,6 +15,7 @@ namespace VectorAccelerator.Tests
     {
         public void CUDA()
         {
+            
             var location = StorageLocation.Host;
             var normal = new Normal(new RandomNumberStream(location), 0, 1);
             var input = NArray.CreateRandom(1000, normal);
@@ -35,25 +36,26 @@ namespace VectorAccelerator.Tests
             var normal = new Normal(new RandomNumberStream(location), 0, 1);
             var state = NArray.CreateRandom(1000, normal);
             var k = 95;
-            var result = NArray.CreateLike(state);
-            var s0 = NArray.CreateScalar(100);
-            s0.IsIndependentVariable = true;
-            using (NArray.DeferredExecution())
+            var s0 = NArray.CreateScalar(100); // even if they are scalars, any independent variables should be NArrays
+            
+            var test = NMath.Exp(0.25 * state); // immediate executation mode outside Evaluate
+
+            var result1 = NArray.Evaluate(() =>
             {
                 var s = s0 * NMath.Exp(0.2 * state); // simple log-normal
-                result.Assign(s - k); // non-discounting forward
-            }
+                return s - k;
+            }, s0);
 
-            Evaluate(() =>
-                {
-                    var s = s0 * NMath.Exp(0.2 * state); // simple log-normal
-                    return s - k;
-                }, s0);
-        }
+            var expected = (s0 * NMath.Exp(0.2 * state) - k)
+                .DebugDataView.ToArray();
+            var obtained = result1[0].DebugDataView.ToArray();
 
-        public void Evaluate(Func<NArray> function, params NArray[] independentVariables)
-        {
 
+            NArray.Evaluate(() =>
+            {
+                var s = s0 * NMath.Exp(0.2 * state); // simple log-normal
+                return Finance.BlackScholes(CallPut.Call, s, k, 0.2, 1);
+            }, s0);
         }
     }
 }

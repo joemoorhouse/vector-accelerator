@@ -19,16 +19,42 @@ namespace VectorAccelerator
     public class DeferringExecutor : BaseExecutor, IExecutor
     {
         BlockExpressionBuilder _builder = new BlockExpressionBuilder();
-        
-        int _vectorLength = -1;
-        public int VectorsLength { get { return _vectorLength; } }
+
+        public int VectorsLength { get { return _builder.VectorLength; } }
 
         public void Execute(VectorExecutionOptions options)
         {
             var codeBuilder = new CUDACodeBuilder();
             var block = _builder.ToBlock();
-            AlgorithmicDifferentiator.Differentiate(block);
             codeBuilder.GenerateCode(block);
+        }
+
+        public void Evaluate(VectorExecutionOptions options, 
+            out NArray[] outputs,
+            NArray dependentVariable, params NArray[] independentVariables)
+        {
+            var dependentVariableExpression = _builder.GetParameter<double>(dependentVariable);
+            var independentVariableExpressions = independentVariables.Select(v => _builder.GetParameter<double>(v)).ToArray();
+            
+            // differentiate, extending the block as necessary
+            IList<Expression> derivativeExpressions;
+            AlgorithmicDifferentiator.Differentiate(_builder, out derivativeExpressions,
+                dependentVariableExpression, independentVariableExpressions);
+            
+            // the derivativeExpressions can be either constant expressions (a common case!) or locals
+            var outputArrays = new NArray[independentVariables.Length + 1];
+            outputArrays[0] = dependentVariable;
+
+            // for locals that we know need to be peristed, we will use full storage (rather than re-assign)
+            outputs = new NArray[] { dependentVariable }.Concat
+                (derivativeExpressions.Select(e => (e is ConstantExpression<double>) ?
+                    NArray.CreateScalar((e as ConstantExpression<double>).Value) :
+                    (e as ReferencingVectorParameterExpression<double>).Array as NArray))
+                    .ToArray();
+
+            // run
+            VectorBlockExpressionRunner.RunNonCompiling(_builder, Provider(StorageLocation.Host), 
+                new VectorExecutionOptions(), outputs);
         }
 
         #region Deferrable Operations
@@ -152,8 +178,8 @@ namespace VectorAccelerator
 
         public NArray<T> Index<T>(NArray<T> operand, NArrayInt indices)
         {
-            if (_vectorLength == -1) _vectorLength = indices.Length;
-            if (indices.Length != _vectorLength)
+            if (_builder.VectorLength == -1) _builder.VectorLength = indices.Length;
+            if (indices.Length != _builder.VectorLength)
                 throw new ArgumentException("length mismatch", "array");
 
             return NewNArrayLike<T>(operand);
@@ -178,11 +204,11 @@ namespace VectorAccelerator
 
         private ILocalNArray CreateLocalLike<S, T>(NArray<T> array)
         {
-            if (_vectorLength == -1) _vectorLength = array.Length;
-            if (array.Length != _vectorLength)
+            if (_builder.VectorLength == -1) _builder.VectorLength = array.Length;
+            if (array.Length != _builder.VectorLength)
                 throw new ArgumentException("length mismatch", "array");
-            
-            return _builder.CreateLocalOfLength<T>(_vectorLength);
+
+            return _builder.CreateLocal<T>();
         }
     }
 }

@@ -22,6 +22,9 @@ namespace VectorAccelerator.Launcher
 
             var expressionBuilding = new BasicExpressionBuildingTests();
             expressionBuilding.AAD();
+
+            return;
+            
             expressionBuilding.CUDA();
 
             var basicModelTests = new BasicModelTests();
