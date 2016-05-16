@@ -9,9 +9,7 @@ using VectorAccelerator;
 
 namespace RiskEngine.Pricers
 {
-    public enum Currency { EUR, USD }
-    
-    public class FixedCashflowDeal : Deal
+    public class FloatingCashflowDeal : Deal
     {
         public double Amount { get; set; }
 
@@ -20,11 +18,11 @@ namespace RiskEngine.Pricers
         public DateTime PaymentDate { get; set; }
     }
 
-    public class FixedCashflowPricer : Pricer<FixedCashflowDeal>
+    public class FloatingCashflowPricer : Pricer<FloatingCashflowDeal>
     {
         DiscountFactorNonCash _df;
 
-        public FixedCashflowPricer(FixedCashflowDeal deal)
+        public FloatingCashflowPricer(FloatingCashflowDeal deal)
         {
             _deal = deal;
         }

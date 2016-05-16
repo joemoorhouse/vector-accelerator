@@ -99,7 +99,7 @@ namespace VectorAccelerator
                 / Math.Sqrt((NMath.Dot(a, a) * n - aSum * aSum) * (NMath.Dot(b, b) * n - bSum * bSum));
         }
 
-        public static IEnumerable<double> Percentiles(NArray a, double[] percentiles)
+        public static IEnumerable<double> Percentiles(NArray a, IEnumerable<double> percentiles)
         {
             var clone = a.Clone();
             SortInPlace(clone);

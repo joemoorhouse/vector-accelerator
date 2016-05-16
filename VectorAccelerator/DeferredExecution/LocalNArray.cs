@@ -23,6 +23,12 @@ namespace VectorAccelerator
             _index = index;
         }
 
+        public LocalNArray(int index, double value)
+            : base(StorageLocation.Host, new double[] { value })
+        {
+            _index = index;
+        }
+
         public int Index
         {
             get { return _index; }

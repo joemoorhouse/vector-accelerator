@@ -14,16 +14,19 @@ namespace RiskEngine.Framework
     /// </summary>
     public abstract class MultiFactorModel : EvolvingModel
     {
-        public List<IdentifiedNArray> Factors { get { return _factors; } }
+        public List<NArray> Factors { get { return _factors; } }
         
-        public IdentifiedNArray AddFactor(string identifier)
+        public NArray AddFactor(string identifier, SimulationGraph graph)
         {
-            var factor = new IdentifiedNArray(identifier);
+            var context = graph.Context;
+            var factor = context.Factory.CreateNArray(context.Settings.SimulationCount, 1);
             _factors.Add(factor);
+            _factorIdentifiers.Add(identifier);
             return factor;
         }
 
-        protected List<IdentifiedNArray> _factors = new List<IdentifiedNArray>();
+        protected List<NArray> _factors = new List<NArray>();
+        protected List<string> _factorIdentifiers = new List<string>();
         protected NArrayFactory _factory;
     }
 }

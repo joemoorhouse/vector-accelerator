@@ -73,6 +73,7 @@
     <Compile Include="ConditionalSpeedTest.cs" />
     <Compile Include="DeferredExecutionTests.cs" />
     <Compile Include="DistributionTests.cs" />
+    <Compile Include="ExpressionBuildingTests\BasicDifferentiationTests.cs" />
     <Compile Include="ExpressionBuildingTests\BasicExpressionBuildingTests.cs">
       <ExcludeFromStyleCop>True</ExcludeFromStyleCop>
     </Compile>

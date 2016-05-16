@@ -7,7 +7,12 @@ using System.Linq.Expressions;
 
 namespace VectorAccelerator.DeferredExecution.Expressions
 {
-    public enum ParameterType {  Local, Argument };
+    /// <summary>
+    /// Argument = input of calculation. Scalars may be arguments, but only if used as an independent variable
+    /// Local = intermediate result of calculation. Scalars may be locals, but only if the scalar is an independent variable
+    /// Constant = scalar that is not an independent variable
+    /// </summary>
+    public enum ParameterType {  Local, Argument, Constant }; 
     
     public abstract class VectorParameterExpression : Expression
     {
@@ -25,6 +30,7 @@ namespace VectorAccelerator.DeferredExecution.Expressions
         {
             get
             {
+                if (_index == -1) return string.Empty;
                 return string.Format("{0}{1}",
                     _parameterType == ParameterType.Argument ? "arg" : "local",
                     _index);

@@ -63,6 +63,7 @@
     <Compile Include="Data\Curve.cs" />
     <Compile Include="Data\DataPoint.cs" />
     <Compile Include="Data\DataProvider.cs" />
+    <Compile Include="Data\Analysis\Descriptive.cs" />
     <Compile Include="Factors\DiscountFactorNonCash.cs" />
     <Compile Include="Factors\ModelInterfaces\IDiscountFactor.cs" />
     <Compile Include="Factors\ModelInterfaces\IMeanRevertingNormalProcess.cs" />
@@ -70,6 +71,7 @@
     <Compile Include="Factors\MeanRevertingNormalPath.cs" />
     <Compile Include="Factors\NormalVariates.cs" />
     <Compile Include="Framework\Context.cs" />
+    <Compile Include="Framework\Deal.cs" />
     <Compile Include="Framework\Factors\Factor.cs" />
     <Compile Include="Framework\Factors\PathFactor.cs" />
     <Compile Include="Framework\Factors\SnapshotFactor.cs" />
@@ -102,6 +104,7 @@
     <Compile Include="Models\MultiVariateNormalModel.cs" />
     <Compile Include="Models\NormalProcess.cs" />
     <Compile Include="Pricers\FixedCashflowDeal.cs" />
+    <Compile Include="Pricers\FloatingCashflowDeal.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

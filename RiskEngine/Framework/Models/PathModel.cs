@@ -7,14 +7,17 @@ using VectorAccelerator;
 
 namespace RiskEngine.Framework
 {
-    public interface IPath<T>
+    public interface IPath
     {
         NArray this[int timeIndex] { get; }
-
+    }
+    
+    public interface IPath<T> : IPath
+    {
         T Process { get; }
     }
     
-    public class PathModel<T> : StoringModel<T> where T : Process, new()
+    public class PathModel<T> : StoringModel<T>, IPath where T : Process, new()
     {
         List<NArray> _storage = new List<NArray>();
 
@@ -27,14 +30,15 @@ namespace RiskEngine.Framework
 
         public PathModel() : base() { }
 
-        public override void Initialise(Simulation simulation)
+        public override void Initialise(SimulationGraph graph)
         {
-            _singleFactorProcess.Initialise(simulation);
+            base.Initialise(graph);
+            _singleFactorProcess.Initialise(graph);
         }
 
         public override void Prepare(Context context)
         {
-            _storage[0] = _singleFactorProcess.Prepare(context);
+            _storage.Add(_singleFactorProcess.Prepare(context));
         }
 
         public override void StepNext()

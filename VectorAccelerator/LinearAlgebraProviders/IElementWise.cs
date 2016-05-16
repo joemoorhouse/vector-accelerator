@@ -14,6 +14,14 @@ namespace VectorAccelerator.LinearAlgebraProviders
         void UnaryElementWiseOperation(NArray<T> a, NArray<T> result, UnaryElementWiseOperation operation);
 
         /// <summary>
+        /// Inverts and scales a vector by a constant amount
+        /// </summary>
+        /// <param name="a">Input vector</param>
+        /// <param name="scale">Scaling factor</param>
+        /// <returns></returns>
+        void ScaleInverse(NArray<T> a, T scale, NArray<T> result);
+
+        /// <summary>
         /// Scales and offsets a vector by constant amounts
         /// </summary>
         /// <param name="a">Input vector</param>

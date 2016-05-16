@@ -28,23 +28,30 @@ namespace RiskEngine.Framework
         public int SimulationCount { get; private set; }
 
         public TimeInterval[] SimulationIntervals { get; private set; }
+        
+        public TimePoint[] SimulationTimePoints { get; private set; }
 
         public SimulationSettings(DateTime closeOfBusinessDate)
         {
             SimulationCount = 5000;
-            var simulationDateTimes = SimulationDateTimes(closeOfBusinessDate);
+            var simulationDateTimes = SimulationDateTimes(closeOfBusinessDate).ToList();
+            
             SimulationIntervals = simulationDateTimes.Skip(1)
                 .Zip(simulationDateTimes, (n, p) => new TimeInterval(p, n))
-                .ToArray();     
+                .ToArray();
+
+            SimulationTimePoints = simulationDateTimes
+                .Select(p => new TimePoint(p, (p - simulationDateTimes[0]).Days / 365.25))
+                .ToArray();
         }
 
         private IEnumerable<DateTime> SimulationDateTimes(DateTime start)
         {
             var startDateTime = start;
             var startWeekly = startDateTime.AddMonths(1);
-            var startMonthly = startDateTime.AddYears(3);
-            var startAnnual = startDateTime.AddYears(2);
-            var start5Yearly = startDateTime.AddYears(5);
+            var startMonthly = startDateTime.AddYears(2);
+            var startAnnual = startDateTime.AddYears(5);
+            var start5Yearly = startDateTime.AddYears(20); // 5
             var end = startDateTime.AddYears(60);
 
             var currentDateTime = startDateTime;
@@ -61,8 +68,15 @@ namespace RiskEngine.Framework
                 currentDateTime = currentDateTime.AddDays(7);
             }
 
-            currentDateTime = startAnnual;
+            currentDateTime = startMonthly;
             while (currentDateTime < startAnnual)
+            {
+                yield return currentDateTime;
+                currentDateTime = currentDateTime.AddMonths(1);
+            }
+
+            currentDateTime = startAnnual;
+            while (currentDateTime < start5Yearly)
             {
                 yield return currentDateTime;
                 currentDateTime = currentDateTime.AddYears(1);

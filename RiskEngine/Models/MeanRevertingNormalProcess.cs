@@ -21,9 +21,9 @@ namespace RiskEngine.Models
 
         public double Lambda { get; set; }
 
-        public override void Initialise(Simulation simulation)
+        public override void Initialise(SimulationGraph graph)
         {
-            _normalVariates = simulation.RegisterModel<NormalVariates>(Identifier);
+            _normalVariates = graph.RegisterFactor<NormalVariates>(Identifier);
             // defaults values:
             Sigma = 0.1; 
             Lambda = 0.05;
@@ -38,7 +38,7 @@ namespace RiskEngine.Models
         {
             var t = timeStep.IntervalInYears;
             return previous * NMath.Exp(-Lambda * t)
-                + E(2.0 * Lambda, t) * _normalVariates.Value;
+                + NMath.Sqrt(E(2.0 * Lambda, t)) * _normalVariates.Value;
         }
 
         private static double E(double lambda, double t)

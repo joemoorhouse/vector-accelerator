@@ -4,11 +4,30 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using VectorAccelerator;
+using RiskEngine.Framework;
+using RiskEngine.Models;
 
 namespace RiskEngine.Calibration
 {
     public class CorrelationHelper
     {
+        public static void AddMultivariateModelWeightsProvider(Context context,
+            IList<string> identifiers, NArray correlationMatrix)
+        {
+            correlationMatrix = CorrelationHelper.NearestCorrelationMatrix(correlationMatrix);
+            
+            var weightsCount = correlationMatrix.RowCount;
+            var weightsMatrix = NMath.CholeskyDecomposition(correlationMatrix).Transpose();
+
+            var weights = context.Data.AddCalibrationParametersProvider
+                (new WeightsProvider(weightsCount));
+
+            for (int i = 0; i < weightsMatrix.ColumnCount; ++i)
+            {
+                weights.AddValue(identifiers[i], weightsMatrix.Column(i));
+            }
+        }
+        
         public static NArray CorrelationMatrixToWeights(NArray correlationMatrix)
         {
             var nearestCorrelationMatrix = NearestCorrelationMatrix(correlationMatrix);

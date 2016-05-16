@@ -21,7 +21,18 @@ namespace VectorAccelerator.Launcher
             //var hash2 = typeof(double).GetHashCode();
 
             var expressionBuilding = new BasicExpressionBuildingTests();
-            expressionBuilding.AAD();
+            //expressionBuilding.AAD();
+
+            var basicDifferentiationTests = new BasicDifferentiationTests();
+            //basicDifferentiationTests.TestDivision();
+
+            var extendedExpressionBuilding = new BasicSwapAADTest();
+            extendedExpressionBuilding.AADSwapPortfolio();
+
+            //var test0 = new CheckApplicationLevelThreadingMKL();
+            //test0.TranscendentalFunctionTest();
+
+
 
             return;
             

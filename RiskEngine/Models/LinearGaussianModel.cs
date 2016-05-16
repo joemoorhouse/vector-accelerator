@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using RiskEngine.Framework;
 using VectorAccelerator;
 using RiskEngine.Factors;
+using RiskEngine.Data;
 
 namespace RiskEngine.Models
 {
@@ -32,13 +33,30 @@ namespace RiskEngine.Models
             factorCount = 3;
         }
 
-        public override void Initialise(Simulation simulation)
+        public override void Initialise(SimulationGraph graph)
         {
+            base.Initialise(graph);
+
             _factorPaths = Enumerable.Range(0, factorCount).Select(i =>
-                simulation.RegisterModel<MeanRevertingNormalPathModel>(string.Format("IR.{0}.{1}", Identifier, i)))
+                graph.RegisterModel<MeanRevertingNormalPathModel>(
+                string.Format("IR_DiscountFactor_{0}_Factor{1}", Identifier, i)))
                 .ToArray();
 
             _factors = _factorPaths.Select(p => p.Process).ToArray();
+
+            var weightsProvider = graph.Context.Data.CalibrationParametersProviderOfType<WeightsProvider>();
+
+            _factorCorrelation = new double[_factors.Length, _factors.Length];
+
+            for (int i = 0; i < _factorPaths.Length; ++i)
+            {
+                for (int j = 0; j < _factorPaths.Length; ++j)
+                {
+                    _factorCorrelation[i, j] = NMath.Dot(
+                        weightsProvider.Value(_factorPaths[i].Identifier),
+                        weightsProvider.Value(_factorPaths[j].Identifier));
+                }
+            }
         }
 
         /// <summary>
@@ -49,7 +67,8 @@ namespace RiskEngine.Models
         /// <returns></returns>
         public NArray DiscountFactor(int timeIndex, DateTime t)
         {
-            var B = NArrayFactory.CreateLike(_factorPaths[0][timeIndex]);
+            var B = NArray.CreateScalar(0);
+
             double tenor = (t - _timePoints[timeIndex].DateTime).Days / 365.25;
             
             for (int factorIndex = 0; factorIndex < _factors.Length; ++factorIndex)
@@ -73,7 +92,7 @@ namespace RiskEngine.Models
             {
                 for (int j = 0; j < _factors.Length; ++j)
                 {
-                    drift = (_factorCorrelation[i, j] * Sigma(i) * Sigma(j) / (Lambda(i) * Lambda(j)))
+                    drift += (_factorCorrelation[i, j] * Sigma(i) * Sigma(j) / (Lambda(i) * Lambda(j)))
                         * (DriftHelper(Lambda(i), t, tenor) + DriftHelper(Lambda(j), t, tenor)
                         - DriftHelper(Lambda(i) + Lambda(j), t, tenor));
                 }

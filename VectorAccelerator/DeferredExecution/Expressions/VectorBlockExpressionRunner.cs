@@ -25,6 +25,7 @@ namespace VectorAccelerator.DeferredExecution.Expressions
             NArray[] outputs)
         {
             //Console.WriteLine(executor.DebugString());
+
             var block = _builder.ToBlock();
 
             int chunksLength = 1000;
@@ -78,7 +79,7 @@ namespace VectorAccelerator.DeferredExecution.Expressions
             int vectorLength,
             int chunkIndex, int startIndex)
         {
-            if (operation.NodeType != ExpressionType.Assign) return;
+            if (operation == null || operation.NodeType != ExpressionType.Assign) return;
             
             if (operation == null) return;
 
@@ -86,9 +87,10 @@ namespace VectorAccelerator.DeferredExecution.Expressions
                 return;
 
             NArray<T> result;
-            if (operation.Left is LocalNArrayVectorParameterExpression<T>)
+            var left = operation.Left as ReferencingVectorParameterExpression<T>;
+            if (left.ParameterType == ParameterType.Local)
             {
-                result = (operation.Left as LocalNArrayVectorParameterExpression<T>).Array;
+                result = left.Array;
                 var chunkyStorage = result.Storage as ChunkyStorage<T>;
                 if (chunkyStorage != null)
                 {
@@ -110,6 +112,13 @@ namespace VectorAccelerator.DeferredExecution.Expressions
                     var scaleOffset = unaryOperation as ScaleOffsetExpression<T>;
                     (provider as IElementWise<T>).ScaleOffset(Slice<T>(unaryOperation.Operand, chunkIndex, startIndex, vectorLength),
                         scaleOffset.Scale, scaleOffset.Offset,
+                        Slice(result, chunkIndex, startIndex, vectorLength));
+                }
+                else if (unaryOperation.UnaryType == UnaryElementWiseOperation.ScaleInverse)
+                {
+                    var scaleInverse = unaryOperation as ScaleInverseExpression<T>;
+                    (provider as IElementWise<T>).ScaleInverse(Slice<T>(unaryOperation.Operand, chunkIndex, startIndex, vectorLength),
+                        scaleInverse.Scale,
                         Slice(result, chunkIndex, startIndex, vectorLength));
                 }
                 else
@@ -160,6 +169,7 @@ namespace VectorAccelerator.DeferredExecution.Expressions
 
             foreach (var localNArray in requireChunkyStorage)
             {
+                if (localNArray == null) continue;
                 localNArray.Storage = new ChunkyStorage<T>(chunkCount, chunksLength);
             }
 

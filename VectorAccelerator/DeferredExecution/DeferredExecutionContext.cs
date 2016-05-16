@@ -48,7 +48,7 @@ namespace VectorAccelerator.DeferredExecution
 
         public void Dispose()
         {
-            _executor.Execute(_options);
+            //_executor.Execute(_options);
             ExecutionContext.Executor = _previousExecutor;
         }
     }

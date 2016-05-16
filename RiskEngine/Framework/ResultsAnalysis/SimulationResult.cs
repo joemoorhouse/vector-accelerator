@@ -3,29 +3,22 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using VectorAccelerator;
 
 namespace RiskEngine.Framework
 {
-    public struct DataPoint
+    public static class Analysis
     {
-        public DateTime Time;
-        public double Value;
-
-        public DataPoint(DateTime time, double value)
+        public static IEnumerable<double> ApplyMeasures(IEnumerable<Measure> measures, NArray vector)
         {
-            this.Time = time;
-            this.Value = value;
-        }
-
-        public override string ToString()
-        {
-            return string.Join(" ", Time.ToShortDateString(), Value.ToString());
+            var percentileMeasures = measures.OfType<PercentileMeasure>();
+            var percentiles = percentileMeasures.Select(m => m.Percentile);
+            return NMath.Percentiles(vector, percentiles);
         }
     }
-
+    
     public class Measure
     {
-
     }
 
     public class PercentileMeasure : Measure
@@ -45,6 +38,7 @@ namespace RiskEngine.Framework
         {
             return String.Format("{0:P}", Percentile);
         }
+
     }
 
     public class Profile

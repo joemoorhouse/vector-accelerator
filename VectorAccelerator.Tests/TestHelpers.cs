@@ -46,9 +46,14 @@ namespace VectorAccelerator.Tests
             return Checkit(first, second) ? "Matches" : "Does not match";
         }
 
-        public static bool Checkit(IList<double> first, IList<double> second)
+        public static bool Checkit(NArray first, NArray second)
         {
-            if (first.Count != second.Count) return false;
+            return Checkit(first.DebugDataView, second.DebugDataView);
+        }
+
+        public static bool Checkit(IEnumerable<double> first, IEnumerable<double> second)
+        {
+            if (first.Count() != second.Count()) return false;
             var diffs = first.Zip(second, (f, s) => (f - s)).Where(d => Math.Abs(d) > 1e-6);
             return !diffs.Any();
         }

@@ -61,6 +61,14 @@ namespace VectorAccelerator.DeferredExecution.Expressions
                 );
         }
 
+        public void AddScaleInverseOperation<T>(NArray<T> a, T scale, NArray<T> result)
+        {
+            _operations.Add(
+                Expression.Assign(GetParameter<T>(result),
+                ExpressionExtended.ScaleInverse<T>(GetParameter<T>(a), scale))
+                );
+        }
+
         public void AddScaleOffsetOperation<T>(NArray<T> a, T scale, T offset, NArray<T> result)
         {
             _operations.Add(
@@ -70,73 +78,80 @@ namespace VectorAccelerator.DeferredExecution.Expressions
         }
 
         /// <summary>
-        /// Efficient representation of product of two Expressions. This returns constant or parameter if possible, otherwise constructs
-        /// a new assignment expression and returns the new local.  
+        /// Adds a product expression efficiently; assumes that scalar independent variables can be combined
+        /// i.e. that any differentiation has already occurred
         /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="a"></param>
-        /// <param name="b"></param>
-        /// <returns></returns>
-        public Expression AddProductExpression(Expression a, Expression b)
-        {   
-            if (a is ConstantExpression<double> && b is ConstantExpression<double>)
+        public VectorParameterExpression AddProductExpression(Expression a,
+            Expression b)
+        {
+            var paramA = a as ReferencingVectorParameterExpression<double>;
+            var paramB = b as ReferencingVectorParameterExpression<double>;
+            if (paramA == null || paramB == null) throw new NotImplementedException();
+            if (paramA.IsScalar && paramB.IsScalar)
             {
                 return new ConstantExpression<double>(
-                    (a as ConstantExpression<double>).Value *
-                    (b as ConstantExpression<double>).Value);
+                    paramA.ScalarValue * paramB.ScalarValue);
             }
-            else if (a is VectorParameterExpression && b is ConstantExpression<double>)
+            else if (paramA.IsScalar && paramA.ScalarValue == 1)
             {
-                ConstantExpression<double> constant = b as ConstantExpression<double>;
-                if (constant.Value == 1.0) return a;
-                return AddLocalAssignment<double>(new ScaleOffsetExpression<double>(a as VectorParameterExpression, constant.Value, 0));
+                return paramB;
             }
-            else if (b is VectorParameterExpression && a is ConstantExpression<double>)
+            else if (paramB.IsScalar && paramB.ScalarValue == 1)
             {
-                ConstantExpression<double> constant = a as ConstantExpression<double>;
-                if (constant.Value == 1.0) return b;
-                return AddLocalAssignment<double>(new ScaleOffsetExpression<double>(b as VectorParameterExpression, constant.Value, 0));
+                return paramA;
             }
-            else if (a is VectorParameterExpression && b is VectorParameterExpression)
+            else
             {
-                return AddLocalAssignment<double>(Expression.MakeBinary(ExpressionType.Multiply, a, b));
+                return AddLocalAssignment<double>(Expression.MakeBinary(ExpressionType.Multiply, paramA, paramB));
             }
-            else throw new NotImplementedException();
         }
 
         /// <summary>
-        /// Efficient representation of sum of two Expressions. This returns constant or parameter if possible, otherwise constructs
-        /// a new assignment expression and returns the new local.  
+        /// Adds a sum expression efficiently; assumes that scalar independent variables can be combined
+        /// i.e. that any differentiation has already occurred
         /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="a"></param>
-        /// <param name="b"></param>
-        /// <returns></returns>
-        public Expression AddAdditionExpression(Expression a, Expression b)
+        public VectorParameterExpression AddAdditionExpression(Expression a, 
+            Expression b)
         {
-            if (a is ConstantExpression<double> && b is ConstantExpression<double>)
+            var paramA = a as ReferencingVectorParameterExpression<double>;
+            var paramB = b as ReferencingVectorParameterExpression<double>;
+            if (paramA == null || paramB == null) throw new NotImplementedException();
+            if (paramA.IsScalar && paramB.IsScalar)
             {
                 return new ConstantExpression<double>(
-                    (a as ConstantExpression<double>).Value +
-                    (b as ConstantExpression<double>).Value);
+                    paramA.ScalarValue +
+                    paramB.ScalarValue);
             }
-            else if (a is VectorParameterExpression && b is ConstantExpression<double>)
+            else if (paramA.IsScalar && paramA.ScalarValue == 0)
             {
-                ConstantExpression<double> constant = b as ConstantExpression<double>;
-                if (constant.Value == 0) return a;
-                return AddLocalAssignment<double>(new ScaleOffsetExpression<double>(a as VectorParameterExpression, 0, constant.Value));
+                return paramB;
             }
-            else if (b is VectorParameterExpression && a is ConstantExpression<double>)
+            else if (paramB.IsScalar && paramB.ScalarValue == 0)
             {
-                ConstantExpression<double> constant = a as ConstantExpression<double>;
-                if (constant.Value == 0) return b;
-                return AddLocalAssignment<double>(new ScaleOffsetExpression<double>(b as VectorParameterExpression, 0, constant.Value));
+                return paramA;
             }
-            else if (a is VectorParameterExpression && b is VectorParameterExpression)
+            else
             {
-                return AddLocalAssignment<double>(Expression.MakeBinary(ExpressionType.Add, a, b));
+                return AddLocalAssignment<double>(Expression.MakeBinary(ExpressionType.Add, paramA, paramB));
             }
-            else throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Adds a division and negation expression efficiently; assumes that scalar independent variables can be combined
+        /// i.e. that any differentiation has already occurred
+        /// </summary>
+        public Expression AddNegateDivideExpression(VectorParameterExpression a, VectorParameterExpression b)
+        {
+            var paramA = a as ReferencingVectorParameterExpression<double>;
+            var paramB = b as ReferencingVectorParameterExpression<double>;
+            if (paramA.IsScalar && paramB.IsScalar)
+            {
+                return new ConstantExpression<double>(
+                    -paramA.ScalarValue /
+                    paramB.ScalarValue);
+            }
+            var newLocal = AddLocalAssignment<double>(Expression.Divide(a, b));
+            return AddLocalAssignment<double>(new ScaleOffsetExpression<double>(newLocal, -1, 0));
         }
 
         public VectorParameterExpression AddLocalAssignment<T>(Expression rhs)
@@ -146,6 +161,22 @@ namespace VectorAccelerator.DeferredExecution.Expressions
             _operations.Add(
                 Expression.Assign(lhs, rhs));
             return lhs;
+        }
+
+        public VectorParameterExpression AddLocalAssignment<T>(T scalarValue, Expression rhs)
+        {
+            ILocalNArray dummy;
+            var lhs = CreateScalarLocal<T>(scalarValue, out dummy);
+            _operations.Add(
+                Expression.Assign(lhs, rhs));
+            return lhs;
+        }
+
+        public ILocalNArray CreateScalarLocal<T>(T value)
+        {
+            ILocalNArray array;
+            CreateScalarLocal<T>(value, out array);
+            return array;
         }
 
         public ILocalNArray CreateLocal<T>()
@@ -160,15 +191,33 @@ namespace VectorAccelerator.DeferredExecution.Expressions
             return array;
         }
 
-        private LocalNArrayVectorParameterExpression<T> CreateLocalOfLength<T>(int length, out ILocalNArray array)
+        private ReferencingVectorParameterExpression<T> CreateLocalOfLength<T>(int length, out ILocalNArray array)
         {
             NArray<T> localArray = null;
-            if (typeof(T) == typeof(double)) localArray = new LocalNArray(_localParameters.Count, length) as NArray<T>;
-            else if (typeof(T) == typeof(int)) localArray = new LocalNArrayInt(_localParameters.Count, length) as NArray<T>;
+            var index = NextLocalIndex();
+            if (typeof(T) == typeof(double)) localArray = new LocalNArray(index, length) as NArray<T>;
+            else if (typeof(T) == typeof(int)) localArray = new LocalNArrayInt(index, length) as NArray<T>;
             array = localArray as ILocalNArray;
-            var parameter = new LocalNArrayVectorParameterExpression<T>(localArray);
+            var parameter = new ReferencingVectorParameterExpression<T>(localArray, ParameterType.Local, index);
             _localParameters.Add(parameter);
             return parameter;
+        }
+
+        private ReferencingVectorParameterExpression<T> CreateScalarLocal<T>(T value, out ILocalNArray array)
+        {
+            NArray<T> localArray = null;
+            var index = NextLocalIndex();
+            if (typeof(T) == typeof(double)) localArray = new LocalNArray(index, Convert.ToDouble(value)) as NArray<T>;
+            else throw new NotImplementedException();
+            array = localArray as ILocalNArray;
+            var parameter = new ReferencingVectorParameterExpression<T>(localArray.First(), ParameterType.Local, index);
+            _localParameters.Add(parameter);
+            return parameter;
+        }
+
+        private int NextLocalIndex()
+        {
+            return _localParameters.Count == 0 ? 0 : _localParameters.Last().Index + 1; // we assume only that list is in increasing order: we can thereby renumber
         }
 
         public VectorParameterExpression GetParameter<T>(NArray<T> array)
@@ -180,11 +229,15 @@ namespace VectorAccelerator.DeferredExecution.Expressions
             }
             else
             {
+                // if the array is a scalar and not an independent variable of any derivative calculation, we do not care where it came from; do not 
+                // add to argument list
+                if (array.IsScalar && !array.IsIndependentVariable) return new ConstantExpression<T>(array.First());
                 VectorParameterExpression argument;
                 // is this fast enough?
                 if (!_argumentLookup.TryGetValue(array, out argument))
                 {
-                    argument = new ReferencingVectorParameterExpression<T>(array, ParameterType.Argument, _argumentLookup.Count);
+                    argument = array.IsScalar ? new ReferencingVectorParameterExpression<T>(array.First(), ParameterType.Argument, _argumentLookup.Count)
+                        : new ReferencingVectorParameterExpression<T>(array, ParameterType.Argument, _argumentLookup.Count);
                     _argumentLookup.Add(array, argument);
                 }
                 return argument;
@@ -206,50 +259,65 @@ namespace VectorAccelerator.DeferredExecution.Expressions
 
         public BinaryExpression SimplifyOperation(BinaryExpression assignmentExpression)
         {
-            // an important optimisation: any vector-scalar or scalar-scalar operations are evaluated
+            // if operation is a scalar, nothing to do (result is already calculated)
+            if ((assignmentExpression.Left as ReferencingVectorParameterExpression<double>).IsScalar) return null;
+
+            // if one side of operation is scalar, can be simplified:
             if (assignmentExpression.Right is BinaryExpression)
             {
                 var binaryExpression = assignmentExpression.Right as BinaryExpression;
                 var left = binaryExpression.Left as ReferencingVectorParameterExpression<double>;
                 var right = binaryExpression.Right as ReferencingVectorParameterExpression<double>;
                 if (left == null || right == null) return assignmentExpression; // only supports doubles for now
-                if (left.Array.IsScalar)
+                if (left.IsScalar)
                 {
-                    if (right.Array.IsScalar) // both are scalars
+                    if (right.IsScalar) // both are scalars
                     {
-                        double value;
-                        switch (binaryExpression.NodeType)
-                        {
-                            case (ExpressionType.Multiply):
-                                value = left.Array.First() * right.Array.First(); break; 
-                            default:
-                                throw new NotImplementedException();
-                        }
-                        SetArrayToScalar<double>(assignmentExpression.Left, value);
-                        return null; // now a null operation
+                        throw new NotImplementedException(); // should not happen
                     }
                     else
                     {
                         // left is scalar, right is vector
                         switch (binaryExpression.NodeType)
                         {
+                            case (ExpressionType.Add):
+                                return Expression.Assign(assignmentExpression.Left, new ScaleOffsetExpression<double>(right, 1, left.ScalarValue));
+                            case (ExpressionType.Subtract):
+                                return Expression.Assign(assignmentExpression.Left, new ScaleOffsetExpression<double>(right, -1, left.ScalarValue));
                             case (ExpressionType.Multiply):
-                                return Expression.Assign(assignmentExpression.Left, new ScaleOffsetExpression<double>(right, left.Array.First(), 0)); 
+                                return Expression.Assign(assignmentExpression.Left, new ScaleOffsetExpression<double>(right, left.ScalarValue, 0));
+                            case (ExpressionType.Divide):
+                                return Expression.Assign(assignmentExpression.Left, new ScaleInverseExpression<double>(right, left.ScalarValue));
                             default:
                                 throw new NotImplementedException();
                         }
                     }
                 }
-                else if (right.Array.IsScalar)
+                else if (right.IsScalar)
                 {
                     // left is vector, right is scalar
                     switch (binaryExpression.NodeType)
                     {
+                        case (ExpressionType.Add):
+                            return Expression.Assign(assignmentExpression.Left, new ScaleOffsetExpression<double>(left, 1, right.ScalarValue));
+                        case (ExpressionType.Subtract):
+                            return Expression.Assign(assignmentExpression.Left, new ScaleOffsetExpression<double>(left, 1, -right.ScalarValue));
                         case (ExpressionType.Multiply):
-                            return Expression.AddAssign(assignmentExpression.Left, new ScaleOffsetExpression<double>(left, right.Array.First(), 0));
+                            return Expression.Assign(assignmentExpression.Left, new ScaleOffsetExpression<double>(left, right.ScalarValue, 0));
+                        case (ExpressionType.Divide):
+                            return Expression.Assign(assignmentExpression.Left, new ScaleOffsetExpression<double>(left, 1 / right.ScalarValue, 0));
                         default:
                             throw new NotImplementedException();
                     }
+                }
+            }
+            else if (assignmentExpression.Right is UnaryMathsExpression)
+            {
+                var unaryMathsExpression = assignmentExpression.Right as UnaryMathsExpression;
+                var operand = unaryMathsExpression.Operand as ReferencingVectorParameterExpression<double>;
+                if (operand.IsScalar) 
+                {
+                    throw new NotImplementedException(); // should not happen
                 }
             }
             return assignmentExpression;

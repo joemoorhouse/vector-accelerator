@@ -69,6 +69,7 @@
   </Choose>
   <ItemGroup>
     <Compile Include="BasicModelTests.cs" />
+    <Compile Include="BasicSwapAADTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TestsCalibrationParametersProvider.cs" />
   </ItemGroup>
@@ -80,6 +81,10 @@
     <ProjectReference Include="..\VectorAccelerator.Plot\VectorAccelerator.Plot.csproj">
       <Project>{4ca14a12-d924-4a6c-a5d1-fc22cbd4cc37}</Project>
       <Name>VectorAccelerator.Plot</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\VectorAccelerator.Tests\VectorAccelerator.Tests.csproj">
+      <Project>{857f0b20-d443-4ce0-88a0-a4f176e3bcdd}</Project>
+      <Name>VectorAccelerator.Tests</Name>
     </ProjectReference>
     <ProjectReference Include="..\VectorAccelerator\VectorAccelerator.csproj">
       <Project>{2ba4f945-3704-4c6d-8b1e-7482ab9dd9a8}</Project>

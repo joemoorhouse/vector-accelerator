@@ -9,13 +9,15 @@ namespace RiskEngine.Framework
 {    
     public class Factor
     {
+        public Model Model { get { return _model; } }
+        
         protected Model _model;
 
-        public static U Create<U, V>(string identifier, Simulation simulation)
+        public static U Create<U, V>(string identifier, SimulationGraph graph)
             where U : Factor, new()
             where V : Model, new()
         {
-            var model = RiskEngine.Framework.Model.Create<V>(identifier, simulation);
+            var model = RiskEngine.Framework.Model.Create<V>(identifier, graph);
             var factor = new U();
             factor._model = model;
             //factor.Identifier = identifier;

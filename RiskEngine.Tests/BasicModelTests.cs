@@ -36,18 +36,18 @@ namespace RiskEngine.Tests
         {
             var testDate = new DateTime(2015, 12, 1);
 
-            var simulation = new Simulation(StorageLocation.Host, testDate);
+            var graph = new SimulationGraph(StorageLocation.Host, testDate);
 
-            var identifiers = CreateTestWeightsProvider(simulation.Context, WeightsType.Cholesky);
+            var identifiers = CreateTestWeightsProvider(graph.Context, WeightsType.Cholesky);
 
-            var factor = simulation.RegisterFactor<MeanRevertingNormal>(identifiers[0]);
+            var factor = graph.RegisterFactor<MeanRevertingNormal>(identifiers[0]);
 
-            var runner = simulation.CreateSimulationRunner();
+            var runner = graph.ToSimulationRunner();
 
             // prepare to simulate
             runner.Prepare();
 
-            var intervals = simulation.Context.Settings.SimulationIntervals;
+            var intervals = graph.Context.Settings.SimulationIntervals;
 
             var percentiles = new double[] { 1, 10, 50, 90, 99 };
             var result = new SimulationResult(percentiles.Select(p => new PercentileMeasure(p)));
@@ -66,22 +66,22 @@ namespace RiskEngine.Tests
         {
             var testDate = new DateTime(2015, 12, 1);
 
-            var simulation = new Simulation(StorageLocation.Host, testDate);
+            var graph = new SimulationGraph(StorageLocation.Host, testDate);
 
             int weightsCount = 1000;
 
-            var identifiers = CreateTestWeightsProvider(simulation.Context, WeightsType.Returns, weightsCount);
+            var identifiers = CreateTestWeightsProvider(graph.Context, WeightsType.Returns, weightsCount);
 
-            var factor1 = simulation.RegisterFactor<NormalVariates>(identifiers[0]);
-            var factor2 = simulation.RegisterFactor<NormalVariates>(identifiers[1]);
-            var factor3 = simulation.RegisterFactor<NormalVariates>(identifiers[2]);
+            var factor1 = graph.RegisterFactor<NormalVariates>(identifiers[0]);
+            var factor2 = graph.RegisterFactor<NormalVariates>(identifiers[1]);
+            var factor3 = graph.RegisterFactor<NormalVariates>(identifiers[2]);
 
-            var runner = simulation.CreateSimulationRunner();
+            var runner = graph.ToSimulationRunner();
          
             // prepare to simulate
             runner.Prepare();
 
-            var intervals = simulation.Context.Settings.SimulationIntervals;
+            var intervals = graph.Context.Settings.SimulationIntervals;
             
             // simulate to the first time point; factors will hold values used to simulate across the specified interval 
             runner.Step(intervals.First());
@@ -117,7 +117,7 @@ namespace RiskEngine.Tests
             }
 
             var weights = context.Data.AddCalibrationParametersProvider
-                (new MultiVariateNormalModel.WeightsProvider(weightsCount));
+                (new WeightsProvider(weightsCount));
 
             var identifiers = Enumerable.Range(1, weightsMatrix.ColumnCount)
                 .Select(i => string.Format("TestFactor{0}", i)).ToList();

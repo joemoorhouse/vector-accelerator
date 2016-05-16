@@ -60,6 +60,11 @@ namespace VectorAccelerator.DeferredExecution.Expressions
             return new UnaryMathsExpression(unaryType, operand);
         }
 
+        public static ScaleInverseExpression<T> ScaleInverse<T>(VectorParameterExpression operand, T scale)
+        {
+            return new ScaleInverseExpression<T>(operand, scale);
+        }
+
         public static ScaleOffsetExpression<T> ScaleOffset<T>(VectorParameterExpression operand, T scale, T offset)
         {
             return new ScaleOffsetExpression<T>(operand, scale, offset);

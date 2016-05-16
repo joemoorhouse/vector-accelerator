@@ -7,10 +7,8 @@ using System.Linq.Expressions;
 
 namespace VectorAccelerator.DeferredExecution.Expressions
 {
-    public class ConstantExpression<T> : Expression
+    public class ConstantExpression<T> : ReferencingVectorParameterExpression<T>
     {
-        public readonly T Value;
-
         public override ExpressionType NodeType
         {
             get
@@ -20,13 +18,6 @@ namespace VectorAccelerator.DeferredExecution.Expressions
         }
 
         public ConstantExpression(T value)
-        {
-            Value = value;
-        }
-
-        public override string ToString()
-        {
-            return Value.ToString();
-        }
+            : base(value, ParameterType.Constant, -1) { }
     }
 }

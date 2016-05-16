@@ -3,8 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using VectorAccelerator;
 
-namespace RiskEngine
+namespace RiskEngine.Framework
 {
     public class Curve
     {
@@ -15,7 +16,18 @@ namespace RiskEngine
             Data = data.ToArray();
         }
 
-        public double GetValue(DateTime t)
+        public DataPoint this[int index]
+        {
+            get { return Data[index]; }
+        }
+
+        public Curve(DateTime[] times, NArray[] values)
+        {
+            if (times.Length != values.Length) throw new ArgumentException("length mismatch");
+            Data = times.Zip(values, (t, v) => new DataPoint(t, v)).ToArray();
+        }
+
+        public NArray GetValue(DateTime t)
         {
             int lower = GetLowerIndex(t);
             double weight = (double)(t - Data[lower].Time).Days 
