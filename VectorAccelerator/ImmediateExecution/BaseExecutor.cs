@@ -14,7 +14,7 @@ namespace VectorAccelerator
 
     //public enum BinaryElementWiseOperation { Add, Subtract, Multiply, Divide };
     
-    public enum UnaryElementWiseOperation { Inverse, Negate, Exp, Log, SquareRoot, InverseSquareRoot, Normal, CumulativeNormal, InverseCumulativeNormal, ScaleOffset };
+    public enum UnaryElementWiseOperation { ScaleInverse, Negate, Exp, Log, SquareRoot, Inverse, InverseSquareRoot, Normal, CumulativeNormal, InverseCumulativeNormal, ScaleOffset };
 
     public enum LogicalBinaryElementWiseOperation { And, Or };
 
@@ -40,10 +40,12 @@ namespace VectorAccelerator
 
         public abstract NArray<S> NewNArrayLike<S, T>(NArray<T> array);
 
-        public NArray<T> NewScalarNArray<T>(T scalarValue)
+        public virtual NArray<T> NewScalarNArray<T>(T scalarValue)
         {
             return ElementWise<T>().NewScalarNArray(scalarValue);
         }
+
+        public abstract void DoScaleInverse<T>(NArray<T> a, T scale, NArray<T> result);
 
         public abstract void DoScaleOffset<T>(NArray<T> a, T scale, T offset, NArray<T> result);
 
@@ -92,14 +94,11 @@ namespace VectorAccelerator
 
         #region Binary Operations
 
-        public NArray<T> ElementWiseAdd<T>(NArray<T> operand1, NArray<T> operand2)
+        public virtual NArray<T> ElementWiseAdd<T>(NArray<T> operand1, NArray<T> operand2) // immediate-mode version
         {
             NArray<T> result = null;
-            if (operand1.IsScalar && operand2.IsScalar)
-            {
-                result = NewScalarNArray(Add(operand1.First(), operand2.First()));
-            }
-            else if (!IsScalarConstant(operand1) && !IsScalarConstant(operand2))
+            if (operand1.IsScalar && operand2.IsScalar) result = NewScalarNArray(Add(operand1.First(), operand2.First()));
+            else if (!operand1.IsScalar && !operand1.IsScalar)
             {
                 result = NewNArrayLike(operand1);
                 DoBinaryElementWiseOperation(operand1, operand2, result, ExpressionType.Add);
@@ -121,7 +120,7 @@ namespace VectorAccelerator
             return result;
         }
 
-        public NArray<T> ElementWiseSubtract<T>(NArray<T> operand1, NArray<T> operand2)
+        public virtual NArray<T> ElementWiseSubtract<T>(NArray<T> operand1, NArray<T> operand2)
         {
             NArray<T> result = null;
             if (IsScalarConstant(operand1) && IsScalarConstant(operand2))
@@ -152,7 +151,7 @@ namespace VectorAccelerator
             return result;
         }
 
-        public NArray<T> ElementWiseMultiply<T>(NArray<T> operand1, NArray<T> operand2)
+        public virtual NArray<T> ElementWiseMultiply<T>(NArray<T> operand1, NArray<T> operand2)
         {
             NArray<T> result = null;
             if (IsScalarConstant(operand1) && IsScalarConstant(operand2))
@@ -181,7 +180,7 @@ namespace VectorAccelerator
             return result;
         }
 
-        public NArray<T> ElementWiseDivide<T>(NArray<T> operand1, NArray<T> operand2)
+        public virtual NArray<T> ElementWiseDivide<T>(NArray<T> operand1, NArray<T> operand2)
         {
             NArray<T> result = null;
             if (IsScalarConstant(operand1) && IsScalarConstant(operand2))
@@ -201,8 +200,9 @@ namespace VectorAccelerator
                     result = NewNArrayLike(operand2);
                     if (typeof(T) == typeof(double))
                     {
-                        DoUnaryElementWiseOperation(operand2, result, VectorAccelerator.UnaryElementWiseOperation.Inverse);
-                        DoScaleOffset(result, operand1.First(), offset, result);
+                        //DoUnaryElementWiseOperation(operand2, result, VectorAccelerator.UnaryElementWiseOperation.Inverse);
+                        //DoScaleOffset(result, operand1.First(), offset, result);
+                        DoScaleInverse(operand2, operand1.First(), result);
                     }
                     else throw new NotImplementedException();
                 }

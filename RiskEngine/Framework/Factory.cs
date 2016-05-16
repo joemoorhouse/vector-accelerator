@@ -9,30 +9,30 @@ namespace RiskEngine.Framework
 {
     public class Factory
     {
-        public delegate Model CreateNewModel(string identifier, Simulation simulation);
+        public delegate Model CreateNewModel(string identifier, SimulationGraph graph);
 
-        public delegate object CreateNewFactor(string identifier, Simulation simulation);
+        public delegate object CreateNewFactor(string identifier, SimulationGraph graph);
 
         public Factory()
         {
             _factorModels = GetFactorModels();
         }
 
-        public Model CreateModel(Type modelType, string identifier, Simulation simulation)
+        public Model CreateModel(Type modelType, string identifier, SimulationGraph graph)
         {
             MethodInfo genericMethod = typeof(Model).GetMethod("Create").MakeGenericMethod(modelType);
             var creationDelegate = Delegate.CreateDelegate(typeof(CreateNewModel), genericMethod) as CreateNewModel;
-            var model = creationDelegate(identifier, simulation);
+            var model = creationDelegate(identifier, graph);
             return model as Model;
         }
 
-        public object CreateFactor(Type factorType, string identifier, Simulation simulation) 
+        public object CreateFactor(Type factorType, string identifier, SimulationGraph graph) 
         {
             var modelType = _factorModels[factorType].First();
             MethodInfo genericMethod = typeof(Factor).GetMethod("Create").MakeGenericMethod(factorType, modelType);
             var creationDelegate = Delegate.CreateDelegate(typeof(CreateNewFactor), genericMethod) as CreateNewFactor;
-            var model = creationDelegate(identifier, simulation);
-            return model;
+            var factor = creationDelegate(identifier, graph);
+            return factor;
         }
 
         private Dictionary<Type, List<Type>> GetFactorModels()

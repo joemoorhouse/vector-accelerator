@@ -49,14 +49,19 @@ namespace VectorAccelerator.LinearAlgebraProviders
         public override void UnaryElementWiseOperation(NArray<double> a,
             NArray<double> result, UnaryElementWiseOperation operation)
         {
+            if (operation == VectorAccelerator.UnaryElementWiseOperation.Negate)
+            {
+                ScaleOffset(a, -1, 0, result);
+                return;
+            }
             VectorOperation vectorVectorOperation = null;
             switch (operation)
             {
                 case VectorAccelerator.UnaryElementWiseOperation.CumulativeNormal: vectorVectorOperation = IntelMathKernelLibrary.CumulativeNormal; break;
                 case VectorAccelerator.UnaryElementWiseOperation.Exp: vectorVectorOperation = IntelMathKernelLibrary.Exp; break;
-                case VectorAccelerator.UnaryElementWiseOperation.Inverse: vectorVectorOperation = IntelMathKernelLibrary.Inverse; break;
                 case VectorAccelerator.UnaryElementWiseOperation.InverseCumulativeNormal: vectorVectorOperation = IntelMathKernelLibrary.InverseCumulativeNormal; break;
                 case VectorAccelerator.UnaryElementWiseOperation.InverseSquareRoot: vectorVectorOperation = IntelMathKernelLibrary.InverseSquareRoot; break;
+                case VectorAccelerator.UnaryElementWiseOperation.Inverse: vectorVectorOperation = IntelMathKernelLibrary.Inverse; break;
                 case VectorAccelerator.UnaryElementWiseOperation.Log: vectorVectorOperation = IntelMathKernelLibrary.Log; break;
                 case VectorAccelerator.UnaryElementWiseOperation.SquareRoot: vectorVectorOperation = IntelMathKernelLibrary.SquareRoot; break;
             }
@@ -65,6 +70,21 @@ namespace VectorAccelerator.LinearAlgebraProviders
 
         public override void UnaryElementWiseOperation(NArray<int> a,
             NArray<int> result, UnaryElementWiseOperation operation)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void ScaleInverse(NArray<double> a, double scale, NArray<double> result)
+        {
+            double[] aArray, resultArray;
+            int aStart, resultStart;
+            GetArray(a, out aArray, out aStart);
+            GetArray(result, out resultArray, out resultStart);
+            VectorOperation(a, result, IntelMathKernelLibrary.Inverse);
+            IntelMathKernelLibrary.ConstantAddMultiply(resultArray, resultStart, scale, 0, resultArray, resultStart, result.Length);
+        }
+
+        public override void ScaleInverse(NArray<int> a, int scale, NArray<int> result)
         {
             throw new NotImplementedException();
         }

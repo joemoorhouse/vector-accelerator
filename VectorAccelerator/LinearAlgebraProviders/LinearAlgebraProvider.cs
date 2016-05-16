@@ -51,6 +51,10 @@ namespace VectorAccelerator.LinearAlgebraProviders
 
         public abstract void UnaryElementWiseOperation(NArray<int> a, NArray<int> result, UnaryElementWiseOperation operation);
 
+        public abstract void ScaleInverse(NArray<double> a, double scale, NArray<double> result);
+
+        public abstract void ScaleInverse(NArray<int> a, int scale, NArray<int> result);
+
         public abstract void ScaleOffset(NArray<double> a, double scale, double offset, NArray<double> result);
 
         public abstract void ScaleOffset(NArray<int> a, int scale, int offset, NArray<int> result);

@@ -36,6 +36,11 @@ namespace VectorAccelerator
             return NArrayFactory.CreateLike<S, T>(array);
         }
 
+        public override void DoScaleInverse<T>(NArray<T> a, T scale, NArray<T> result)
+        {
+            ElementWise<T>(a).ScaleInverse(a, scale, result);
+        }
+
         public override void DoScaleOffset<T>(NArray<T> a, T scale, T offset, NArray<T> result)
         {
             ElementWise<T>(a).ScaleOffset(a, scale, offset, result);

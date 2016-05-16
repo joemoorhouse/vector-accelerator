@@ -101,8 +101,8 @@
     <Compile Include="DeferredExecution\DeferredOperations.cs" />
     <Compile Include="DeferredExecution\Expressions\ConstantExpression.cs" />
     <Compile Include="DeferredExecution\Expressions\CUDACodeBuilder.cs" />
-    <Compile Include="DeferredExecution\Expressions\LocalNArrayVectorParameterExpression.cs" />
     <Compile Include="DeferredExecution\Expressions\ReferencingVectorParameterExpression.cs" />
+    <Compile Include="DeferredExecution\Expressions\ScaleInverseExpression.cs" />
     <Compile Include="DeferredExecution\Expressions\UnaryMathsExpression.cs" />
     <Compile Include="DeferredExecution\Expressions\VectorBlockExpression.cs" />
     <Compile Include="DeferredExecution\Expressions\BlockExpressionBuilder.cs" />

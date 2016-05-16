@@ -32,7 +32,7 @@ namespace VectorAccelerator
         public void Evaluate(VectorExecutionOptions options, 
             out NArray[] outputs,
             NArray dependentVariable, params NArray[] independentVariables)
-        {
+        {            
             var dependentVariableExpression = _builder.GetParameter<double>(dependentVariable);
             var independentVariableExpressions = independentVariables.Select(v => _builder.GetParameter<double>(v)).ToArray();
             
@@ -48,7 +48,7 @@ namespace VectorAccelerator
             // for locals that we know need to be peristed, we will use full storage (rather than re-assign)
             outputs = new NArray[] { dependentVariable }.Concat
                 (derivativeExpressions.Select(e => (e is ConstantExpression<double>) ?
-                    NArray.CreateScalar((e as ConstantExpression<double>).Value) :
+                    NArray.CreateScalar((e as ConstantExpression<double>).ScalarValue) :
                     (e as ReferencingVectorParameterExpression<double>).Array as NArray))
                     .ToArray();
 
@@ -58,6 +58,55 @@ namespace VectorAccelerator
         }
 
         #region Deferrable Operations
+
+        public override NArray<T> ElementWiseAdd<T>(NArray<T> operand1, NArray<T> operand2)
+        {
+            return ElementWiseOperation<T>(operand1, operand2, ExpressionType.Add, Add<T>);
+        }
+
+        public override NArray<T> ElementWiseSubtract<T>(NArray<T> operand1, NArray<T> operand2)
+        {
+            return ElementWiseOperation<T>(operand1, operand2, ExpressionType.Subtract, Subtract<T>);
+        }
+
+        public override NArray<T> ElementWiseMultiply<T>(NArray<T> operand1, NArray<T> operand2)
+        {
+            return ElementWiseOperation<T>(operand1, operand2, ExpressionType.Multiply, Multiply<T>);
+        }
+
+        public override NArray<T> ElementWiseDivide<T>(NArray<T> operand1, NArray<T> operand2)
+        {
+            return ElementWiseOperation<T>(operand1, operand2, ExpressionType.Divide, Divide<T>);
+        }
+
+        private NArray<T> ElementWiseOperation<T>(NArray<T> operand1, NArray<T> operand2,
+            ExpressionType type, Func<T, T, T> scalarOperation)
+        {
+            NArray<T> result = null;
+            if (operand1.IsScalar && operand2.IsScalar)
+            {
+                if (!operand1.IsIndependentVariable && !operand2.IsIndependentVariable)
+                {
+                    return NewScalarNArray(scalarOperation(operand1.First(), operand2.First())); // this is a scalar that does not depend on any independent variable: can simply return
+                }
+                else
+                {
+                    result = NewScalarLocalNArray(scalarOperation(operand1.First(), operand2.First()));
+                    result.IsIndependentVariable = true;
+                }
+            }
+            else if (operand1.IsScalar) result = NewNArrayLike(operand2);
+            else result = NewNArrayLike(operand1);
+
+            DoBinaryElementWiseOperation(operand1, operand2, result, type);
+
+            return result;
+        }
+
+        public NArray<T> NewScalarLocalNArray<T>(T scalarValue)
+        {
+            return CreateScalarLocal<T>(scalarValue) as NArray<T>;
+        }
 
         public override NArray<T> NewNArrayLike<T>(NArray<T> array)
         {
@@ -77,6 +126,11 @@ namespace VectorAccelerator
         public override void DoUnaryElementWiseOperation<T>(NArray<T> a, NArray<T> result, UnaryElementWiseOperation operation)
         {
             _builder.AddUnaryElementWiseOperation(a, result, operation);
+        }
+
+        public override void DoScaleInverse<T>(NArray<T> a, T scale, NArray<T> result)
+        {
+            _builder.AddScaleInverseOperation<T>(a, scale, result);
         }
 
         public override void DoScaleOffset<T>(NArray<T> a, T scale, T offset, NArray<T> result)
@@ -202,8 +256,15 @@ namespace VectorAccelerator
 
         #endregion
 
+        private ILocalNArray CreateScalarLocal<T>(T value)
+        {
+            return _builder.CreateScalarLocal<T>(value);
+        }
+
         private ILocalNArray CreateLocalLike<S, T>(NArray<T> array)
         {
+            //if (array.IsScalar) return _builder.CreateScalarLocal<T>(); // can happen when deferring if we want to calculate derivatives
+            
             if (_builder.VectorLength == -1) _builder.VectorLength = array.Length;
             if (array.Length != _builder.VectorLength)
                 throw new ArgumentException("length mismatch", "array");

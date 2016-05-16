@@ -7,7 +7,17 @@ using VectorAccelerator;
 
 namespace RiskEngine.Framework
 {
-    public class SnapshotModel<T> : StoringModel<T> where T : Process, new()
+    public interface IValue
+    {
+        NArray Value { get; }
+    }
+
+    public interface IValue<T> : IValue
+    {
+        T Process { get; }
+    }
+    
+    public class SnapshotModel<T> : StoringModel<T>, IValue where T : Process, new()
     {
         NArray _value;
 
@@ -15,9 +25,10 @@ namespace RiskEngine.Framework
 
         public SnapshotModel() : base() { }
 
-        public override void Initialise(Simulation simulation)
+        public override void Initialise(SimulationGraph graph)
         {
-            _singleFactorProcess.Initialise(simulation);
+            base.Initialise(graph);
+            _singleFactorProcess.Initialise(graph);
         }
 
         public override void Prepare(Context context)
@@ -27,9 +38,7 @@ namespace RiskEngine.Framework
 
         public override void StepNext()
         {
-            _value.Assign(
-                _singleFactorProcess.Step(_timeIntervals[_timeIndex], _value)
-                );
+            _value = _singleFactorProcess.Step(_timeIntervals[_timeIndex], _value);
         }
     }
 }

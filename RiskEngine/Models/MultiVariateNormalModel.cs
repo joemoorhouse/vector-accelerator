@@ -16,9 +16,9 @@ namespace RiskEngine.Models
     /// </summary>
     public class MultiVariateNormalModel : MultiFactorModel
     {
-        public override void Initialise(Simulation simulation)
+        public override void Initialise(SimulationGraph graph)
         {
-            var randomStream = new RandomNumberStream(simulation.Context.Factory.StorageLocation,
+            var randomStream = new RandomNumberStream(graph.Context.Factory.StorageLocation,
                 RandomNumberGeneratorType.MRG32K3A, 111);
             _normalDistribution = new Normal(randomStream, 0, 1);
         }
@@ -35,9 +35,9 @@ namespace RiskEngine.Models
             
             for (int i = 0; i < _factors.Count; ++i)
             {
-                _rootCovariance.SetColumn(i, weightsProvider.Value(_factors[i].Identifier));
+                _rootCovariance.SetColumn(i, weightsProvider.Value(_factorIdentifiers[i]));
 
-                _factors[i].Value.Storage = _correlated.Storage.ColumnAsReference(i);
+                _factors[i].Storage = _correlated.Storage.ColumnAsReference(i);
             }
         }
 
@@ -57,24 +57,24 @@ namespace RiskEngine.Models
         private NArray _rootCovariance;
         private NArray _uncorrelated;
         private NArray _correlated;
+    }
 
-        public class WeightsProvider : ParameterProvider<NArray> 
-        {   
-            public readonly int WeightsLength; 
-            
-            public WeightsProvider(int weightsLength)
-            {
-                WeightsLength = weightsLength;
-            }
+    public class WeightsProvider : ParameterProvider<NArray>
+    {
+        public readonly int WeightsLength;
 
-            //public double GetCorrelation(string factor1, string factor2)
+        public WeightsProvider(int weightsLength)
+        {
+            WeightsLength = weightsLength;
+        }
 
-            public override void AddValue(string factor, NArray weights)
-            {
-                Assertions.AssertIsVectorOfLength(weights, WeightsLength, "weights");
-                if (weights.Length != WeightsLength) throw new ArgumentException("length mismatch");
-                _cache[factor] = weights;
-            }
+        //public double GetCorrelation(string factor1, string factor2)
+
+        public override void AddValue(string factor, NArray weights)
+        {
+            Assertions.AssertIsVectorOfLength(weights, WeightsLength, "weights");
+            if (weights.Length != WeightsLength) throw new ArgumentException("length mismatch");
+            _cache[factor] = weights;
         }
     }
 }

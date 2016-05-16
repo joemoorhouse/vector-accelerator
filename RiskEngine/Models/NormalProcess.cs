@@ -18,13 +18,13 @@ namespace RiskEngine.Models
 
     public class NormalProcess : Process, IProcess
     {
-        public override void Initialise(Simulation simulation)
+        public override void Initialise(SimulationGraph graph)
         {
             // we get the (single) instance of the MultiVariateNormalModel
-            var model = simulation.RegisterModel<MultiVariateNormalModel>("General");
+            var model = graph.RegisterModel<MultiVariateNormalModel>("General");
 
             // and store the factor
-            _factor = model.AddFactor(Identifier);
+            _factor = model.AddFactor(Identifier, graph);
         }
 
         public override NArray Prepare(Context context)
@@ -34,9 +34,9 @@ namespace RiskEngine.Models
 
         public override NArray Step(TimeInterval timeStep, NArray previous)
         {
-            return _factor.Value;
+            return _factor;
         }
 
-        private IdentifiedNArray _factor;
+        private NArray _factor;
     }
 }

@@ -11,18 +11,22 @@ namespace RiskEngine.Framework
     /// </summary>
     public class Model 
     {
-        public string Identifier { get; internal set; }
+        public virtual string Identifier { get; internal set; }
 
         protected Model() { }
 
-        public static T Create<T>(string identifier, Simulation simulation) where T : Model, new()
+        public static T Create<T>(string identifier, SimulationGraph graph) where T : Model, new()
         {
             var model = new T();
             model.Identifier = identifier;
             return model;
         }
 
-        public virtual void Initialise(Simulation simulation) { }
+        public virtual void Initialise(SimulationGraph graph) 
+        {
+            _timePoints = graph.Context.Settings.SimulationTimePoints;
+            _timeIntervals = graph.Context.Settings.SimulationIntervals;
+        }
 
         public override string ToString()
         {

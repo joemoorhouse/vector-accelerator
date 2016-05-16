@@ -13,6 +13,8 @@ namespace VectorAccelerator.DeferredExecution.Expressions
     public class ReferencingVectorParameterExpression<T> : VectorParameterExpression
     {
         public readonly NArray<T> Array;
+        public readonly T ScalarValue;
+        public readonly bool IsScalar;
 
         public override ExpressionType NodeType
         {
@@ -26,12 +28,31 @@ namespace VectorAccelerator.DeferredExecution.Expressions
             : base(GetType<T>(), parameterType, index)
         {
             Array = array;
+            IsScalar = false;
+        }
+
+        public ReferencingVectorParameterExpression(T scalarValue, ParameterType parameterType, int index)
+            : base(GetType<T>(), parameterType, index)
+        {
+            Array = null;
+            ScalarValue = scalarValue;
+            IsScalar = true;
         }
 
         private static Type GetType<T>()
         {
             if (typeof(T) == typeof(double)) return typeof(NArray);
             else return typeof(NArray<T>);
+        }
+
+        public override string ToString()
+        {
+            if (IsScalar)
+            {
+                if (Name == string.Empty) return ScalarValue.ToString();
+                else return String.Format("{0}[{1}]", Name, ScalarValue);
+            }
+            else return Name;
         }
     }
 }

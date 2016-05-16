@@ -6,6 +6,11 @@ using System.Threading.Tasks;
 
 namespace RiskEngine.Framework
 {
+    /// <summary>
+    /// A node in the calculation graph. Each node comprises a single model. The model may be tagged using a 
+    /// risk factor. This occurs if a risk factor was requested by a graph element and the model for that risk factor
+    /// is then inferred.
+    /// </summary>
     public class SimulationNode
     {
         /// <summary>
@@ -23,6 +28,18 @@ namespace RiskEngine.Framework
             {
                 if (!Key.Matches(value)) throw new Exception("Model does not match Key");
                 _model = value;
+            }
+        }
+
+        /// <summary>
+        /// The RiskFactor
+        /// </summary>
+        public Factor Factor
+        {
+            get { return _factor; }
+            set
+            {
+                _factor = value;
             }
         }
 
@@ -79,5 +96,6 @@ namespace RiskEngine.Framework
         }
 
         Model _model;
+        Factor _factor;
     }
 }

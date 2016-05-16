@@ -9,9 +9,7 @@ namespace RiskEngine.Framework
     public class TimeInterval
     {
         public readonly double IntervalInYears;
-
         public readonly DateTime Previous;
-
         public readonly DateTime Next;
 
         public TimeInterval(DateTime previous, DateTime next)
@@ -26,5 +24,11 @@ namespace RiskEngine.Framework
     {
         public readonly DateTime DateTime;
         public readonly double YearsFromBaseDate;
+
+        public TimePoint(DateTime dateTime, double yearsFromBaseDate)
+        {
+            DateTime = dateTime;
+            YearsFromBaseDate = yearsFromBaseDate;
+        }
     }
 }
