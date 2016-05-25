@@ -20,6 +20,18 @@ namespace VectorAccelerator.Launcher
             //var hash = typeof(double).GetHashCode();
             //var hash2 = typeof(double).GetHashCode();
 
+            var illustrative = new Illustrative();
+            illustrative.Example1();
+
+            var testPrinciple = new CheckApplicationLevelThreadingMKL();
+            //testPrinciple.VectorFundamentalsTest();
+            
+            //Console.ReadKey();
+
+
+            //testPrinciple.TranscendentalFunctionTest();
+
+
             var expressionBuilding = new BasicExpressionBuildingTests();
             //expressionBuilding.AAD();
 
@@ -27,12 +39,15 @@ namespace VectorAccelerator.Launcher
             //basicDifferentiationTests.TestDivision();
 
             var extendedExpressionBuilding = new BasicSwapAADTest();
-            extendedExpressionBuilding.AADSwapPortfolio();
+            //extendedExpressionBuilding.SimulateAll();
+            
+            //extendedExpressionBuilding.CheckBasics();
+            //extendedExpressionBuilding.CheckPerformance();
 
             //var test0 = new CheckApplicationLevelThreadingMKL();
             //test0.TranscendentalFunctionTest();
 
-
+            Console.ReadKey();
 
             return;
             
@@ -84,7 +99,7 @@ namespace VectorAccelerator.Launcher
             test7.VectorBinarySearch();
 
             // good tests:
-            //test3.TranscendentalFunctionTest();
+            test3.TranscendentalFunctionTest();
             //test.TestBlackScholes();
             //test2.OptionPricingTest();
 
@@ -101,60 +116,46 @@ namespace VectorAccelerator.Launcher
         }
     }
 
-    public class OrnsteinUhlenbeckVariates
-    {
-        public void PreGenerate()
-        {
-            for (int i = 0; i < timePoints.Length - 1; ++i)
-            {
-                double tiplus1 = timePoints[i + 1];
-                int start = bridgingVariatesStartIndex[i];
-                int stop = bridgingVariatesStopIndex[i];
-                for (int j = start; j < stop; ++j)
-                {
-                    double tj = bridgedTimePoints[j];
-                    double tjplus1 = bridgedTimePoints[j + 1];
+    //public class OrnsteinUhlenbeckVariates
+    //{
+    //    public void PreGenerate()
+    //    {
+    //        for (int i = 0; i < timePoints.Length - 1; ++i)
+    //        {
+    //            double tiplus1 = timePoints[i + 1];
+    //            int start = bridgingVariatesStartIndex[i];
+    //            int stop = bridgingVariatesStopIndex[i];
+    //            for (int j = start; j < stop; ++j)
+    //            {
+    //                double tj = bridgedTimePoints[j];
+    //                double tjplus1 = bridgedTimePoints[j + 1];
 
-                    w1[j] = Math.Sqrt((tjplus1 - tj) / (tiplus1 - tj));
-                    //w2[j] = Math.Sqrt(())
-                    sumWeights[i] = Math.Sqrt(
-                        (1 / (2 * a)) * Math.Exp(-2 * a * (tiplus1 - tjplus1))
-                        * (1 - Math.Exp(-2 * a * (tjplus1 - tj)))
-                        );
+    //                w1[j] = Math.Sqrt((tjplus1 - tj) / (tiplus1 - tj));
+    //                //w2[j] = Math.Sqrt(())
+    //                sumWeights[i] = Math.Sqrt(
+    //                    (1 / (2 * a)) * Math.Exp(-2 * a * (tiplus1 - tjplus1))
+    //                    * (1 - Math.Exp(-2 * a * (tjplus1 - tj)))
+    //                    );
 
-                }
-            }
-        }
+    //            }
+    //        }
+    //    }
 
-        public double Get(int timeIndex)
-        {
-            double epsilon = variates[timeIndex];
-            int start = bridgingVariatesStartIndex[timeIndex];
-            int stop = bridgingVariatesStopIndex[timeIndex];
-            double pathStart = 0;
-            double integral = 0;
-            for (int j = start; j < stop; ++j)
-            {
-                double epsilonPrime = variates[363 + j];
-                double epsilonBridged = w1[j] * (epsilon - pathStart) + w2[j] * epsilonPrime;
-                pathStart = pathStart + epsilonBridged;
-                integral += sumWeights[j] * epsilonBridged;
-            }
-            return integral;
-        }
-
-        double a;
-
-        double[] timePoints;
-        double[] bridgedTimePoints;
-
-        int[] bridgingVariatesStartIndex;
-        int[] bridgingVariatesStopIndex;
-        double[] w1;
-        double[] w2;
-
-        double[] variates;
-
-        double[] sumWeights;
-    }
+    //    public double Get(int timeIndex)
+    //    {
+    //        double epsilon = variates[timeIndex];
+    //        int start = bridgingVariatesStartIndex[timeIndex];
+    //        int stop = bridgingVariatesStopIndex[timeIndex];
+    //        double pathStart = 0;
+    //        double integral = 0;
+    //        for (int j = start; j < stop; ++j)
+    //        {
+    //            double epsilonPrime = variates[363 + j];
+    //            double epsilonBridged = w1[j] * (epsilon - pathStart) + w2[j] * epsilonPrime;
+    //            pathStart = pathStart + epsilonBridged;
+    //            integral += sumWeights[j] * epsilonBridged;
+    //        }
+    //        return integral;
+    //    }
+    //}
 }

@@ -3,9 +3,17 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using VectorAccelerator;
 
 namespace RiskEngine.Framework
 {
+    public interface IPricer
+    {
+        void Price(int timeIndex, out NArray pv);
+
+        void Register(SimulationGraph graph);
+    }
+    
     public class Pricer<T> where T : Deal, new()
     {
         protected T _deal = new T();

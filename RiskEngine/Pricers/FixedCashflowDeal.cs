@@ -13,14 +13,18 @@ namespace RiskEngine.Pricers
     
     public class FixedCashflowDeal : Deal
     {
-        public double Amount { get; set; }
+        public double Notional { get; set; }
 
         public Currency Currency { get; set; }
 
-        public DateTime PaymentDate { get; set; }
+        public double Rate { get; set; }
+
+        public DateTime StartDate { get; set; }
+
+        public DateTime EndDate { get; set; }
     }
 
-    public class FixedCashflowPricer : Pricer<FixedCashflowDeal>
+    public class FixedCashflowPricer : Pricer<FixedCashflowDeal>, IPricer
     {
         DiscountFactorNonCash _df;
 
@@ -36,7 +40,8 @@ namespace RiskEngine.Pricers
 
         public void Price(int timeIndex, out NArray pv)
         {
-            pv = _deal.Amount * _df[timeIndex, _deal.PaymentDate];
+            var coverage = (_deal.EndDate - _deal.StartDate).Days / 365.35;
+            pv = _deal.Notional * _deal.Rate * coverage * _df[timeIndex, _deal.EndDate];
         }
     }
 }

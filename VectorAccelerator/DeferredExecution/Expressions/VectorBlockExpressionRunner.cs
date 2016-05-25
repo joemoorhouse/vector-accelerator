@@ -22,13 +22,14 @@ namespace VectorAccelerator.DeferredExecution.Expressions
         /// <param name="vectorOptions"></param>
         public static void RunNonCompiling(BlockExpressionBuilder _builder, 
             LinearAlgebraProvider provider, VectorExecutionOptions vectorOptions,
-            NArray[] outputs)
+            NArray[] outputs, int[] outputsIndices, Aggregator aggregator)
         {
-            //Console.WriteLine(executor.DebugString());
-
             var block = _builder.ToBlock();
 
-            int chunksLength = 1000;
+            // we will cycle through arrays in order of increasing index
+            var getter = new OutputGetter<double>(outputs, outputsIndices);
+
+            int chunksLength = 5000;
             var arrayPoolStack = ExecutionContext.ArrayPool.GetStack(chunksLength);
 
             while (arrayPoolStack.Count < 10)
@@ -42,7 +43,7 @@ namespace VectorAccelerator.DeferredExecution.Expressions
             int chunkCount = length / chunksLength;
             if (length % chunksLength != 0) chunkCount++;
 
-            AssignNArrayStorage(block, outputs, chunkCount, chunksLength, length);
+            AssignNArrayStorage<double>(block, chunkCount, chunksLength, length);
             // and integers too?
 
             var options = new ParallelOptions();
@@ -50,7 +51,8 @@ namespace VectorAccelerator.DeferredExecution.Expressions
 
             //var operations = Simplify(executor, provider);
 
-            Parallel.For(0, chunkCount, options, (i) =>
+            //Parallel.For(0, chunkCount, options, (i) =>
+            for (int i = 0; i < chunkCount; ++i)
             {
                 int startIndex = i * chunksLength;
                 List<double[]> temporaryArrays = new List<double[]>();
@@ -61,7 +63,8 @@ namespace VectorAccelerator.DeferredExecution.Expressions
                     {
                         var newOperation = _builder.SimplifyOperation(operation); // deal with any expressions containing scalars that can be simplified
                         ExecuteSingleVectorOperation<double>(newOperation, provider,
-                            arrayPoolStack, temporaryArrays,
+                            arrayPoolStack, temporaryArrays, 
+                            getter, aggregator,
                             vectorLength,
                             i, startIndex);
                     }
@@ -70,15 +73,16 @@ namespace VectorAccelerator.DeferredExecution.Expressions
                 {
                     arrayPoolStack.Push(array);
                 }
-            });
+            };//);
         }
 
         private static void ExecuteSingleVectorOperation<T>(BinaryExpression operation,
             LinearAlgebraProvider provider,
-            ArrayPoolStack<T> arrayPoolStack, List<T[]> temporaryArrays,
+            ArrayPoolStack<T> arrayPoolStack, List<T[]> temporaryArrays, 
+            OutputGetter<T> getter, Aggregator aggregator,
             int vectorLength,
             int chunkIndex, int startIndex)
-        {
+        {   
             if (operation == null || operation.NodeType != ExpressionType.Assign) return;
             
             if (operation == null) return;
@@ -88,6 +92,9 @@ namespace VectorAccelerator.DeferredExecution.Expressions
 
             NArray<T> result;
             var left = operation.Left as ReferencingVectorParameterExpression<T>;
+
+            NArray<T> aggregationTarget = null;
+
             if (left.ParameterType == ParameterType.Local)
             {
                 result = left.Array;
@@ -97,6 +104,7 @@ namespace VectorAccelerator.DeferredExecution.Expressions
                     temporaryArrays.Add(arrayPoolStack.Pop());
                     chunkyStorage.SetChunk(chunkIndex, temporaryArrays.Last());
                 }
+                aggregationTarget = getter.TryGetNext(left.Index);
             }
             else
             {
@@ -139,6 +147,16 @@ namespace VectorAccelerator.DeferredExecution.Expressions
                     Slice(result, chunkIndex, startIndex, vectorLength),
                     binaryOperation.NodeType);
             }
+
+            if (aggregationTarget != null)
+            {
+                if (aggregator != Aggregator.ElementwiseAdd) throw new NotImplementedException();
+                var slice = Slice<T>(aggregationTarget, chunkIndex, startIndex, vectorLength);
+                (provider as IElementWise<T>).BinaryElementWiseOperation(
+                    slice,
+                    Slice(result, chunkIndex, startIndex, vectorLength),
+                    slice, ExpressionType.Add);
+            }
         }
 
         private static NArray<T> Slice<T>(Expression expression, int chunkIndex, int startIndex, int length)
@@ -160,22 +178,15 @@ namespace VectorAccelerator.DeferredExecution.Expressions
             }
         }
 
-        private static void AssignNArrayStorage<T>(VectorBlockExpression block, IEnumerable<NArray<T>> persistingArrays,
+        private static void AssignNArrayStorage<T>(VectorBlockExpression block,
             int chunkCount, int chunksLength, int vectorLength)
         {
             var localNArrays = block.LocalParameters.Select(r => (r as ReferencingVectorParameterExpression<T>).Array);
-            var requireChunkyStorage = localNArrays.Except(persistingArrays);
-            var requirePersistingStorage = localNArrays.Intersect(persistingArrays);
 
-            foreach (var localNArray in requireChunkyStorage)
+            foreach (var localNArray in localNArrays)
             {
                 if (localNArray == null) continue;
                 localNArray.Storage = new ChunkyStorage<T>(chunkCount, chunksLength);
-            }
-
-            foreach (var localNArray in requirePersistingStorage)
-            {
-                localNArray.Storage = new ManagedStorage<T>(vectorLength, 1);
             }
         }
 
@@ -187,6 +198,32 @@ namespace VectorAccelerator.DeferredExecution.Expressions
         private static NArray<T> GetArray<T>(VectorParameterExpression expression)
         {
             return (expression as ReferencingVectorParameterExpression<T>).Array;
+        }
+    }
+
+    public class OutputGetter<T>
+    {
+        public int[] OutputsIndices;
+
+        public NArray<T>[] Outputs;
+
+        public int _next;
+
+        public OutputGetter(NArray<T>[] outputs, int[] outputsIndices)
+        {
+            OutputsIndices = (int[])outputsIndices.Clone();
+            Outputs = (NArray<T>[])outputs.Clone();
+            Array.Sort(OutputsIndices, Outputs);
+            _next = 0;
+        }
+
+        public NArray<T> TryGetNext(int candidateIndex)
+        {
+            if (_next < OutputsIndices.Length && candidateIndex == OutputsIndices[_next])
+            {
+                return Outputs[_next++];
+            }
+            else return null;
         }
     }
 }

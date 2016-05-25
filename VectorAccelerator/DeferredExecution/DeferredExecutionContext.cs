@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 
 namespace VectorAccelerator.DeferredExecution
-{
+{   
     public class DeferredExecutionContext : IDisposable
     {
         DeferringExecutor _executor;
@@ -20,7 +20,8 @@ namespace VectorAccelerator.DeferredExecution
             ExecutionContext.Executor = _executor;
         }
 
-        public static IList<NArray> Evaluate(Func<NArray> function, params NArray[] independentVariables)
+        public static IList<NArray> Evaluate(Func<NArray> function, IList<NArray> independentVariables, StringBuilder expressionsOut = null,
+            Aggregator aggregator = Aggregator.ElementwiseAdd, IList<NArray> existingStorage = null)
         {
             NArray[] outputs = null;
             try
@@ -33,7 +34,7 @@ namespace VectorAccelerator.DeferredExecution
                 {
                     // execute function as deferred operations and obtain reference to the dependentVariable
                     var dependentVariable = function();
-                    context._executor.Evaluate(context._options, out outputs, dependentVariable, independentVariables);
+                    context._executor.Evaluate(context._options, out outputs, dependentVariable, independentVariables, expressionsOut, aggregator, existingStorage);
                 }
             }
             finally

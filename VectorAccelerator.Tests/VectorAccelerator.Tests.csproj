@@ -78,6 +78,7 @@
       <ExcludeFromStyleCop>True</ExcludeFromStyleCop>
     </Compile>
     <Compile Include="Financial\CounterpartyCreditRisk\InterestRateModel.cs" />
+    <Compile Include="Illustrative.cs" />
     <Compile Include="InterpolationTest.cs" />
     <Compile Include="Checks\CheckApplicationLevelThreadingMKL.cs" />
     <Compile Include="LinearAlgebraTests.cs" />

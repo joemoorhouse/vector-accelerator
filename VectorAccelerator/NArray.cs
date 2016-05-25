@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using VectorAccelerator;
 using VectorAccelerator.NArrayStorage;
 using VectorAccelerator.DeferredExecution;
 using VectorAccelerator.LinearAlgebraProviders;
@@ -11,6 +12,8 @@ using VectorAccelerator.Distributions;
 
 namespace VectorAccelerator
 {    
+    public enum Aggregator {  None, ElementwiseAdd };
+    
     public static class StorageCreator
     {
         public static NArrayStorage<T> NewStorage<T>(StorageLocation location, int rowCount, int columnCount)
@@ -235,9 +238,20 @@ namespace VectorAccelerator
             return new VectorAccelerator.DeferredExecution.DeferredExecutionContext(options);
         }
 
+        public static IList<NArray> Evaluate(Func<NArray> function, IList<NArray> independentVariables,
+            Aggregator aggregator, IList<NArray> existingStorage)
+        {
+            return VectorAccelerator.DeferredExecution.DeferredExecutionContext.Evaluate(function, independentVariables, null, aggregator, existingStorage);
+        }
+
         public static IList<NArray> Evaluate(Func<NArray> function, params NArray[] independentVariables)
         {
             return VectorAccelerator.DeferredExecution.DeferredExecutionContext.Evaluate(function, independentVariables);
+        }
+
+        public static IList<NArray> Evaluate(Func<NArray> function, StringBuilder expressionsOut, params NArray[] independentVariables)
+        {
+            return VectorAccelerator.DeferredExecution.DeferredExecutionContext.Evaluate(function, independentVariables, expressionsOut);
         }
 
         public override string ToString()

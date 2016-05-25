@@ -20,5 +20,7 @@ namespace RiskEngine
         /// <param name="t">Zero coupon bond maturity</param>
         /// <returns></returns>
         NArray this[int timeIndex, DateTime t] { get; }
+
+        NArray ForwardRate(int timeIndex, DateTime t1, DateTime t2);
     }
 }

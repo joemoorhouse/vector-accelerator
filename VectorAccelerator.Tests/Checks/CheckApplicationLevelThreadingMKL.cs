@@ -133,21 +133,125 @@ namespace VectorAccelerator.Tests.Checks
             var result = NArray.CreateLike(a);
             result.Assign(a);
 
-            var options = new DeferredExecution.VectorExecutionOptions() { MultipleThreads = threaded };
+            var result2 = NArray.CreateLike(a);
+
+            //var options = new DeferredExecution.VectorExecutionOptions() { MultipleThreads = threaded };
 
             for (int j = 0; j < 100; ++j)
             {
-                using (NArray.DeferredExecution(options))
-                {
-                    var temp = NMath.Exp(result);
-                    result.Assign(NMath.Log(temp));
-                }
+                NArray.Evaluate(() =>
+                    {
+                        return NMath.Log(NMath.Exp(result));
+                    }, new List<NArray>(), Aggregator.ElementwiseAdd, new List<NArray> { result2 });
+                
+                //using (NArray.DeferredExecution(options))
+                //{
+                //    var temp = NMath.Exp(result);
+                //    result.Assign(NMath.Log(temp));
+                //}
             } 
         }
 
         private double[] GetArray(NArray a)
         {
             return (a.Storage as ManagedStorage<double>).Array;
+        }
+
+        /// <summary>
+        /// Test that shows that as long as we do not have to create intermediate storage and this is not 
+        /// too large, that vector operations do not have high overhead.
+        /// </summary>
+        [TestMethod]
+        public void VectorFundamentalsTest()
+        {
+            var location = StorageLocation.Host;
+
+            using (var randomStream = new RandomNumberStream(location, RandomNumberGeneratorType.MRG32K3A, 111))
+            {
+                var normalDistribution = new Normal(randomStream, 0, 1);
+
+                var a = new NArray(StorageLocation.Host, 5000);
+                var b = new NArray(StorageLocation.Host, 5000);
+                var c = new NArray(StorageLocation.Host, 5000);
+                var d = new NArray(StorageLocation.Host, 5000);
+                var result = NArray.CreateLike(a);
+                a.FillRandom(normalDistribution);
+                b.FillRandom(normalDistribution);
+                c.FillRandom(normalDistribution);
+                d.FillRandom(normalDistribution);
+                var aArray = GetArray(a);
+                var bArray = GetArray(b);
+                var cArray = GetArray(c);
+                var dArray = GetArray(d);
+                var resultArray = GetArray(result);
+
+                Console.WriteLine(); Console.WriteLine("In place vector Exp MKL");
+                TestHelpers.Timeit(() =>
+                    {
+                        IntelMathKernelLibrary.Exp(aArray, 0, resultArray, 0, result.Length);
+                    }, 20, 50);
+
+                Console.WriteLine(); Console.WriteLine("In place vector Exp C sharp");
+                TestHelpers.Timeit(() =>
+                {
+                    for (int i = 0; i < 5000; ++i)
+                    {
+                        resultArray[i] = Math.Exp(aArray[i]);
+                    }
+                }, 20, 50);
+
+                Console.WriteLine(); Console.WriteLine("In place vector aX + Y MKL");
+                TestHelpers.Timeit(() =>
+                {
+                    IntelMathKernelLibrary.ConstantAddMultiply(aArray, 0, 3, 0, resultArray, 0, 5000);
+                    //IntelMathKernelLibrary.Multiply(bArray, 0, resultArray, 0, resultArray, 0, result.Length);
+                    IntelMathKernelLibrary.Add(bArray, 0, resultArray, 0, resultArray, 0, result.Length);
+                    //IntelMathKernelLibrary.Exp(resultArray, 0, resultArray, 0, result.Length);
+                    // 3 reads and 2 writes
+                }, 20, 50);
+
+                Console.WriteLine(); Console.WriteLine("In place vector aX + Y C sharp");
+                TestHelpers.Timeit(() =>
+                {
+                    for (int i = 0; i < 5000; ++i)
+                    {
+                        resultArray[i] = 3 * aArray[i] + bArray[i]; // 2 reads and a write
+                        //resultArray[i] = Math.Exp(3 * aArray[i] + bArray[i]); // 2 reads and a write
+                    }
+                }, 20, 50);
+
+                Console.WriteLine(); Console.WriteLine("Immediate mode; creating storage");
+                TestHelpers.Timeit(() =>
+                {
+                    //var result2 = NMath.Exp(3 * a + b);
+                    var result2 = 3 * a + b;
+                }, 20, 50);
+
+                var result3 = NArray.CreateLike(a);
+
+                Console.WriteLine(); Console.WriteLine("Deferred mode; storage passed in");
+                TestHelpers.Timeit(() =>
+                {
+                    NArray.Evaluate(() =>
+                        {
+                            //return NMath.Exp(3 * a + b);
+                            return 3 * a + b;
+                        }
+                        , new List<NArray>(), Aggregator.ElementwiseAdd, new List<NArray> { result3 });
+                }, 20, 50);
+
+                return;
+
+                Console.WriteLine(); Console.WriteLine("Deferred mode; storage passed in");
+                TestHelpers.Timeit(() =>
+                {
+                    NArray.Evaluate(() =>
+                    {
+                        return 3 * a + b;
+                    }
+                        , new List<NArray>(), Aggregator.ElementwiseAdd, new List<NArray> { result });
+                }, 20, 50);
+            }
         }
     }
 }

@@ -14,5 +14,10 @@ namespace RiskEngine.Factors
         {
             get { return Model[timeIndex, t]; }
         }
+
+        public NArray ForwardRate(int timeIndex, DateTime t1, DateTime t2)
+        {
+            return Model.ForwardRate(timeIndex, t1, t2);
+        }
     }
 }

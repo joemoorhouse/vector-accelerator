@@ -31,8 +31,13 @@ namespace VectorAccelerator
 
         public void Evaluate(VectorExecutionOptions options, 
             out NArray[] outputs,
-            NArray dependentVariable, params NArray[] independentVariables)
+            NArray dependentVariable, IList<NArray> independentVariables, StringBuilder expressionsOut = null,
+            Aggregator aggregator = Aggregator.ElementwiseAdd, IList<NArray> existingStorage = null)
         {            
+            if (existingStorage != null && existingStorage.Count != independentVariables.Count + 1) 
+                throw new ArgumentException(string.Format("storage provided does not match requirement for 1 result and {0} derivatives", 
+                    independentVariables.Count));
+
             var dependentVariableExpression = _builder.GetParameter<double>(dependentVariable);
             var independentVariableExpressions = independentVariables.Select(v => _builder.GetParameter<double>(v)).ToArray();
             
@@ -40,21 +45,45 @@ namespace VectorAccelerator
             IList<Expression> derivativeExpressions;
             AlgorithmicDifferentiator.Differentiate(_builder, out derivativeExpressions,
                 dependentVariableExpression, independentVariableExpressions);
-            
-            // the derivativeExpressions can be either constant expressions (a common case!) or locals
-            var outputArrays = new NArray[independentVariables.Length + 1];
-            outputArrays[0] = dependentVariable;
 
-            // for locals that we know need to be peristed, we will use full storage (rather than re-assign)
-            outputs = new NArray[] { dependentVariable }.Concat
-                (derivativeExpressions.Select(e => (e is ConstantExpression<double>) ?
-                    NArray.CreateScalar((e as ConstantExpression<double>).ScalarValue) :
-                    (e as ReferencingVectorParameterExpression<double>).Array as NArray))
-                    .ToArray();
-
+            // arrange output storage
+            var outputIndices = new int[1 + independentVariables.Count];
+            outputIndices[0] = dependentVariableExpression.Index;
+            outputs = new NArray[1 + independentVariables.Count];
+            outputs[0] = (existingStorage == null) ? new NArray(StorageLocation.Host, _builder.VectorLength, 1) : existingStorage[0]; 
+            for (int i = 0; i < independentVariables.Count; ++i)
+            {
+                var referencingExpression = derivativeExpressions[i] as ReferencingVectorParameterExpression<double>;
+                if (referencingExpression.IsScalar) // common case: constant derivative (especially zero)
+                {
+                    outputs[i + 1] = NArray.CreateScalar(referencingExpression.ScalarValue);
+                    outputIndices[i + 1] = int.MaxValue;
+                    // TODO if storage passed in, update here in case of non-zero constant?
+                }
+                else
+                {
+                    outputIndices[i + 1] = referencingExpression.Index;
+                    if (existingStorage == null)
+                        outputs[i + 1] = new NArray(StorageLocation.Host, _builder.VectorLength, 1);
+                    else outputs[i + 1] = existingStorage[i + 1];
+                }
+            }
+               
             // run
-            VectorBlockExpressionRunner.RunNonCompiling(_builder, Provider(StorageLocation.Host), 
-                new VectorExecutionOptions(), outputs);
+            VectorBlockExpressionRunner.RunNonCompiling(_builder, Provider(StorageLocation.Host),
+                new VectorExecutionOptions(), outputs, outputIndices, aggregator);
+
+            if (expressionsOut != null)
+            {
+                var block = _builder.ToBlock();
+                expressionsOut.AppendLine("Derivatives in lines " + String.Join(",", 
+                    independentVariableExpressions.Select(e => e.ToString())));
+                foreach (var item in block.Operations)
+                {
+                    var display = item.ToString();
+                    var result = new string(display.Skip(1).Take(display.Length - 2).ToArray());
+                }
+            }
         }
 
         #region Deferrable Operations

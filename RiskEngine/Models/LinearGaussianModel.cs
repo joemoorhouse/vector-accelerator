@@ -84,6 +84,35 @@ namespace RiskEngine.Models
             return (d0T / d0t) * NMath.Exp(-0.5 * drift + B);
         }
 
+        /// <summary>
+        /// Calculate forward rate that applies between times t1 and t2 (t2 > t1)
+        /// </summary>
+        /// <param name="timeIndex"></param>
+        /// <param name="t1"></param>
+        /// <param name="t2"></param>
+        /// <returns></returns>
+        public NArray ForwardRate(int timeIndex, DateTime t1, DateTime t2)
+        {
+            var B = NArray.CreateScalar(0);
+
+            double tenor1 = (t1 - _timePoints[timeIndex].DateTime).Days / 365.25;
+            double tenor2 = (t2 - _timePoints[timeIndex].DateTime).Days / 365.25;
+
+            for (int factorIndex = 0; factorIndex < _factors.Length; ++factorIndex)
+            {
+                B += Sigma(factorIndex) * (E(Lambda(factorIndex), tenor1) - E(Lambda(factorIndex), tenor2))
+                    * _factorPaths[factorIndex][timeIndex];
+            }
+
+            var d0t1 = DiscountFactorT0.GetValue(t1);
+            var d0t2 = DiscountFactorT0.GetValue(t2);
+
+            double drift = GetDrift(timeIndex, tenor1) - GetDrift(timeIndex, tenor2);
+            var dfRatio = (d0t1 / d0t2) * NMath.Exp(-0.5 * drift + B); // df(t, t1) / df(t, t2)
+            double alpha = (t2 - t1).Days / 365.25;
+            return (dfRatio - 1) / alpha;
+        }
+
         private double GetDrift(int timeIndex, double tenor)
         {
             double drift = 0;

@@ -25,7 +25,7 @@ namespace RiskEngine.Framework
 
     public class SimulationSettings
     {
-        public int SimulationCount { get; private set; }
+        public int SimulationCount { get; set; }
 
         public TimeInterval[] SimulationIntervals { get; private set; }
         
