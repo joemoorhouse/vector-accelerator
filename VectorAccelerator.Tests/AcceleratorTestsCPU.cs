@@ -60,10 +60,10 @@ namespace VectorAccelerator.Tests
             Timeit(
                 () =>
                 {
-                    using (NArray.DeferredExecution(vectorOptions))
+                    NArray.Evaluate(vectorOptions, () =>
                     {
-                        resultN.Assign(3 * NMath.Log(NMath.Exp(a) * NMath.Exp(b)));
-                    }
+                        return 3 * NMath.Log(NMath.Exp(a) * NMath.Exp(b));
+                    });
                 });
             Console.WriteLine(CheckitString(result, (resultN.Storage as ManagedStorage<double>).Array));
             Console.WriteLine(Environment.NewLine);
@@ -74,10 +74,10 @@ namespace VectorAccelerator.Tests
             Timeit(
                 () =>
                 {
-                    using (NArray.DeferredExecution(vectorOptions))
+                    NArray.Evaluate(vectorOptions, () =>
                     {
-                        resultN.Assign(3 * NMath.Log(NMath.Exp(a) * NMath.Exp(b)));
-                    }
+                        return 3 * NMath.Log(NMath.Exp(a) * NMath.Exp(b));
+                    });
                 });
             Console.WriteLine(CheckitString(result, (resultN.Storage as ManagedStorage<double>).Array));
             Console.WriteLine(Environment.NewLine);
@@ -146,14 +146,14 @@ namespace VectorAccelerator.Tests
                 Parallel.For(0, 1000, options, (i) =>
                 {
                     optionPrices2 = NArray.CreateLike(variates);
-                    using (NArray.DeferredExecution())
+                    NArray.Evaluate(optionPrices2, () =>
                     {
                         var logStockPrice = Math.Log(100)
                             + variates * Math.Sqrt(deltaT) * vol + (r - 0.5 * vol * vol) * deltaT;
                         var stockPrices = NMath.Exp(logStockPrice);
 
-                        optionPrices2.Assign(Finance.BlackScholes(-1, stockPrices, 90, 0.2, 1));
-                    }
+                        return Finance.BlackScholes(-1, stockPrices, 90, 0.2, 1);
+                    });
                 });
                 Console.WriteLine("Deferred sequential");
                 Console.WriteLine(watch.ElapsedMilliseconds);
@@ -162,15 +162,15 @@ namespace VectorAccelerator.Tests
 
                 Parallel.For(0, 1000, (i) =>
                 {
-                    optionPrices2 = NArray.CreateLike(variates);
-                    using (NArray.DeferredExecution())
+                    //optionPrices2 = NArray.CreateLike(variates);
+                    optionPrices2 = NArray.Evaluate(() =>
                     {
                         var logStockPrice = Math.Log(100)
                             + variates * Math.Sqrt(deltaT) * vol + (r - 0.5 * vol * vol) * deltaT;
                         var stockPrices = NMath.Exp(logStockPrice);
 
-                        optionPrices2.Assign(Finance.BlackScholes(-1, stockPrices, 90, 0.2, 1));
-                    }
+                        return Finance.BlackScholes(-1, stockPrices, 90, 0.2, 1);
+                    });
                 });
                 Console.WriteLine("Deferred threaded");
                 Console.WriteLine(watch.ElapsedMilliseconds); watch.Restart();

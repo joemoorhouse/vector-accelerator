@@ -6,8 +6,8 @@ using System.Threading.Tasks;
 
 namespace RiskEngine.Framework
 {    
-    public class TimePoints
+    public static class TimePoints
     {
-        public readonly DateTime[] Timepoints;
+
     }
 }

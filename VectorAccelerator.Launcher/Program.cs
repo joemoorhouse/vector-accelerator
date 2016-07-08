@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using RiskEngine.Tests;
 using VectorAccelerator.Tests;
@@ -17,13 +18,20 @@ namespace VectorAccelerator.Launcher
     {     
         static void Main(string[] args)
         {
-            //var hash = typeof(double).GetHashCode();
-            //var hash2 = typeof(double).GetHashCode();
+            Thread.CurrentThread.CurrentCulture = new System.Globalization.CultureInfo("en-UK");
+            //var illustrative = new Illustrative();
+            //illustrative.Example1();
 
-            var illustrative = new Illustrative();
-            illustrative.Example1();
+            var extendedExpressionBuilding = new BasicSwapAADTest();
+            //extendedExpressionBuilding.SimulateAll();
 
-            var testPrinciple = new CheckApplicationLevelThreadingMKL();
+            extendedExpressionBuilding.CheckBasics();
+            //extendedExpressionBuilding.CheckPerformance();
+
+            //var expressionBuilding = new BasicExpressionBuildingTests();
+            //expressionBuilding.AAD();
+
+            //var testPrinciple = new CheckApplicationLevelThreadingMKL();
             //testPrinciple.VectorFundamentalsTest();
             
             //Console.ReadKey();
@@ -32,37 +40,24 @@ namespace VectorAccelerator.Launcher
             //testPrinciple.TranscendentalFunctionTest();
 
 
-            var expressionBuilding = new BasicExpressionBuildingTests();
-            //expressionBuilding.AAD();
-
-            var basicDifferentiationTests = new BasicDifferentiationTests();
+            //var basicDifferentiationTests = new BasicDifferentiationTests();
             //basicDifferentiationTests.TestDivision();
-
-            var extendedExpressionBuilding = new BasicSwapAADTest();
-            //extendedExpressionBuilding.SimulateAll();
-            
-            //extendedExpressionBuilding.CheckBasics();
-            //extendedExpressionBuilding.CheckPerformance();
 
             //var test0 = new CheckApplicationLevelThreadingMKL();
             //test0.TranscendentalFunctionTest();
-
-            Console.ReadKey();
-
-            return;
             
-            expressionBuilding.CUDA();
+            //expressionBuilding.CUDA();
 
-            var basicModelTests = new BasicModelTests();
-            basicModelTests.MultiVariateNormalModel();
+            //var basicModelTests = new BasicModelTests();
+            //basicModelTests.MultiVariateNormalModel();
 
-            var param1 = Expression.Parameter(typeof(double), "a");
-            var param2 = Expression.Parameter(typeof(double), "a");
-            var param3 = Expression.Parameter(typeof(double), "c");
+            //var param1 = Expression.Parameter(typeof(double), "a");
+            //var param2 = Expression.Parameter(typeof(double), "a");
+            //var param3 = Expression.Parameter(typeof(double), "c");
 
-            var add = Expression.Assign(param3, Expression.Add(param1, param2));
+            //var add = Expression.Assign(param3, Expression.Add(param1, param2));
 
-            var block = Expression.Block(add);
+            //var block = Expression.Block(add);
 
 
 
@@ -74,32 +69,28 @@ namespace VectorAccelerator.Launcher
 
             //basicModelTests.GetRate(0, 0, 400 / 365.25);
             
-            var test = new AcceleratorTestsCPU();
-            var test2 = new SimpleCounterpartyRiskTest();
-            var test3 = new CheckApplicationLevelThreadingMKL();
-            var test4 = new ThrowAwayTests();
-            var test5 = new DistributionTests();
-            var test6 = new SpeedComparison();
-            var test7 = new InterpolationTest();
+            //var test = new AcceleratorTestsCPU();
+            //var test2 = new SimpleCounterpartyRiskTest();
+            //var test3 = new CheckApplicationLevelThreadingMKL();
+            //var test4 = new ThrowAwayTests();
+            //var test5 = new DistributionTests();
+            //var test6 = new SpeedComparison();
+            //var test7 = new InterpolationTest();
 
-            var test8 = new InterestRateModel();
-            var test9 = new LinearAlgebraTests();
+            //var test8 = new InterestRateModel();
+            //var test9 = new LinearAlgebraTests();
 
-            test6.OptionPricingTest();
+            //test6.OptionPricingTest();
 
             //test2.OptionPricingTest();
-            Console.ReadKey();
-            return;
 
 
-            test9.TestCorrelation();
-
-            test8.CheckHullWhite();
-
-            test7.VectorBinarySearch();
+            //test9.TestCorrelation();
+            //test8.CheckHullWhite();
+            //test7.VectorBinarySearch();
 
             // good tests:
-            test3.TranscendentalFunctionTest();
+            //test3.TranscendentalFunctionTest();
             //test.TestBlackScholes();
             //test2.OptionPricingTest();
 
@@ -114,7 +105,16 @@ namespace VectorAccelerator.Launcher
             //test.TestMKLWithNETThreads();
             Console.ReadKey();
         }
+
+        public static void Example()
+        {
+
+        }
+
+
     }
+
+
 
     //public class OrnsteinUhlenbeckVariates
     //{

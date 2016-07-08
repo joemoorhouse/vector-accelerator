@@ -228,20 +228,25 @@ namespace VectorAccelerator
             throw new NotImplementedException();
         }
 
-        public static VectorAccelerator.DeferredExecution.DeferredExecutionContext DeferredExecution()
-        {
-            return DeferredExecution(new VectorExecutionOptions());
-        }
-
-        public static VectorAccelerator.DeferredExecution.DeferredExecutionContext DeferredExecution(VectorExecutionOptions options)
-        {
-            return new VectorAccelerator.DeferredExecution.DeferredExecutionContext(options);
-        }
-
         public static IList<NArray> Evaluate(Func<NArray> function, IList<NArray> independentVariables,
             Aggregator aggregator, IList<NArray> existingStorage)
         {
             return VectorAccelerator.DeferredExecution.DeferredExecutionContext.Evaluate(function, independentVariables, null, aggregator, existingStorage);
+        }
+
+        public static NArray Evaluate(Func<NArray> function)
+        {
+            return VectorAccelerator.DeferredExecution.DeferredExecutionContext.Evaluate(function, new List<NArray>()).First();
+        }
+
+        public static void Evaluate(NArray result, Func<NArray> function)
+        {
+            VectorAccelerator.DeferredExecution.DeferredExecutionContext.Evaluate(function, new List<NArray>(), null, Aggregator.ElementwiseAdd, new List<NArray> { result }).First();
+        }
+
+        public static IList<NArray> Evaluate(VectorExecutionOptions vectorOptions, Func<NArray> function)
+        {
+            return VectorAccelerator.DeferredExecution.DeferredExecutionContext.Evaluate(function, new List<NArray>(), null, Aggregator.ElementwiseAdd, null, vectorOptions);
         }
 
         public static IList<NArray> Evaluate(Func<NArray> function, params NArray[] independentVariables)
@@ -338,7 +343,7 @@ namespace VectorAccelerator
 
         public void Add(NArray operand)
         {
-            ExecutionContext.Executor.Add(this, operand);
+            ExecutionContext.Executor.ElementWiseAddInPlace(this, operand);
         }
 
         public static NArray CreateRandom(int length, ContinuousDistribution distribution)

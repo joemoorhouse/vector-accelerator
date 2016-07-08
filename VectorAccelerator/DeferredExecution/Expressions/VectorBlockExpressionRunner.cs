@@ -26,10 +26,12 @@ namespace VectorAccelerator.DeferredExecution.Expressions
         {
             var block = _builder.ToBlock();
 
+            if (block.Operations.Count == 0) return;
+
             // we will cycle through arrays in order of increasing index
             var getter = new OutputGetter<double>(outputs, outputsIndices);
 
-            int chunksLength = 5000;
+            int chunksLength = _builder.VectorLength; //5000;
             var arrayPoolStack = ExecutionContext.ArrayPool.GetStack(chunksLength);
 
             while (arrayPoolStack.Count < 10)
@@ -84,7 +86,7 @@ namespace VectorAccelerator.DeferredExecution.Expressions
             int chunkIndex, int startIndex)
         {   
             if (operation == null || operation.NodeType != ExpressionType.Assign) return;
-            
+
             if (operation == null) return;
 
             if (operation is AssignOperation<T>)
@@ -151,6 +153,7 @@ namespace VectorAccelerator.DeferredExecution.Expressions
             if (aggregationTarget != null)
             {
                 if (aggregator != Aggregator.ElementwiseAdd) throw new NotImplementedException();
+                if (aggregationTarget.IsScalar) throw new Exception();
                 var slice = Slice<T>(aggregationTarget, chunkIndex, startIndex, vectorLength);
                 (provider as IElementWise<T>).BinaryElementWiseOperation(
                     slice,

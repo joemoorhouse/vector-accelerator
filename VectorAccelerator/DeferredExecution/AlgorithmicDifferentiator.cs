@@ -34,6 +34,12 @@ namespace VectorAccelerator.DeferredExecution
             VectorParameterExpression dependentVariable,
             params VectorParameterExpression[] independentVariables)
         {
+            if (independentVariables.Length == 0)
+            {
+                derivativeExpressions = null;
+                return;
+            }
+            
             builder.UpdateLocalsNumbering();
             var block = builder.ToBlock();
             // change the numbering of variables; arguments first, then locals      
@@ -170,6 +176,9 @@ namespace VectorAccelerator.DeferredExecution
                     return builder.AddNegateDivideExpression(function.Parameter, unaryExpression.Operand); // i.e. x/y => x/y * -1/y 
                 }
                 else if (unaryExpression.UnaryType == UnaryElementWiseOperation.Exp) return function.Parameter;
+                else if (unaryExpression.UnaryType == UnaryElementWiseOperation.Log) return builder.AddInverseExpression(unaryExpression.Operand);
+                else if (unaryExpression.UnaryType == UnaryElementWiseOperation.SquareRoot) return builder.AddHalfInverseSquareRootExpression(unaryExpression.Operand);
+                else if (unaryExpression.UnaryType == UnaryElementWiseOperation.CumulativeNormal) return builder.AddGaussian(unaryExpression.Operand);
                 else throw new NotImplementedException();
             }
             else throw new NotImplementedException();

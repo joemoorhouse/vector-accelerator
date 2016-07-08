@@ -20,11 +20,10 @@ namespace VectorAccelerator.Tests
             var normal = new Normal(new RandomNumberStream(location), 0, 1);
             var input = NArray.CreateRandom(1000, normal);
             var result = NArray.CreateLike(input);
-            using (NArray.DeferredExecution())
+            NArray.Evaluate(() =>
             {
-                var temp = NMath.Exp(input * 0.2 + 6);
-                result.Assign(temp);
-            }
+                return NMath.Exp(input * 0.2 + 6);
+            });
         }
 
         /// <summary>

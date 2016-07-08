@@ -9,6 +9,8 @@ namespace RiskEngine.Framework
 {
     public interface IPricer
     {
+        void PrePrice();
+        
         void Price(int timeIndex, out NArray pv);
 
         void Register(SimulationGraph graph);
@@ -17,22 +19,15 @@ namespace RiskEngine.Framework
     public class Pricer<T> where T : Deal, new()
     {
         protected T _deal = new T();
+        //protected TimePoint[] _timePoints;
+        protected DateTime[] _timePoints;
 
         public T Deal { get { return _deal; } }
 
-        public static Pricer<S> FromDeal<S>(S deal) where S :  Deal, new()
+        public virtual void Register(SimulationGraph graph)
         {
-            var pricer = new Pricer<S>();
-            pricer._deal = deal;
-            return pricer;
-        }
-    }
-
-    public static class PricerExtensions
-    {
-        public static IEnumerable<Pricer<T>> ToPricers<T>(this IEnumerable<T> deals) where T : Deal, new()
-        {
-            foreach (var deal in deals) yield return Pricer<T>.FromDeal<T>(deal);
+            var timePoints = graph.Context.Settings.SimulationTimePoints;
+            _timePoints = timePoints.Select(t => t.DateTime).ToArray();
         }
     }
 }

@@ -5,13 +5,13 @@ using System.Text;
 
 namespace VectorAccelerator.DeferredExecution
 {   
-    public class DeferredExecutionContext : IDisposable
+    public class DeferredExecutionContext 
     {
         DeferringExecutor _executor;
         IExecutor _previousExecutor;
         VectorExecutionOptions _options;
 
-        public DeferredExecutionContext(VectorExecutionOptions options)
+        private DeferredExecutionContext(VectorExecutionOptions options)
         {
             //_executor = new ExpressionBuildingExecutor();
             _executor = new DeferringExecutor();
@@ -21,21 +21,38 @@ namespace VectorAccelerator.DeferredExecution
         }
 
         public static IList<NArray> Evaluate(Func<NArray> function, IList<NArray> independentVariables, StringBuilder expressionsOut = null,
-            Aggregator aggregator = Aggregator.ElementwiseAdd, IList<NArray> existingStorage = null)
+            Aggregator aggregator = Aggregator.ElementwiseAdd, IList<NArray> existingStorage = null, VectorExecutionOptions vectorOptions = null)
         {
-            NArray[] outputs = null;
+            if (existingStorage != null && existingStorage.Count != independentVariables.Count + 1)
+                throw new ArgumentException(string.Format("storage provided does not match requirement for 1 result and {0} derivatives",
+                    independentVariables.Count));
+            
+            NArray[] outputs = new NArray[independentVariables.Count + 1];
             try
             {
                 foreach (var variable in independentVariables)
                 {
                     variable.IsIndependentVariable = true; // revisit?
                 }
-                using (var context = new DeferredExecutionContext(new VectorExecutionOptions()))
+                var context = new DeferredExecutionContext(new VectorExecutionOptions());
+                NArray dependentVariable;
+                try
                 {
                     // execute function as deferred operations and obtain reference to the dependentVariable
-                    var dependentVariable = function();
-                    context._executor.Evaluate(context._options, out outputs, dependentVariable, independentVariables, expressionsOut, aggregator, existingStorage);
+                    dependentVariable = function();
                 }
+                finally
+                {
+                    context.Finish();
+                }
+
+                for (int i = 0; i < outputs.Length; ++i)
+                {
+                    // if new storage is required, we create scalars in the first instance
+                    outputs[i] = (existingStorage == null) ? NArray.CreateScalar(0) : existingStorage[i];
+                }
+                context._executor.Evaluate(context._options, outputs, dependentVariable, independentVariables, expressionsOut, aggregator);
+
             }
             finally
             {
@@ -47,7 +64,7 @@ namespace VectorAccelerator.DeferredExecution
             return outputs;
         }
 
-        public void Dispose()
+        private void Finish()
         {
             //_executor.Execute(_options);
             ExecutionContext.Executor = _previousExecutor;

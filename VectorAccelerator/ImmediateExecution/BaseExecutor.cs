@@ -94,11 +94,24 @@ namespace VectorAccelerator
 
         #region Binary Operations
 
+        public virtual void ElementWiseAddInPlace<T>(NArray<T> operand1, NArray<T> operand2)
+        {
+            if (operand2.IsScalar)
+            {
+                T scale; Convert(1, out scale);
+                DoScaleOffset(operand1, scale, operand2.First(), operand2);
+            }
+            else
+            {
+                DoBinaryElementWiseOperation(operand1, operand2, operand1, ExpressionType.Add);
+            }
+        }
+
         public virtual NArray<T> ElementWiseAdd<T>(NArray<T> operand1, NArray<T> operand2) // immediate-mode version
         {
             NArray<T> result = null;
-            if (operand1.IsScalar && operand2.IsScalar) result = NewScalarNArray(Add(operand1.First(), operand2.First()));
-            else if (!operand1.IsScalar && !operand1.IsScalar)
+            if (IsScalarConstant(operand1) && IsScalarConstant(operand2)) result = NewScalarNArray(Add(operand1.First(), operand2.First()));
+            else if (!IsScalarConstant(operand1) && !IsScalarConstant(operand2))
             {
                 result = NewNArrayLike(operand1);
                 DoBinaryElementWiseOperation(operand1, operand2, result, ExpressionType.Add);

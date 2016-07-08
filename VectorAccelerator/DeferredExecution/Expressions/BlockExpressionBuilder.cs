@@ -154,6 +154,42 @@ namespace VectorAccelerator.DeferredExecution.Expressions
             return AddLocalAssignment<double>(new ScaleOffsetExpression<double>(newLocal, -1, 0));
         }
 
+        public Expression AddInverseExpression(VectorParameterExpression a)
+        {
+            var paramA = a as ReferencingVectorParameterExpression<double>;
+            if (paramA.IsScalar)
+            {
+                return new ConstantExpression<double>(1 / paramA.ScalarValue);
+            }
+            return AddLocalAssignment<double>(new ScaleInverseExpression<double>(a, 1));
+        }
+
+        public Expression AddHalfInverseSquareRootExpression(VectorParameterExpression a)
+        {
+            var paramA = a as ReferencingVectorParameterExpression<double>;
+            if (paramA.IsScalar)
+            {
+                return new ConstantExpression<double>(0.5 / Math.Sqrt(paramA.ScalarValue));
+            }
+            var newLocal = AddLocalAssignment<double>(new ScaleInverseExpression<double>(a, 1));
+            return AddLocalAssignment<double>(new ScaleOffsetExpression<double>(newLocal, 0.5, 0));
+        }
+
+        private static double _gaussianScaling = 1.0 / Math.Sqrt(2.0 * Math.PI);
+
+        public Expression AddGaussian(VectorParameterExpression a)
+        {
+            var paramA = a as ReferencingVectorParameterExpression<double>;
+            if (paramA.IsScalar)
+            {
+                return new ConstantExpression<double>(_gaussianScaling * Math.Exp(-paramA.ScalarValue * paramA.ScalarValue / 2));
+            }
+            var newLocal1 = AddLocalAssignment<double>(Expression.MakeBinary(ExpressionType.Multiply, paramA, paramA));
+            var newLocal2 = AddLocalAssignment<double>(new ScaleOffsetExpression<double>(newLocal1, -0.5, 0));
+            var newLocal3 = AddLocalAssignment<double>(new UnaryMathsExpression(UnaryElementWiseOperation.Exp, newLocal2));
+            return AddLocalAssignment<double>(new ScaleOffsetExpression<double>(newLocal3, _gaussianScaling, 0));
+        }
+
         public VectorParameterExpression AddLocalAssignment<T>(Expression rhs)
         {
             ILocalNArray dummy;

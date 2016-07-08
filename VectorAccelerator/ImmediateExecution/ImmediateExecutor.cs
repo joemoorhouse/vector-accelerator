@@ -79,11 +79,6 @@ namespace VectorAccelerator
 
         #region Binary Operations
 
-        public void Add(NArray operand1, NArray operand2)
-        {
-            Provider(operand1, operand2).BinaryElementWiseOperation(operand1, operand2, operand1, ExpressionType.Add);
-        }
-
         public NArray<int> LeftShift(NArray<int> operand, int shift)
         {
             var result = NewNArrayLike(operand);

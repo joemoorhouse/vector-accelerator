@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Diagnostics;
 using VectorAccelerator.NArrayStorage;
 using VectorAccelerator.LinearAlgebraProviders;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace VectorAccelerator.Tests
 {
@@ -28,33 +29,40 @@ namespace VectorAccelerator.Tests
                 watch.Restart();
             }
             watch.Stop();
-            Console.WriteLine(String.Format("Average time: {0} ticks", ticks.Skip(2).Average()));
-            Array.Sort(ticks);
-            Console.WriteLine(String.Format("Fastest time: {0} ticks", ticks.Min()));
-            Console.WriteLine(String.Format("75 percentile fastest time: {0} ticks", ticks[(int)Math.Floor(repetitions * 0.75)]));
-            Console.WriteLine(String.Format("Average time: {0} ms", millisecs.Skip(2).Average()));
+            if (repetitions == 1)
+            {
+                Console.WriteLine(String.Format("Average time: {0} ms", millisecs.First()));
+            }
+            else
+            {
+                Console.WriteLine(String.Format("Average time: {0} ticks", ticks.Skip(2).Average()));
+                Array.Sort(ticks);
+                Console.WriteLine(String.Format("Fastest time: {0} ticks", ticks.Min()));
+                Console.WriteLine(String.Format("75 percentile fastest time: {0} ticks", ticks[(int)Math.Floor(repetitions * 0.75)]));
+                Console.WriteLine(String.Format("Average time: {0} ms", millisecs.Skip(2).Average()));
+            }
         }
 
-        public static string CheckitString(NArray first, NArray second)
+        public static string AgreesAbsoluteString(NArray first, NArray second)
         {
-            return CheckitString((first.Storage as ManagedStorage<double>).Array,
+            return AgreesAbsoluteString((first.Storage as ManagedStorage<double>).Array,
                 (second.Storage as ManagedStorage<double>).Array);
         }
 
-        public static string CheckitString(IList<double> first, IList<double> second)
+        public static string AgreesAbsoluteString(IList<double> first, IList<double> second)
         {
-            return Checkit(first, second) ? "Matches" : "Does not match";
+            return AgreesAbsolute(first, second) ? "Matches" : "Does not match";
         }
 
-        public static bool Checkit(NArray first, NArray second)
+        public static bool AgreesAbsolute(NArray first, NArray second)
         {
-            return Checkit(first.DebugDataView, second.DebugDataView);
+            return AgreesAbsolute(first.DebugDataView, second.DebugDataView);
         }
 
-        public static bool Checkit(IEnumerable<double> first, IEnumerable<double> second)
+        public static bool AgreesAbsolute(IEnumerable<double> first, IEnumerable<double> second, double tolerance = 1e-6)
         {
             if (first.Count() != second.Count()) return false;
-            var diffs = first.Zip(second, (f, s) => (f - s)).Where(d => Math.Abs(d) > 1e-6);
+            var diffs = first.Zip(second, (f, s) => (f - s)).Where(d => Math.Abs(d) > tolerance);
             return !diffs.Any();
         }
     }

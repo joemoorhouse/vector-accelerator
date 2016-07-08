@@ -38,7 +38,7 @@ namespace VectorAccelerator
 
         #region Binary
 
-        void Add(NArray operand1, NArray operand2);
+        void ElementWiseAddInPlace<T>(NArray<T> operand1, NArray<T> operand2);
 
         NArray<T> ElementWiseAdd<T>(NArray<T> operand1, NArray<T> operand2);
 

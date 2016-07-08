@@ -47,7 +47,7 @@ namespace VectorAccelerator.Tests
                         (optionPricesIndexed.Storage as ManagedStorage<double>).Array);
                 });
                 Console.WriteLine(
-                    TestHelpers.CheckitString(optionPricesVector, optionPricesIndexed));
+                    TestHelpers.AgreesAbsoluteString(optionPricesVector, optionPricesIndexed));
             }
         }
         

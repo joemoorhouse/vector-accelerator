@@ -23,21 +23,40 @@ namespace RiskEngine.Pricers
     public class FloatingCashflowPricer : Pricer<FloatingCashflowDeal>, IPricer
     {
         DiscountFactorNonCash _df;
+        int _fixingTimeIndex;
 
         public FloatingCashflowPricer(FloatingCashflowDeal deal)
         {
             _deal = deal;
         }
 
-        public void Register(SimulationGraph graph)
+        public override void Register(SimulationGraph graph)
         {
+            base.Register(graph);
             _df = graph.RegisterFactor<DiscountFactorNonCash>(_deal.Currency.ToString());
+        }
+
+        public void PrePrice()
+        {
+            _fixingTimeIndex = Array.BinarySearch(_timePoints, _deal.StartDate);
+            if (_fixingTimeIndex < 0)
+            {
+                _fixingTimeIndex = -_fixingTimeIndex;
+            }
         }
 
         public void Price(int timeIndex, out NArray pv)
         {
+            if (_timePoints[timeIndex] > _deal.EndDate)
+            {
+                pv = 0; return;
+            }
+            var forwardRate = (_timePoints[timeIndex] > _deal.StartDate)
+                ? _df.ForwardRate(_fixingTimeIndex, _deal.StartDate, Deal.EndDate)
+                : _df.ForwardRate(timeIndex, _deal.StartDate, Deal.EndDate);
+
             var coverage = (_deal.EndDate - _deal.StartDate).Days / 365.35;
-            pv = _deal.Notional * coverage * _df.ForwardRate(timeIndex, _deal.StartDate, Deal.EndDate);    
+            pv = _deal.Notional * coverage * forwardRate;    
         }
     }
 }

@@ -48,7 +48,7 @@ namespace VectorAccelerator.LinearAlgebraProviders
 
         public override void UnaryElementWiseOperation(NArray<double> a,
             NArray<double> result, UnaryElementWiseOperation operation)
-        {
+        {           
             if (operation == VectorAccelerator.UnaryElementWiseOperation.Negate)
             {
                 ScaleOffset(a, -1, 0, result);

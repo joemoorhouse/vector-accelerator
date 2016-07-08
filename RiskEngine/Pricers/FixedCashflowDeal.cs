@@ -33,13 +33,20 @@ namespace RiskEngine.Pricers
             _deal = deal;
         }
 
-        public void Register(SimulationGraph graph)
+        public override void Register(SimulationGraph graph)
         {
+            base.Register(graph);
             _df = graph.RegisterFactor<DiscountFactorNonCash>(_deal.Currency.ToString());
         }
 
+        public void PrePrice() { }
+
         public void Price(int timeIndex, out NArray pv)
         {
+            if (_timePoints[timeIndex] > _deal.EndDate)
+            {
+                pv = 0; return;
+            }
             var coverage = (_deal.EndDate - _deal.StartDate).Days / 365.35;
             pv = _deal.Notional * _deal.Rate * coverage * _df[timeIndex, _deal.EndDate];
         }

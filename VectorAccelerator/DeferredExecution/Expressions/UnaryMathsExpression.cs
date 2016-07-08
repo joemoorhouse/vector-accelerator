@@ -48,6 +48,10 @@ namespace VectorAccelerator.DeferredExecution.Expressions
                     return "exp({0})";
                 case UnaryElementWiseOperation.SquareRoot:
                     return "sqrt({0})";
+                case UnaryElementWiseOperation.Log:
+                    return "log({0})";
+                case UnaryElementWiseOperation.CumulativeNormal:
+                    return "cdf({0})";
             }
             return "n/a";
         }

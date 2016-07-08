@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Text;
 using VectorAccelerator;
 using System.Diagnostics;
 using System.Collections.Generic;
@@ -19,6 +20,7 @@ namespace VectorAccelerator.Tests
 {
     public class BasicSwapAADTest
     {
+               
         public void SimulateAll()
         {
             LinearGaussianModel model;
@@ -29,11 +31,27 @@ namespace VectorAccelerator.Tests
 
             SimulateModel(out model, out allDiscountFactorT0, out timePoints, out graph, out pricers);
 
-            var resultStorage = Enumerable.Range(0, 1 + allDiscountFactorT0.Count()).
-                Select(i => new NArray(StorageLocation.Host, 5000, 1)).ToArray();
+            var simulationCount = graph.Context.Settings.SimulationCount;
+            var timePointCount = graph.Context.Settings.SimulationTimePoints.Length;
 
-            var resultStorageSingle = new List<NArray> { new NArray(StorageLocation.Host, 5000, 1) };
+            var resultStorage = 
+                Enumerable.Range(0, timePointCount).Select(i =>
+                Enumerable.Range(0, 1 + allDiscountFactorT0.Count()).
+                Select(j => new NArray(StorageLocation.Host, simulationCount, 1)).ToArray()).
+                ToArray();
 
+            var resultStorageSingle = Enumerable.Range(0, timePointCount).Select(i =>
+                new List<NArray> { new NArray(StorageLocation.Host, 
+                simulationCount, 1) })
+                .ToArray();
+
+            Console.WriteLine(string.Format("Using {0} scenarios", simulationCount));
+
+            foreach (var pricer in pricers) pricer.PrePrice();
+
+            Console.WriteLine(); Console.WriteLine("Deferred execution single flow, single thread");
+            var tempStorage = new List<NArray> { new NArray(StorageLocation.Host, 
+                simulationCount, 1) };
             VectorAccelerator.Tests.TestHelpers.Timeit(() =>
             {
                 NArray.Evaluate(() =>
@@ -42,37 +60,59 @@ namespace VectorAccelerator.Tests
                     pricers.First().Price(10, out pv);
                     return pv;
                 },
-                    new List<NArray>(), Aggregator.ElementwiseAdd, resultStorageSingle);
+                    new List<NArray>(), Aggregator.ElementwiseAdd, tempStorage);
             }, 10, 10);
 
+            Console.WriteLine(); Console.WriteLine(string.Format("Deferred execution, {0} flows, no derivatives, single thread", pricers.Count));
             VectorAccelerator.Tests.TestHelpers.Timeit(() =>
             {
-                foreach (var pricer in pricers)
+                for (int i = 0; i < timePointCount; ++i)
                 {
-                    NArray.Evaluate(() =>
+                    foreach (var pricer in pricers)
                     {
-                        NArray pv;
-                        pricer.Price(10, out pv);
-                        return pv;
-                    },
-                    new List<NArray>(), Aggregator.ElementwiseAdd, resultStorageSingle);
+                        NArray.Evaluate(() =>
+                        {
+                            NArray pv;
+                            pricer.Price(i, out pv);
+                            return pv;
+                        },
+                        new List<NArray>(), Aggregator.ElementwiseAdd, resultStorageSingle[i]);
+                    }
                 }
-            }, 10, 1);
+            }, 1, 1);
 
-            Console.WriteLine(); Console.WriteLine("Deferred execution all derivatives, storage provided");
+            var percentiles = new double[] { 1, 10, 50, 90, 99 };
+            var measures = new List<IList<double>>();
+            for (int i = 0; i < timePoints.Length; ++i)
+            {
+                var values = NMath.Percentiles(resultStorageSingle[i].First(), percentiles).ToList();
+                measures.Add(values);
+            }
+
+            var times = timePoints.Select(p => p.YearsFromBaseDate).ToArray();
+            var profile10 = measures.Select(p => p[1]).ToArray();
+            var profile90 = measures.Select(p => p[3]).ToArray();
+
+            VectorAccelerator.Plot.PlotHelper.QuickPlot(times, profile90);
+            //return;
+
+            Console.WriteLine(); Console.WriteLine(string.Format("Deferred execution, {0} flows, {1} derivatives, single thread", pricers.Count, allDiscountFactorT0.Count()));
             VectorAccelerator.Tests.TestHelpers.Timeit(() =>
             {
-                foreach (var pricer in pricers)
+                for (int i = 0; i < timePointCount; ++i)
                 {
-                    NArray.Evaluate(() =>
+                    foreach (var pricer in pricers)
                     {
-                        NArray pv;
-                        pricer.Price(10, out pv);
-                        return pv;
-                    },
-                    allDiscountFactorT0.ToArray(), Aggregator.ElementwiseAdd, resultStorage);
+                        NArray.Evaluate(() =>
+                        {
+                            NArray pv;
+                            pricer.Price(i, out pv);
+                            return pv;
+                        },
+                        allDiscountFactorT0.ToArray(), Aggregator.ElementwiseAdd, resultStorage[i]);
+                    }
                 }
-            }, 10, 1);
+            }, 1, 1);
         }
         
         public void CheckBasics()
@@ -122,16 +162,16 @@ namespace VectorAccelerator.Tests
             var context = graph.Context;
             context.Settings.SimulationCount = 5000;
 
-            var fixedLeg = Enumerable.Range(0, 12).Select(i => new FixedCashflowDeal()
+            var fixedLeg = Enumerable.Range(0, 40).Select(i => new FixedCashflowDeal()
                 {
-                    Notional = 1e6,
-                    Rate = 0.01,
+                    Notional = -1e6,
+                    Rate = 0.0078,
                     Currency = Currency.EUR,
                     StartDate = testDate.AddMonths(3 * i),
                     EndDate = testDate.AddMonths(3 * (i + 1))
                 });
 
-            var floatingLeg = Enumerable.Range(0, 12).Select(i => new FloatingCashflowDeal()
+            var floatingLeg = Enumerable.Range(0, 40).Select(i => new FloatingCashflowDeal()
                 {
                     Notional = 1e6,
                     Currency = Currency.EUR,
@@ -239,11 +279,16 @@ namespace VectorAccelerator.Tests
 
                 var obtained = result1[0].DebugDataView.ToArray();
 
+                Assert.IsTrue(TestHelpers.AgreesAbsolute(expected, obtained));
+
+                var log = new StringBuilder();
                 var result2 = NArray.Evaluate(() =>
                 {
                     var df = model[10, timePoints[10].DateTime.AddMonths(3)];
                     return df;
-                }, allDiscountFactorT0.ToArray());
+                }, log, allDiscountFactorT0.ToArray());
+
+                var logCheck = log.ToString();
 
                 var obtained2 = result2[0].DebugDataView.ToArray();
                 var obtained2_Deriv = result2[1].DebugDataView.ToArray();
@@ -254,6 +299,9 @@ namespace VectorAccelerator.Tests
 
                 var expected_deriv = ((bumped - unbumped) / 1e-6)
                     .DebugDataView.ToArray();
+
+                Assert.IsTrue(TestHelpers.AgreesAbsolute(expected, obtained2));
+                Assert.IsTrue(TestHelpers.AgreesAbsolute(expected_deriv, obtained2_Deriv));
 
                 var result3 = NArray.Evaluate(() =>
                 {

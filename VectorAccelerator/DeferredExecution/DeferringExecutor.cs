@@ -30,17 +30,25 @@ namespace VectorAccelerator
         }
 
         public void Evaluate(VectorExecutionOptions options, 
-            out NArray[] outputs,
+            NArray[] outputs,
             NArray dependentVariable, IList<NArray> independentVariables, StringBuilder expressionsOut = null,
-            Aggregator aggregator = Aggregator.ElementwiseAdd, IList<NArray> existingStorage = null)
-        {            
-            if (existingStorage != null && existingStorage.Count != independentVariables.Count + 1) 
-                throw new ArgumentException(string.Format("storage provided does not match requirement for 1 result and {0} derivatives", 
-                    independentVariables.Count));
-
+            Aggregator aggregator = Aggregator.ElementwiseAdd)
+        {
+            if (aggregator != Aggregator.ElementwiseAdd) throw new NotImplementedException();
+            
             var dependentVariableExpression = _builder.GetParameter<double>(dependentVariable);
             var independentVariableExpressions = independentVariables.Select(v => _builder.GetParameter<double>(v)).ToArray();
-            
+
+            // and important special case
+            // this can only occur if the dependent variable is a scalar that does not depend on any independent variables
+            if (dependentVariableExpression.Index == -1) 
+            {
+                var scalarValue = (dependentVariableExpression as ReferencingVectorParameterExpression<double>).ScalarValue;
+                outputs[0].Add(scalarValue);
+                // all derivatives remains zero
+                return;
+            }
+
             // differentiate, extending the block as necessary
             IList<Expression> derivativeExpressions;
             AlgorithmicDifferentiator.Differentiate(_builder, out derivativeExpressions,
@@ -48,24 +56,20 @@ namespace VectorAccelerator
 
             // arrange output storage
             var outputIndices = new int[1 + independentVariables.Count];
-            outputIndices[0] = dependentVariableExpression.Index;
-            outputs = new NArray[1 + independentVariables.Count];
-            outputs[0] = (existingStorage == null) ? new NArray(StorageLocation.Host, _builder.VectorLength, 1) : existingStorage[0]; 
-            for (int i = 0; i < independentVariables.Count; ++i)
+            for (int i = 0; i < independentVariables.Count + 1; ++i)
             {
-                var referencingExpression = derivativeExpressions[i] as ReferencingVectorParameterExpression<double>;
+                var referencingExpression = (i > 0) ? derivativeExpressions[i - 1] as ReferencingVectorParameterExpression<double>
+                    : dependentVariableExpression as ReferencingVectorParameterExpression<double>;
                 if (referencingExpression.IsScalar) // common case: constant derivative (especially zero)
                 {
-                    outputs[i + 1] = NArray.CreateScalar(referencingExpression.ScalarValue);
-                    outputIndices[i + 1] = int.MaxValue;
+                    outputs[i].Add(referencingExpression.ScalarValue);
+                    outputIndices[i] = int.MaxValue;
                     // TODO if storage passed in, update here in case of non-zero constant?
                 }
-                else
+                else // not a scalar so we will need storage 
                 {
-                    outputIndices[i + 1] = referencingExpression.Index;
-                    if (existingStorage == null)
-                        outputs[i + 1] = new NArray(StorageLocation.Host, _builder.VectorLength, 1);
-                    else outputs[i + 1] = existingStorage[i + 1];
+                    outputIndices[i] = referencingExpression.Index;
+                    outputs[i] = new NArray(StorageLocation.Host, _builder.VectorLength, 1);
                 }
             }
                
@@ -76,14 +80,25 @@ namespace VectorAccelerator
             if (expressionsOut != null)
             {
                 var block = _builder.ToBlock();
-                expressionsOut.AppendLine("Derivatives in lines " + String.Join(",", 
-                    independentVariableExpressions.Select(e => e.ToString())));
+                expressionsOut.AppendLine("Result in expression " 
+                    + dependentVariableExpression.ToString());
+                
+                if (derivativeExpressions.Any())
+                {
+                    expressionsOut.AppendLine("Derivatives in expressions " + String.Join(", ",
+                        derivativeExpressions.Select(e => e.ToString())));
+                }
                 foreach (var item in block.Operations)
                 {
                     var display = item.ToString();
-                    var result = new string(display.Skip(1).Take(display.Length - 2).ToArray());
+                    expressionsOut.AppendLine(new string(display.Skip(1).Take(display.Length - 2).ToArray()));
                 }
             }
+        }
+
+        private void Update(NArray output, double scalar, Aggregator aggregator)
+        {
+            output.Add(scalar);
         }
 
         #region Deferrable Operations
@@ -231,13 +246,6 @@ namespace VectorAccelerator
         #endregion
 
         #region Unary Operations
-
-        public void Add(NArray operand1, NArray operand2)
-        {
-            if (operand1.Length != operand2.Length) throw new ArgumentException("length mismatch");
-           
-            //_vectorOperations.Add(new BinaryVectorOperation(operand1, operand2, operand1, _provider.Add));
-        }
 
         public NArray<int> LeftShift(NArray<int> operand, int shift)
         {

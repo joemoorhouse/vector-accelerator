@@ -19,6 +19,7 @@ namespace VectorAccelerator.Distributions
         {
             _location = location;
             _innerStream = ExecutionContext.Executor.CreateRandomNumberStream(location, type, seed);
+
             Type = type;
             Seed = seed;
         }

@@ -29,8 +29,8 @@ namespace VectorAccelerator.Tests
             var expected1 = 5.0 / test;
             var expectedDiff1 = -5.0 / (test * test);
 
-            var pass = TestHelpers.Checkit(obtained1[0], expected1);
-            pass = pass && TestHelpers.Checkit(obtained1[1], expectedDiff1);
+            var pass = TestHelpers.AgreesAbsolute(obtained1[0], expected1);
+            pass = pass && TestHelpers.AgreesAbsolute(obtained1[1], expectedDiff1);
 
             // second test
 
@@ -43,9 +43,9 @@ namespace VectorAccelerator.Tests
             var expectedDiff2_1 = 1 / test2;
             var expectedDiff2_2 = -test / (test2 * test2);
 
-            pass = TestHelpers.Checkit(obtained2[0], expected2);
-            pass = pass && TestHelpers.Checkit(obtained2[1], expectedDiff2_1);
-            pass = pass && TestHelpers.Checkit(obtained2[2], expectedDiff2_2);
+            pass = TestHelpers.AgreesAbsolute(obtained2[0], expected2);
+            pass = pass && TestHelpers.AgreesAbsolute(obtained2[1], expectedDiff2_1);
+            pass = pass && TestHelpers.AgreesAbsolute(obtained2[2], expectedDiff2_2);
 
         }
     }

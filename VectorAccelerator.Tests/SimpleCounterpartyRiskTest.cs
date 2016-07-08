@@ -51,7 +51,7 @@ namespace VectorAccelerator.Tests
                 var optionPricesDeferred = Value(normalDistribution);
                 Console.WriteLine(String.Format("Threaded, deferred 2: {0}ms", watch.ElapsedMilliseconds)); watch.Restart();
                 
-                Console.WriteLine(TestHelpers.CheckitString(optionPrices, optionPricesDeferred));
+                Console.WriteLine(TestHelpers.AgreesAbsoluteString(optionPrices, optionPricesDeferred));
             }
         }
 
@@ -125,10 +125,11 @@ namespace VectorAccelerator.Tests
                   var partialSum = initialValue;
                   for (int i = range.Item1; i < range.Item2; i++)
                   {
-                      using (NArray.DeferredExecution())
-                      {
-                          partialSum.Add(deals[i].Price(0));
-                      }
+                      partialSum.Add(
+                          NArray.Evaluate(() =>
+                          {
+                              return deals[i].Price(0);
+                          }));
                   }
                   return partialSum;
               },
