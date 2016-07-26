@@ -99,6 +99,7 @@
     <Compile Include="DeferredExecution\AlgorithmicDifferentiator.cs" />
     <Compile Include="DeferredExecution\DeferredExecutionContext.cs" />
     <Compile Include="DeferredExecution\DeferredOperations.cs" />
+    <Compile Include="DeferredExecution\ExecutionTimer.cs" />
     <Compile Include="DeferredExecution\Expressions\ConstantExpression.cs" />
     <Compile Include="DeferredExecution\Expressions\CUDACodeBuilder.cs" />
     <Compile Include="DeferredExecution\Expressions\ReferencingVectorParameterExpression.cs" />

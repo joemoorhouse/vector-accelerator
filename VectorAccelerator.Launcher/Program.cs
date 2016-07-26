@@ -23,9 +23,11 @@ namespace VectorAccelerator.Launcher
             //illustrative.Example1();
 
             var extendedExpressionBuilding = new BasicSwapAADTest();
-            //extendedExpressionBuilding.SimulateAll();
+            extendedExpressionBuilding.SimulateAll();
 
-            extendedExpressionBuilding.CheckBasics();
+            //extendedExpressionBuilding.PerformanceTest();
+
+            //extendedExpressionBuilding.CheckBasics();
             //extendedExpressionBuilding.CheckPerformance();
 
             //var expressionBuilding = new BasicExpressionBuildingTests();

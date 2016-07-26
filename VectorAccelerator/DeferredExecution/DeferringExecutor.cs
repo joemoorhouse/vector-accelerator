@@ -18,7 +18,7 @@ namespace VectorAccelerator
     /// </summary>
     public class DeferringExecutor : BaseExecutor, IExecutor
     {
-        BlockExpressionBuilder _builder = new BlockExpressionBuilder();
+        public BlockExpressionBuilder _builder = new BlockExpressionBuilder();
 
         public int VectorsLength { get { return _builder.VectorLength; } }
 
@@ -31,7 +31,7 @@ namespace VectorAccelerator
 
         public void Evaluate(VectorExecutionOptions options, 
             NArray[] outputs,
-            NArray dependentVariable, IList<NArray> independentVariables, StringBuilder expressionsOut = null,
+            NArray dependentVariable, IList<NArray> independentVariables, ExecutionTimer timer, StringBuilder expressionsOut = null,
             Aggregator aggregator = Aggregator.ElementwiseAdd)
         {
             if (aggregator != Aggregator.ElementwiseAdd) throw new NotImplementedException();
@@ -49,10 +49,14 @@ namespace VectorAccelerator
                 return;
             }
 
+            timer.MarkEvaluateSetupComplete();
+
             // differentiate, extending the block as necessary
             IList<Expression> derivativeExpressions;
             AlgorithmicDifferentiator.Differentiate(_builder, out derivativeExpressions,
                 dependentVariableExpression, independentVariableExpressions);
+
+            timer.MarkDifferentationComplete();
 
             // arrange output storage
             var outputIndices = new int[1 + independentVariables.Count];
@@ -69,13 +73,22 @@ namespace VectorAccelerator
                 else // not a scalar so we will need storage 
                 {
                     outputIndices[i] = referencingExpression.Index;
-                    outputs[i] = new NArray(StorageLocation.Host, _builder.VectorLength, 1);
+                    if (outputs[i].IsScalar)
+                    {
+                        // we increase the storage, copying the scalar value
+                        outputs[i] = new NArray(new VectorAccelerator.NArrayStorage.ManagedStorage<double>(_builder.VectorLength, 1, outputs[i].First()));
+                        //outputs[i].Storage = new VectorAccelerator.NArrayStorage.ManagedStorage<double>(_builder.VectorLength, 1, outputs[i].First());
+                    }
                 }
             }
-               
+
+            timer.MarkStorageSetupComplete();
+
             // run
             VectorBlockExpressionRunner.RunNonCompiling(_builder, Provider(StorageLocation.Host),
-                new VectorExecutionOptions(), outputs, outputIndices, aggregator);
+                new VectorExecutionOptions(), outputs, outputIndices, aggregator, timer);
+
+            timer.MarkExecuteComplete();
 
             if (expressionsOut != null)
             {

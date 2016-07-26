@@ -58,6 +58,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Attributes\ModelAppliesToAttribute.cs" />
+    <Compile Include="Calculations\CalculationResult.cs" />
+    <Compile Include="Calculations\Calculations.cs" />
     <Compile Include="Data\Calibration\CalibrationParametersProvider.cs" />
     <Compile Include="Data\Calibration\CorrelationHelper.cs" />
     <Compile Include="Data\Curve.cs" />
