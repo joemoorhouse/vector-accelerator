@@ -3,7 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using VectorAccelerator.Distributions;
-using System.Linq.Expressions;
+using VectorAccelerator.DeferredExecution.Expressions;
+//using System.Linq.Expressions;
 
 namespace VectorAccelerator.LinearAlgebraProviders
 {

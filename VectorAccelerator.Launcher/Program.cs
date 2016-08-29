@@ -26,7 +26,7 @@ namespace VectorAccelerator.Launcher
             //extendedExpressionBuilding.SimulateAll();
 
             extendedExpressionBuilding.CheckBasics();
-            //extendedExpressionBuilding.CheckPerformance();
+            extendedExpressionBuilding.CheckPerformance();
 
             //var expressionBuilding = new BasicExpressionBuildingTests();
             //expressionBuilding.AAD();

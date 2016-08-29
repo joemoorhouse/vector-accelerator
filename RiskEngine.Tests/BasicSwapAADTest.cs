@@ -301,7 +301,7 @@ namespace VectorAccelerator.Tests
                     .DebugDataView.ToArray();
 
                 Assert.IsTrue(TestHelpers.AgreesAbsolute(expected, obtained2));
-                Assert.IsTrue(TestHelpers.AgreesAbsolute(expected_deriv, obtained2_Deriv));
+                Assert.IsTrue(TestHelpers.AgreesAbsolute(expected_deriv, obtained2_Deriv, 5e-6));
 
                 var result3 = NArray.Evaluate(() =>
                 {

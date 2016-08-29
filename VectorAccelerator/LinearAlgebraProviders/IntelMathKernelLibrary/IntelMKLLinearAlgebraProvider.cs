@@ -5,7 +5,8 @@ using System.Text;
 using VectorAccelerator;
 using VectorAccelerator.Distributions;
 using VectorAccelerator.NArrayStorage;
-using System.Linq.Expressions;
+using VectorAccelerator.DeferredExecution.Expressions;
+//using System.Linq.Expressions;
 
 namespace VectorAccelerator.LinearAlgebraProviders
 {
