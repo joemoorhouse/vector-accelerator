@@ -45,6 +45,8 @@ namespace RiskEngine.Pricers
             }
         }
 
+        public DateTime ExposureEndDate { get { return _deal.EndDate; } }
+
         public void Price(int timeIndex, out NArray pv)
         {
             if (_timePoints[timeIndex] > _deal.EndDate)
@@ -55,8 +57,8 @@ namespace RiskEngine.Pricers
                 ? _df.ForwardRate(_fixingTimeIndex, _deal.StartDate, Deal.EndDate)
                 : _df.ForwardRate(timeIndex, _deal.StartDate, Deal.EndDate);
 
-            var coverage = (_deal.EndDate - _deal.StartDate).Days / 365.35;
-            pv = _deal.Notional * coverage * forwardRate;    
+            var coverage = (_deal.EndDate - _deal.StartDate).TotalDays / 365.25;
+            pv = _deal.Notional * coverage * forwardRate * _df[timeIndex, _deal.EndDate];    
         }
     }
 }

@@ -82,7 +82,8 @@ namespace RiskEngine.Framework
                 GroupBy(n => new NodeGroupKey(n.Key.Type, n.GetTreeLevel())).
                     OrderBy(k => k.Key.TreeLevel);
 
-            return new SimulationRunner(orderedNodes.Select(g => new SimulationSet(g)), Context);
+            return new SimulationRunner(orderedNodes.Select(g => new SimulationSet(g)), 
+                _nodes.Values.Select(n => n.Model), Context);
         }
 
         Dictionary<FactorKey, ModelKey> _modelLookup = new Dictionary<FactorKey, ModelKey>();

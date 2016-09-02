@@ -49,19 +49,65 @@ namespace VectorAccelerator.Tests
 
             foreach (var pricer in pricers) pricer.PrePrice();
 
+            //#region AddedSpeedTests
+
+            //for (int round = 0; round < 2; ++round)
+            //{
+            //    var store = Enumerable.Range(0, timePointCount).Select(i => new NArray(StorageLocation.Host, simulationCount, 1)).ToArray();
+                
+            //    VectorAccelerator.Tests.TestHelpers.Timeit(() =>
+            //    {
+            //        var options = new ParallelOptions() { MaxDegreeOfParallelism = round + 1 };
+
+            //        Parallel.For(0, timePointCount, options, (i) =>
+            //        {
+            //            var tempResult = store[i]; //new NArray(StorageLocation.Host, simulationCount, 1);
+            //            for (int j = 0; j < pricers.Count; ++j)
+            //            {
+            //                NArray.Evaluate(() =>
+            //                {
+            //                    NArray pv;
+            //                    pricers[j].Price(i, out pv);
+            //                    return pv;
+            //                    //return model.DiscountFactor(10, timePoints.First().DateTime.AddDays(182));
+            //                }, new List<NArray>(), Aggregator.ElementwiseAdd, new List<NArray> { tempResult });
+
+            //            }
+            //        });
+            //    }, 1, 1);
+            //}
+
+            //return;
+
+            //#endregion
+
             Console.WriteLine(); Console.WriteLine("Deferred execution single flow, single thread");
             var tempStorage = new List<NArray> { new NArray(StorageLocation.Host, 
                 simulationCount, 1) };
-            VectorAccelerator.Tests.TestHelpers.Timeit(() =>
-            {
-                NArray.Evaluate(() =>
-                {
-                    NArray pv;
-                    pricers.First().Price(10, out pv);
-                    return pv;
-                },
-                    new List<NArray>(), Aggregator.ElementwiseAdd, tempStorage);
-            }, 10, 10);
+            
+            //VectorAccelerator.Tests.TestHelpers.Timeit(() =>
+            //{
+            //    NArray.Evaluate(() =>
+            //    {
+            //        NArray pv;
+            //        pricers.First().Price(10, out pv);
+            //        return pv;
+            //    },
+            //        new List<NArray>(), Aggregator.ElementwiseAdd, tempStorage);
+            //}, 10, 1);
+
+            //VectorAccelerator.Tests.TestHelpers.Timeit(() =>
+            //{
+            //    NArray.Evaluate(() =>
+            //    {
+            //        NArray pv;
+            //        pricers.First().Price(10, out pv);
+            //        return pv;
+            //    },
+            //        new List<NArray>(), Aggregator.ElementwiseAdd, tempStorage);
+            //}, 10, 1);
+
+            //return;
 
             Console.WriteLine(); Console.WriteLine(string.Format("Deferred execution, {0} flows, no derivatives, single thread", pricers.Count));
             VectorAccelerator.Tests.TestHelpers.Timeit(() =>
@@ -81,6 +127,12 @@ namespace VectorAccelerator.Tests
                 }
             }, 1, 1);
 
+            var pricingOperationCount = 0;
+            for (int i = 0; i < timePointCount; ++i)
+            {
+                pricingOperationCount += pricers.Count(p => p.ExposureEndDate < timePoints[i].DateTime);
+            }
+
             var percentiles = new double[] { 1, 10, 50, 90, 99 };
             var measures = new List<IList<double>>();
             for (int i = 0; i < timePoints.Length; ++i)
@@ -93,13 +145,20 @@ namespace VectorAccelerator.Tests
             var profile10 = measures.Select(p => p[1]).ToArray();
             var profile90 = measures.Select(p => p[3]).ToArray();
 
-            VectorAccelerator.Plot.PlotHelper.QuickPlot(times, profile90);
+            VectorAccelerator.Plot.PlotHelper.QuickPlot(times, profile90, new Tuple<double,double>(0, 11));
             //return;
 
-            Console.WriteLine(); Console.WriteLine(string.Format("Deferred execution, {0} flows, {1} derivatives, multiple threads", pricers.Count, allDiscountFactorT0.Count()));
+            Console.WriteLine(); Console.WriteLine(string.Format("Deferred execution, {0} flows, Calculate, single thread", pricers.Count));
             VectorAccelerator.Tests.TestHelpers.Timeit(() =>
             {
-                Calculations.Calculate(graph, pricers);
+                Calculations.Calculate(graph, pricers, false);
+                //Calculations.Calculate(graph, pricers, allDiscountFactorT0.ToList());
+            }, 1, 1);
+
+            Console.WriteLine(); Console.WriteLine(string.Format("Deferred execution, {0} flows, Calculate, multiple threads", pricers.Count));
+            VectorAccelerator.Tests.TestHelpers.Timeit(() =>
+            {
+                Calculations.Calculate(graph, pricers, true);
                 //Calculations.Calculate(graph, pricers, allDiscountFactorT0.ToList());
             }, 1, 1);
 
@@ -194,7 +253,7 @@ namespace VectorAccelerator.Tests
             var fixedLeg = Enumerable.Range(0, 40).Select(i => new FixedCashflowDeal()
                 {
                     Notional = -1e6,
-                    Rate = 0.0078,
+                    Rate = 0.002,
                     Currency = Currency.EUR,
                     StartDate = testDate.AddMonths(3 * i),
                     EndDate = testDate.AddMonths(3 * (i + 1))
@@ -209,9 +268,9 @@ namespace VectorAccelerator.Tests
                 });
 
             var correlationMatrix = context.Factory.CreateNArray(new double[,] {
-                { 1.0,      -0.947,   0.528},
+                { 1.0,      -0.947,   0.529},
                 { -0.947,     1.0,    -0.767},
-                { 0.528,    -0.767,   1.0}
+                { 0.529,    -0.767,   1.0}
             });
             var identifiers = new string[] { "IR_DiscountFactor_EUR_Factor0", "IR_DiscountFactor_EUR_Factor1", 
                 "IR_DiscountFactor_EUR_Factor2"};
@@ -232,7 +291,11 @@ namespace VectorAccelerator.Tests
             model.Factors[2].Sigma = 0.0114; model.Factors[2].Lambda = 0.957;
 
             var years = new double[] { 0.1, 0.25, 0.5, 0.75, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 15, 20, 25, 40, 60 };
+            years = new int[] { 0, 1, 7, 14, 30, 60, 91, 182, 273, 365, 547, 730, 1095, 1461, 1826, 2191, 2556, 2922, 3287, 3652, 4383, 5478, 7305, 9131, 10957, 12783, 14610, 16436, 18262, 20088, 21915 }
+                .Select(d => d / 365.25).ToArray();
             var zeroRatesInPercent = new double[] { -0.25, -0.25, -0.25, -0.25, -0.25, -0.25, -0.25 - 0.18, -0.08, 0.03, 0.16, 0.3, 0.4, 0.55, 0.75, 1, 1.15, 1.2, 1.2, 1.2 };
+            zeroRatesInPercent = new double[] { -0.3, -0.3, -0.29, -0.29, -0.3, -0.31, -0.31, -0.32, -0.32, -0.33, -0.34, -0.35, -0.35, -0.33, -0.28, -0.2, -0.11, -0.01, 0.1, 0.2, 0.37, 0.56, 0.71, 0.75, 0.76, 0.75, 0.75, 0.72, 0.7, 0.67, 0.64 };
+
             model.DiscountFactorT0 = new Curve(years.Zip(zeroRatesInPercent,
                 (y, r) => new DataPoint(
                     testDate.AddDays(y * 365.25), 
@@ -245,6 +308,13 @@ namespace VectorAccelerator.Tests
 
             timePoints = graph.Context.Settings.SimulationTimePoints;
             allDiscountFactorT0 = model.DiscountFactorT0.Data.Select(d => d.Value);
+
+            var check1 = model[1, timePoints[1].DateTime.AddDays(182)].First();
+
+            var check2 = model[1, timePoints[1].DateTime.AddDays(91)].First();
+
+            var check3 = model.ForwardRate(1, 
+                timePoints[1].DateTime.AddDays(91), timePoints[1].DateTime.AddDays(182)).First();
 
             bool checkProfile = true;
             if (checkProfile)

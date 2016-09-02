@@ -13,6 +13,8 @@ namespace RiskEngine.Framework
         
         void Price(int timeIndex, out NArray pv);
 
+        DateTime ExposureEndDate { get; }
+
         void Register(SimulationGraph graph);
     }
     

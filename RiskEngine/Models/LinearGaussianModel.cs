@@ -59,17 +59,30 @@ namespace RiskEngine.Models
             }
         }
 
+        public override void Prepare(Context context)
+        {
+            var simulationT0 = _timePoints.First().DateTime;
+            
+            _zeroRateT0 = new Curve(
+                DiscountFactorT0.Data
+                .Select(c => new DataPoint(c.Time, -NMath.Log(c.Value) / IntervalInYears(simulationT0, c.Time))
+                ));
+
+            _zeroRateT0.Data[0] = new DataPoint(_zeroRateT0[0].Time, _zeroRateT0[1].Value);
+        }
+
         /// <summary>
-        /// Calculates discount factor for payment at time t at the supplied simulation time index 
+        /// Calculates discount factor for payment at time t2 at the supplied simulation time index 
         /// </summary>
         /// <param name="timeIndex"></param>
-        /// <param name="t"></param>
+        /// <param name="t2"></param>
         /// <returns></returns>
-        public NArray DiscountFactor(int timeIndex, DateTime t)
+        public NArray DiscountFactor(int timeIndex, DateTime t2)
         {
             var B = NArray.CreateScalar(0);
+            var simulationT0 = _timePoints.First().DateTime;
 
-            double tenor = (t - _timePoints[timeIndex].DateTime).Days / 365.25;
+            double tenor = IntervalInYears(_timePoints[timeIndex].DateTime, t2);
             
             for (int factorIndex = 0; factorIndex < _factors.Length; ++factorIndex)
             {
@@ -77,11 +90,16 @@ namespace RiskEngine.Models
                     * _factorPaths[factorIndex][timeIndex];
             }
 
-            var d0T = DiscountFactorT0.GetValue(t);
-            var d0t = DiscountFactorT0.GetValue(_timePoints[timeIndex].DateTime);
+            var lnDF0t2 = -_zeroRateT0.GetValue(t2) * IntervalInYears(simulationT0, t2);
+            var lnDF0t1 = -_zeroRateT0.GetValue(_timePoints[timeIndex].DateTime) 
+                * _timePoints[timeIndex].YearsFromBaseDate;
+
+            //var d0t2 = DiscountFactorT0.GetValue(t2);
+            //var d0t1 = DiscountFactorT0.GetValue(_timePoints[timeIndex].DateTime);
             
             double drift = GetDrift(timeIndex, tenor);
-            return (d0T / d0t) * NMath.Exp(-0.5 * drift + B);
+            return NMath.Exp(lnDF0t2 - lnDF0t1 - 0.5 * drift + B);
+            //return (d0t2 / d0t1) * NMath.Exp(-0.5 * drift + B);
         }
 
         /// <summary>
@@ -94,9 +112,10 @@ namespace RiskEngine.Models
         public NArray ForwardRate(int timeIndex, DateTime t1, DateTime t2)
         {
             var B = NArray.CreateScalar(0);
+            var simulationT0 = _timePoints.First().DateTime;
 
-            double tenor1 = (t1 - _timePoints[timeIndex].DateTime).Days / 365.25;
-            double tenor2 = (t2 - _timePoints[timeIndex].DateTime).Days / 365.25;
+            double tenor1 = IntervalInYears(_timePoints[timeIndex].DateTime, t1);
+            double tenor2 = IntervalInYears(_timePoints[timeIndex].DateTime, t2);
 
             for (int factorIndex = 0; factorIndex < _factors.Length; ++factorIndex)
             {
@@ -104,12 +123,16 @@ namespace RiskEngine.Models
                     * _factorPaths[factorIndex][timeIndex];
             }
 
-            var d0t1 = DiscountFactorT0.GetValue(t1);
-            var d0t2 = DiscountFactorT0.GetValue(t2);
+            var lnDF0t1 = -_zeroRateT0.GetValue(t1) * IntervalInYears(simulationT0, t1);
+            var lnDF0t2 = -_zeroRateT0.GetValue(t2) * IntervalInYears(simulationT0, t2);
+
+            //var d0t1 = DiscountFactorT0.GetValue(t1);
+            //var d0t2 = DiscountFactorT0.GetValue(t2);
 
             double drift = GetDrift(timeIndex, tenor1) - GetDrift(timeIndex, tenor2);
-            var dfRatio = (d0t1 / d0t2) * NMath.Exp(-0.5 * drift + B); // df(t, t1) / df(t, t2)
-            double alpha = (t2 - t1).Days / 365.25;
+            //var dfRatio = (d0t1 / d0t2) * NMath.Exp(-0.5 * drift + B); // df(t, t1) / df(t, t2)
+            var dfRatio = NMath.Exp(lnDF0t1 - lnDF0t2 - 0.5 * drift + B); // df(t, t1) / df(t, t2)
+            double alpha = IntervalInYears(t1, t2);
             return (dfRatio - 1) / alpha;
         }
 
@@ -149,9 +172,15 @@ namespace RiskEngine.Models
             return (1.0 - Math.Exp(-lambda * t)) / lambda;
         }
 
+        private double IntervalInYears(DateTime t1, DateTime t2)
+        {
+            return (t2 - t1).TotalDays / 365.25;
+        }
+
         MeanRevertingNormalPathModel[] _factorPaths;
         MeanRevertingNormalProcess[] _factors;
         double[,] _factorCorrelation;
         int factorCount;
+        Curve _zeroRateT0;
     }
 }

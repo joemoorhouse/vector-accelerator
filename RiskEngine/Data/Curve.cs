@@ -30,8 +30,8 @@ namespace RiskEngine.Framework
         public NArray GetValue(DateTime t)
         {
             int lower = GetLowerIndex(t);
-            double weight = (double)(t - Data[lower].Time).Days 
-                / (double)(Data[lower + 1].Time - Data[lower].Time).Days;
+            double weight = (double)(t - Data[lower].Time).TotalDays
+                / (double)(Data[lower + 1].Time - Data[lower].Time).TotalDays;
             return weight * Data[lower + 1].Value + (1 - weight) * Data[lower].Value;
         }
 

@@ -7,8 +7,7 @@
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300">
     <Grid>
-        <oxy:Plot Name="plot" Title="Test Plot" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-        
+        <oxy:Plot Name="Plot" Title="Test Plot" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
         </oxy:Plot>   
     </Grid>
 </UserControl>

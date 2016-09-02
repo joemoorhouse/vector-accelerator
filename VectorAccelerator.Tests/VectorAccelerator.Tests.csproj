@@ -68,26 +68,29 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
-    <Compile Include="AcceleratorTestsCPU.cs" />
-    <Compile Include="Checks\BasicCheckVectorPerformance.cs" />
-    <Compile Include="ConditionalSpeedTest.cs" />
-    <Compile Include="DeferredExecutionTests.cs" />
-    <Compile Include="DistributionTests.cs" />
-    <Compile Include="ExpressionBuildingTests\BasicDifferentiationTests.cs" />
-    <Compile Include="ExpressionBuildingTests\BasicExpressionBuildingTests.cs">
+    <Compile Include="Old\AcceleratorTestsCPU.cs" />
+    <Compile Include="Old\Checks\BasicCheckVectorPerformance.cs" />
+    <Compile Include="Old\ConditionalSpeedTest.cs" />
+    <Compile Include="Old\DeferredExecutionTests.cs" />
+    <Compile Include="Old\DistributionTests.cs" />
+    <Compile Include="ExpressionBuilding\BasicDifferentiationTests.cs" />
+    <Compile Include="ExpressionBuilding\BasicExpressionBuildingTests.cs">
       <ExcludeFromStyleCop>True</ExcludeFromStyleCop>
     </Compile>
-    <Compile Include="Financial\CounterpartyCreditRisk\InterestRateModel.cs" />
-    <Compile Include="Illustrative.cs" />
-    <Compile Include="InterpolationTest.cs" />
-    <Compile Include="Checks\CheckApplicationLevelThreadingMKL.cs" />
-    <Compile Include="LinearAlgebraTests.cs" />
-    <Compile Include="NonNormalVariateGeneration.cs" />
+    <Compile Include="Old\Financial\CounterpartyCreditRisk\InterestRateModel.cs" />
+    <Compile Include="Old\Illustrative.cs" />
+    <Compile Include="Old\InterpolationTest.cs" />
+    <Compile Include="Old\Checks\CheckApplicationLevelThreadingMKL.cs" />
+    <Compile Include="Old\LinearAlgebraTests.cs" />
+    <Compile Include="Old\NonNormalVariateGeneration.cs" />
+    <Compile Include="Performance\MultithreadingTests.cs" />
+    <Compile Include="Performance\PureTranscendentalWork.cs" />
+    <Compile Include="Performance\Work.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="SimpleCounterpartyRiskTest.cs" />
-    <Compile Include="SpeedComparison.cs" />
-    <Compile Include="TestHelpers.cs" />
-    <Compile Include="ThrowAwayTests.cs" />
+    <Compile Include="Old\SimpleCounterpartyRiskTest.cs" />
+    <Compile Include="Old\SpeedComparison.cs" />
+    <Compile Include="Old\TestHelpers.cs" />
+    <Compile Include="Old\ThrowAwayTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\VectorAccelerator\VectorAccelerator.csproj">

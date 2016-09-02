@@ -36,6 +36,14 @@ namespace RiskEngine.Models
 
         public override NArray Step(TimeInterval timeStep, NArray previous)
         {
+            if (timeStep.Previous == new DateTime(2015, 12, 1))
+            {
+                var array = (_normalVariates.Value.Storage as VectorAccelerator.NArrayStorage.ManagedStorage<double>).Array;
+                if (this.Identifier == "IR_DiscountFactor_EUR_Factor0") array[0] = -0.19506489810511074;
+                if (this.Identifier == "IR_DiscountFactor_EUR_Factor1") array[5000] = -0.1090369125224584;
+                if (this.Identifier == "IR_DiscountFactor_EUR_Factor2") array[10000] = 0.90874299503382527;
+            }
+            
             var t = timeStep.IntervalInYears;
             return previous * NMath.Exp(-Lambda * t)
                 + NMath.Sqrt(E(2.0 * Lambda, t)) * _normalVariates.Value;

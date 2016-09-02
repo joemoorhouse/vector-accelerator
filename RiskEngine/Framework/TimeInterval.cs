@@ -16,7 +16,7 @@ namespace RiskEngine.Framework
         {
             Previous = previous;
             Next = next;
-            IntervalInYears = (next - previous).Days / 365.25;
+            IntervalInYears = (next - previous).TotalDays / 365.25;
         }
     }
 

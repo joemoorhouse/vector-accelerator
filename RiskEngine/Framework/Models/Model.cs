@@ -28,6 +28,11 @@ namespace RiskEngine.Framework
             _timeIntervals = graph.Context.Settings.SimulationIntervals;
         }
 
+        public virtual void Prepare(Context context)
+        {
+            // no preparation in base
+        }
+
         public override string ToString()
         {
             return this.GetType().Name + ":" + Identifier;

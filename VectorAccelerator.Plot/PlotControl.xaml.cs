@@ -22,6 +22,8 @@ namespace VectorAccelerator.Plot
     /// </summary>
     public partial class PlotControl : UserControl
     {
+        LinearAxis _xAxis;
+        
         public PlotControl()
         {
             InitializeComponent();
@@ -31,7 +33,10 @@ namespace VectorAccelerator.Plot
         {
             var lineSeries = new LineSeries();
             lineSeries.ItemsSource = data;
-            plot.Series.Add(lineSeries);
+            Plot.Series.Add(lineSeries);
+            var x = data.Select(d => d.X);
+            _xAxis = new LinearAxis { Position = OxyPlot.Axes.AxisPosition.Bottom }; //, Minimum = x.Min(), Maximum = x.Max() };
+            Plot.Axes.Add(_xAxis);
         }
     }
 }

@@ -19,11 +19,33 @@ namespace VectorAccelerator.Launcher
         static void Main(string[] args)
         {
             Thread.CurrentThread.CurrentCulture = new System.Globalization.CultureInfo("en-UK");
+
+            //double a, b;
+            //var test = Expression.Block(
+            //    Expression.Assign(Expression.Parameter(typeof(double), "y"),
+            //        Expression.Add(
+            //            Expression.Parameter(typeof(double), "a"),
+            //            Expression.Parameter(typeof(double), "b"))
+            //            )
+            //    );
+
+            //var test2 = new CheckApplicationLevelThreadingMKL();
+            //test2.TranscendentalFunctionTest();
+
+            //var test2 = new PureTranscendentalWork();
+            //test2.SimpleSpeedTest();
+
             //var illustrative = new Illustrative();
             //illustrative.Example1();
 
             var extendedExpressionBuilding = new BasicSwapAADTest();
             extendedExpressionBuilding.SimulateAll();
+
+            //var test3 = new AcceleratorTestsCPU();
+            //test3.SimpleSpeedTest();
+
+            //var sanity = new BasicCheckVectorPerformance();
+            //sanity.CheckExponentialPerformance();
 
             //extendedExpressionBuilding.PerformanceTest();
 

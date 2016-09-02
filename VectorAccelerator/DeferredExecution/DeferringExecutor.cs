@@ -33,7 +33,7 @@ namespace VectorAccelerator
             NArray[] outputs,
             NArray dependentVariable, IList<NArray> independentVariables, ExecutionTimer timer, StringBuilder expressionsOut = null,
             Aggregator aggregator = Aggregator.ElementwiseAdd)
-        {
+        {   
             if (aggregator != Aggregator.ElementwiseAdd) throw new NotImplementedException();
             
             var dependentVariableExpression = _builder.GetParameter<double>(dependentVariable);
@@ -118,25 +118,60 @@ namespace VectorAccelerator
 
         public override NArray<T> ElementWiseAdd<T>(NArray<T> operand1, NArray<T> operand2)
         {
-            return ElementWiseOperation<T>(operand1, operand2, ExpressionType.Add, Add<T>);
+            return BinaryElementWiseOperation<T>(operand1, operand2, ExpressionType.Add, Add<T>);
         }
 
         public override NArray<T> ElementWiseSubtract<T>(NArray<T> operand1, NArray<T> operand2)
         {
-            return ElementWiseOperation<T>(operand1, operand2, ExpressionType.Subtract, Subtract<T>);
+            return BinaryElementWiseOperation<T>(operand1, operand2, ExpressionType.Subtract, Subtract<T>);
         }
 
         public override NArray<T> ElementWiseMultiply<T>(NArray<T> operand1, NArray<T> operand2)
         {
-            return ElementWiseOperation<T>(operand1, operand2, ExpressionType.Multiply, Multiply<T>);
+            return BinaryElementWiseOperation<T>(operand1, operand2, ExpressionType.Multiply, Multiply<T>);
         }
 
         public override NArray<T> ElementWiseDivide<T>(NArray<T> operand1, NArray<T> operand2)
         {
-            return ElementWiseOperation<T>(operand1, operand2, ExpressionType.Divide, Divide<T>);
+            return BinaryElementWiseOperation<T>(operand1, operand2, ExpressionType.Divide, Divide<T>);
         }
 
-        private NArray<T> ElementWiseOperation<T>(NArray<T> operand1, NArray<T> operand2,
+        public override NArray<T> UnaryElementWiseOperation<T>(NArray<T> operand,
+            UnaryElementWiseOperation operation)
+        {
+            NArray<T> result = null;
+            if (operand.IsScalar)
+            {
+                Func<T, T> scalarOperation = null;
+                switch (operation)
+                {
+                    case VectorAccelerator.UnaryElementWiseOperation.Negate:
+                        scalarOperation = (op) => { T res; Negate<T>(op, out res); return res; };
+                        break;
+                    //case VectorAccelerator.UnaryElementWiseOperation.Exp:
+
+                    default:
+                        throw new NotImplementedException();
+                }
+                if (!operand.IsIndependentVariable)
+                {
+                    return NewScalarNArray(scalarOperation(operand.First()));
+                }
+                else
+                {
+                    result = NewScalarNArray(scalarOperation(operand.First()));
+                }
+            }
+            else
+            {
+                result = NewNArrayLike(operand);
+            }
+            DoUnaryElementWiseOperation<T>(operand, result, operation);
+
+            return result;
+        }
+
+        private NArray<T> BinaryElementWiseOperation<T>(NArray<T> operand1, NArray<T> operand2,
             ExpressionType type, Func<T, T, T> scalarOperation)
         {
             NArray<T> result = null;

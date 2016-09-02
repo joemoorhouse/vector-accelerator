@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using System.Linq.Expressions;
 
 namespace VectorAccelerator.DeferredExecution.Expressions
-{
+{    
     public class VectorBlockExpression : Expression
     {
         public IReadOnlyList<VectorParameterExpression> LocalParameters;

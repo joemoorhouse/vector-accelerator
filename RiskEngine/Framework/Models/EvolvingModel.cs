@@ -12,7 +12,5 @@ namespace RiskEngine.Framework
     public abstract class EvolvingModel : Model
     {
         public abstract void StepNext();
-
-        public abstract void Prepare(Context context);
     }
 }

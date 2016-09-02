@@ -11,7 +11,8 @@ namespace VectorAccelerator.Plot
 {
     public static class PlotHelper
     {
-        public static void QuickPlot(double[] x, double[] y)
+        public static void QuickPlot(double[] x, double[] y, 
+            Tuple<double, double> xRange = null, Tuple<double, double> yRange = null)
         {
             PlotHelper.Dispatcher.Invoke(() =>
             {
@@ -24,6 +25,12 @@ namespace VectorAccelerator.Plot
                 plotControl.AddLine(
                     x.Zip(y, (a, b) => new OxyPlot.DataPoint(a, b))
                     .ToArray());
+                if (xRange != null)
+                {
+                    var xAxis = plotControl.Plot.Axes.First();
+                    xAxis.Minimum = xRange.Item1;
+                    xAxis.Maximum = xRange.Item2;
+                }
                 window.Content = plotControl;
                 window.Title = "Plot Window";
                 window.Show();

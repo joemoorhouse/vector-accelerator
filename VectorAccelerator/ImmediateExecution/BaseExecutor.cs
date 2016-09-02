@@ -254,21 +254,21 @@ namespace VectorAccelerator
 
         //#region Unary Operations
 
-        public NArray<T> UnaryElementWiseOperation<T>(NArray<T> operand, UnaryElementWiseOperation operation)
+        public virtual NArray<T> UnaryElementWiseOperation<T>(NArray<T> operand, UnaryElementWiseOperation operation)
         {
             var result = NewNArrayLike(operand);
             DoUnaryElementWiseOperation<T>(operand, result, operation);
             return result;
         }
 
-        public NArray<T> ElementWiseNegate<T>(NArray<T> operand)
-        {
-            var result = NewNArrayLike(operand);
-            T scale; Convert(-1, out scale);
-            T offset; Convert(0, out offset);
-            DoScaleOffset(operand, scale, offset, result);
-            return result;
-        }
+        //public NArray<T> ElementWiseNegate<T>(NArray<T> operand)
+        //{
+        //    var result = NewNArrayLike(operand);
+        //    T scale; Convert(-1, out scale);
+        //    T offset; Convert(0, out offset);
+        //    DoScaleOffset(operand, scale, offset, result);
+        //    return result;
+        //}
 
         private LinearAlgebraProvider GetProviderOrThrow<T>(params NArray<T>[] operands)
         {

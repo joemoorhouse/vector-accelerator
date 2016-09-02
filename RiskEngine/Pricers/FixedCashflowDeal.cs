@@ -41,13 +41,15 @@ namespace RiskEngine.Pricers
 
         public void PrePrice() { }
 
+        public DateTime ExposureEndDate { get { return _deal.EndDate; } }
+
         public void Price(int timeIndex, out NArray pv)
         {
             if (_timePoints[timeIndex] > _deal.EndDate)
             {
                 pv = 0; return;
             }
-            var coverage = (_deal.EndDate - _deal.StartDate).Days / 365.35;
+            var coverage = (_deal.EndDate - _deal.StartDate).TotalDays / 365.25;
             pv = _deal.Notional * _deal.Rate * coverage * _df[timeIndex, _deal.EndDate];
         }
     }

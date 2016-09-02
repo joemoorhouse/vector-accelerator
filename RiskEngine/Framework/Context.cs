@@ -45,7 +45,7 @@ namespace RiskEngine.Framework
                 .ToArray();
 
             SimulationTimePoints = simulationDateTimes
-                .Select(p => new TimePoint(p, (p - simulationDateTimes[0]).Days / 365.25))
+                .Select(p => new TimePoint(p, (p - simulationDateTimes[0]).TotalDays / 365.25))
                 .ToArray();
         }
 

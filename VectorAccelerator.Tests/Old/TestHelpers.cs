@@ -15,7 +15,7 @@ namespace VectorAccelerator.Tests
         public static void Timeit(Action action, int repetitions = 10, int innerRepetitions = 50)
         {
             var watch = new Stopwatch();
-            var ticks = new double[repetitions];
+            var tickMillisecs = new double[repetitions];
             var millisecs = new double[repetitions];
             watch.Start();
             for (int i = 0; i < repetitions; ++i)
@@ -24,7 +24,7 @@ namespace VectorAccelerator.Tests
                 {
                     action();
                 }
-                ticks[i] = (double)watch.ElapsedTicks / innerRepetitions;
+                tickMillisecs[i] = (double)watch.ElapsedTicks * 1000 / (innerRepetitions * Stopwatch.Frequency);
                 millisecs[i] = (double)watch.ElapsedMilliseconds / innerRepetitions;
                 watch.Restart();
             }
@@ -35,10 +35,10 @@ namespace VectorAccelerator.Tests
             }
             else
             {
-                Console.WriteLine(String.Format("Average time: {0} ticks", ticks.Skip(2).Average()));
-                Array.Sort(ticks);
-                Console.WriteLine(String.Format("Fastest time: {0} ticks", ticks.Min()));
-                Console.WriteLine(String.Format("75 percentile fastest time: {0} ticks", ticks[(int)Math.Floor(repetitions * 0.75)]));
+                Console.WriteLine(String.Format("Average time: {0} tick ms", tickMillisecs.Skip(2).Average()));
+                Array.Sort(tickMillisecs);
+                Console.WriteLine(String.Format("Fastest time: {0} tick ms", tickMillisecs.Min()));
+                Console.WriteLine(String.Format("75 percentile fastest time: {0} tick ms", tickMillisecs[(int)Math.Floor(repetitions * 0.75)]));
                 Console.WriteLine(String.Format("Average time: {0} ms", millisecs.Skip(2).Average()));
             }
         }

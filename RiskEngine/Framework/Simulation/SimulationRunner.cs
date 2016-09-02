@@ -8,23 +8,29 @@ namespace RiskEngine.Framework
 {
     public class SimulationRunner
     {
-        public SimulationRunner(IEnumerable<SimulationSet> simulationSets, Context context)
+        public SimulationRunner(IEnumerable<SimulationSet> simulationSets, IEnumerable<Model> allModels,
+            Context context)
         {
             _context = context;
             _simulationSets = simulationSets.ToList();
+            _allModels = allModels.ToList();
         }
 
         public void Prepare()
         {
             _currentDateTime = _context.Settings.SimulationIntervals.First().Previous;
-            foreach (var set in _simulationSets)
+            foreach (var model in _allModels)
             {
-                // this provides another axis for parallelising the code 
-                foreach (var model in set.Models)
-                {
-                    model.Prepare(_context);
-                }
+                model.Prepare(_context);
             }
+            //foreach (var set in _simulationSets)
+            //{
+            //    // this provides another axis for parallelising the code 
+            //    foreach (var model in set.Models)
+            //    {
+            //        model.Prepare(_context);
+            //    }
+            //}
         }
 
         /// <summary>
@@ -76,6 +82,6 @@ namespace RiskEngine.Framework
         DateTime _currentDateTime;
         int _nextIntervalIndex = 0;
         List<SimulationSet> _simulationSets;
-
+        List<Model> _allModels;
     }
 }
