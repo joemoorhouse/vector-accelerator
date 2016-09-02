@@ -99,11 +99,16 @@
     <Compile Include="DeferredExecution\AlgorithmicDifferentiator.cs" />
     <Compile Include="DeferredExecution\DeferredExecutionContext.cs" />
     <Compile Include="DeferredExecution\DeferredOperations.cs" />
+    <Compile Include="DeferredExecution\Expressions\AssignBinaryExpression.cs" />
+    <Compile Include="DeferredExecution\Expressions\BinaryExpression.cs" />
     <Compile Include="DeferredExecution\ExecutionTimer.cs" />
     <Compile Include="DeferredExecution\Expressions\ConstantExpression.cs" />
     <Compile Include="DeferredExecution\Expressions\CUDACodeBuilder.cs" />
+    <Compile Include="DeferredExecution\Expressions\Expression.cs" />
     <Compile Include="DeferredExecution\Expressions\ReferencingVectorParameterExpression.cs" />
     <Compile Include="DeferredExecution\Expressions\ScaleInverseExpression.cs" />
+    <Compile Include="DeferredExecution\Expressions\SimpleBinaryExpression.cs" />
+    <Compile Include="DeferredExecution\Expressions\UnaryExpression.cs" />
     <Compile Include="DeferredExecution\Expressions\UnaryMathsExpression.cs" />
     <Compile Include="DeferredExecution\Expressions\VectorBlockExpression.cs" />
     <Compile Include="DeferredExecution\Expressions\BlockExpressionBuilder.cs" />

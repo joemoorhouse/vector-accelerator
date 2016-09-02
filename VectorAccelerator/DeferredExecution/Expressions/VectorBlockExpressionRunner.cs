@@ -86,7 +86,7 @@ namespace VectorAccelerator.DeferredExecution.Expressions
             OutputGetter<T> getter, Aggregator aggregator,
             int vectorLength,
             int chunkIndex, int startIndex, ExecutionTimer timer)
-        {   
+        {            
             if (operation == null || operation.NodeType != ExpressionType.Assign) return;
 
             if (operation == null) return;
@@ -145,7 +145,6 @@ namespace VectorAccelerator.DeferredExecution.Expressions
             if (operation.Right is BinaryExpression)
             {
                 var binaryOperation = operation.Right as BinaryExpression;
-
                 (provider as IElementWise<T>).BinaryElementWiseOperation(Slice<T>(binaryOperation.Left, chunkIndex, startIndex, vectorLength),
                     Slice<T>(binaryOperation.Right, chunkIndex, startIndex, vectorLength),
                     Slice(result, chunkIndex, startIndex, vectorLength),
@@ -156,6 +155,7 @@ namespace VectorAccelerator.DeferredExecution.Expressions
             {
                 if (aggregator != Aggregator.ElementwiseAdd) throw new NotImplementedException();
                 if (aggregationTarget.IsScalar) throw new Exception();
+                //return;
                 var slice = Slice<T>(aggregationTarget, chunkIndex, startIndex, vectorLength);
                 (provider as IElementWise<T>).BinaryElementWiseOperation(
                     slice,

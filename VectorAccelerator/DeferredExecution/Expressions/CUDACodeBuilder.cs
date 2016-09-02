@@ -3,7 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Linq.Expressions;
+using VectorAccelerator.DeferredExecution.Expressions;
+//using System.Linq.Expressions;
 
 namespace VectorAccelerator.DeferredExecution.Expressions
 {
@@ -225,7 +226,7 @@ namespace VectorAccelerator.DeferredExecution.Expressions
                 case ExpressionType.Conditional:
                 //    return VisitConditional((ConditionalExpression)exp);
                 case ExpressionType.Constant:
-                    return VisitConstant((ConstantExpression)exp, builder);
+                    //return VisitConstant((ConstantExpression)exp, builder);
                 case ExpressionType.Parameter:
                     return VisitParameter((VectorParameterExpression)exp, builder);
                 case ExpressionType.MemberAccess:
@@ -268,10 +269,10 @@ namespace VectorAccelerator.DeferredExecution.Expressions
             return block;
         }
 
-        private bool VariableIsParameter(ParameterExpression variable)
-        {
-            return variable.Name.StartsWith("parameter"); // as opposed to "local"
-        }
+        //private bool VariableIsParameter(ParameterExpression variable)
+        //{
+        //    return variable.Name.StartsWith("parameter"); // as opposed to "local"
+        //}
 
         protected Expression VisitBinary(BinaryExpression binary, StringBuilder builder)
         {
@@ -344,11 +345,11 @@ namespace VectorAccelerator.DeferredExecution.Expressions
             return variable;
         }
 
-        protected Expression VisitConstant(ConstantExpression variable, StringBuilder builder)
-        {
-            Write(variable.Value.ToString(), builder);
-            return variable;
-        }
+        //protected Expression VisitConstant(ConstantExpression variable, StringBuilder builder)
+        //{
+        //    Write(variable.Value.ToString(), builder);
+        //    return variable;
+        //}
 
         private Expression VisitAssign(BinaryExpression binary, StringBuilder builder)
         {

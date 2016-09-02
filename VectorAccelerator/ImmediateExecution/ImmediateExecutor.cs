@@ -6,7 +6,8 @@ using System.Threading.Tasks;
 using VectorAccelerator.LinearAlgebraProviders;
 using VectorAccelerator.Distributions;
 using VectorAccelerator.NArrayStorage;
-using System.Linq.Expressions;
+using VectorAccelerator.DeferredExecution.Expressions;
+//using System.Linq.Expressions;
 
 namespace VectorAccelerator
 {

@@ -8,13 +8,11 @@ namespace VectorAccelerator.DeferredExecution.Expressions
 {
     public class ScaleInverseExpression<T> : UnaryMathsExpression
     {
-        public readonly VectorParameterExpression Operand;
         public readonly T Scale;
 
         internal ScaleInverseExpression(VectorParameterExpression operand, T scale)
             : base(UnaryElementWiseOperation.ScaleInverse, operand)
         {
-            Operand = operand;
             Scale = scale;
         }
 

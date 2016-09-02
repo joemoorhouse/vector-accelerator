@@ -57,7 +57,8 @@ namespace VectorAccelerator.DeferredExecution
         public string Report()
         {
             var builder = new StringBuilder();
-            var usPerTick = 1000000.0 / (double)TimeSpan.TicksPerSecond;
+            //var usPerTick = 1000000.0 / (double)TimeSpan.TicksPerSecond;
+            var usPerTick = 1e6 / Stopwatch.Frequency;
             builder.AppendLine(string.Format("Total elapsed: {0} us", _executionComplete * usPerTick));
             builder.AppendLine(string.Format("Function call: {0} us", _functionComplete * usPerTick));
             builder.AppendLine(string.Format("Evaluation set-up: {0} us", (_evaluateSetUpComplete - _functionComplete) * usPerTick));

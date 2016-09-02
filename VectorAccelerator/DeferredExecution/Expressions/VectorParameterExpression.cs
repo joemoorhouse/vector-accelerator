@@ -16,9 +16,9 @@ namespace VectorAccelerator.DeferredExecution.Expressions
     
     public abstract class VectorParameterExpression : Expression
     {
-        private Type _type;
+        private readonly Type _type;
         private int _index;
-        private ParameterType _parameterType;
+        private readonly ParameterType _parameterType;
 
         public int Index
         {

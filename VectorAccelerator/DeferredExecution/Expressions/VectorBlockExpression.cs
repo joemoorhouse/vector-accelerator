@@ -8,7 +8,7 @@ using System.Linq.Expressions;
 namespace VectorAccelerator.DeferredExecution.Expressions
 {    
     public class VectorBlockExpression : Expression
-    {
+    {        
         public IReadOnlyList<VectorParameterExpression> LocalParameters;
         public IReadOnlyList<VectorParameterExpression> ArgumentParameters;
         public IReadOnlyList<BinaryExpression> Operations;
@@ -18,6 +18,14 @@ namespace VectorAccelerator.DeferredExecution.Expressions
             get
             {
                 return ExpressionType.Block;
+            }
+        }
+
+        public override Type Type
+        {
+            get
+            {
+                return null;
             }
         }
     }

@@ -2,7 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Linq.Expressions;
+//using System.Linq.Expressions;
+using VectorAccelerator.DeferredExecution.Expressions;
 using VectorAccelerator.Distributions;
 
 namespace VectorAccelerator.LinearAlgebraProviders

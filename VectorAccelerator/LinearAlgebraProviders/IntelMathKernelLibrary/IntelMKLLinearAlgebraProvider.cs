@@ -5,7 +5,8 @@ using System.Text;
 using VectorAccelerator;
 using VectorAccelerator.Distributions;
 using VectorAccelerator.NArrayStorage;
-using System.Linq.Expressions;
+using VectorAccelerator.DeferredExecution.Expressions;
+//using System.Linq.Expressions;
 
 namespace VectorAccelerator.LinearAlgebraProviders
 {
@@ -16,6 +17,7 @@ namespace VectorAccelerator.LinearAlgebraProviders
         public override void BinaryElementWiseOperation(NArray<double> a, NArray<double> b,
             NArray<double> result, ExpressionType operation)
         {
+            return;
             VectorVectorOperation vectorVectorOperation = null;
             switch (operation)
             {
@@ -48,7 +50,8 @@ namespace VectorAccelerator.LinearAlgebraProviders
 
         public override void UnaryElementWiseOperation(NArray<double> a,
             NArray<double> result, UnaryElementWiseOperation operation)
-        {           
+        {
+            return;
             if (operation == VectorAccelerator.UnaryElementWiseOperation.Negate)
             {
                 ScaleOffset(a, -1, 0, result);
@@ -76,6 +79,7 @@ namespace VectorAccelerator.LinearAlgebraProviders
 
         public override void ScaleInverse(NArray<double> a, double scale, NArray<double> result)
         {
+            return;
             double[] aArray, resultArray;
             int aStart, resultStart;
             GetArray(a, out aArray, out aStart);
@@ -91,6 +95,7 @@ namespace VectorAccelerator.LinearAlgebraProviders
 
         public override void ScaleOffset(NArray<double> a, double scale, double offset, NArray<double> result)
         {
+            return;
             double[] aArray, resultArray;
             int aStart, resultStart;
             GetArray(a, out aArray, out aStart);
