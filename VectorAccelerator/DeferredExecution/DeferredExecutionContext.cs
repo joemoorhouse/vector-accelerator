@@ -26,7 +26,9 @@ namespace VectorAccelerator.DeferredExecution
             if (existingStorage != null && existingStorage.Count != independentVariables.Count + 1)
                 throw new ArgumentException(string.Format("storage provided does not match requirement for 1 result and {0} derivatives",
                     independentVariables.Count));
-            
+
+            var timer = new ExecutionTimer();
+            timer.Start();
             NArray[] outputs = new NArray[independentVariables.Count + 1];
             try
             {
@@ -45,22 +47,23 @@ namespace VectorAccelerator.DeferredExecution
                 {
                     context.Finish();
                 }
-
+                timer.MarkFunctionComplete();
                 for (int i = 0; i < outputs.Length; ++i)
                 {
                     // if new storage is required, we create scalars in the first instance
                     outputs[i] = (existingStorage == null) ? NArray.CreateScalar(0) : existingStorage[i];
                 }
-                context._executor.Evaluate(context._options, outputs, dependentVariable, independentVariables, expressionsOut, aggregator);
+                context._executor.Evaluate(context._options, outputs, dependentVariable, independentVariables, timer, expressionsOut, aggregator);
 
             }
             finally
             {
                 foreach (var variable in independentVariables)
                 {
-                    variable.IsIndependentVariable = false;
+                    //variable.IsIndependentVariable = false;
                 }
             }
+            Console.WriteLine(timer.Report());
             return outputs;
         }
 

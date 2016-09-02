@@ -49,6 +49,13 @@ namespace VectorAccelerator.NArrayStorage
             CreateStorage(Length);
         }
 
+        public ManagedStorage(int rowCount, int columnCount, T value)
+            : base(rowCount, columnCount)
+        {
+            _stride = rowCount;
+            CreateStorage(Length, value);
+        }
+
         public ManagedStorage(T[] array) : base(array.Length) 
         {
             CreateStorage(array, 0, array.Length);
@@ -74,6 +81,12 @@ namespace VectorAccelerator.NArrayStorage
         private void CreateStorage(int length)
         {
             _storage = new T[length];
+        }
+
+        private void CreateStorage(int length, T value)
+        {
+            _storage = new T[length];
+            for (int i = 0; i < _storage.Length; ++i) _storage[i] = value;
         }
 
         private void CreateStorage(T value)

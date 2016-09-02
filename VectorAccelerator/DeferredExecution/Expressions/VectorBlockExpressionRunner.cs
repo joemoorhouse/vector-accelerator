@@ -22,7 +22,7 @@ namespace VectorAccelerator.DeferredExecution.Expressions
         /// <param name="vectorOptions"></param>
         public static void RunNonCompiling(BlockExpressionBuilder _builder, 
             LinearAlgebraProvider provider, VectorExecutionOptions vectorOptions,
-            NArray[] outputs, int[] outputsIndices, Aggregator aggregator)
+            NArray[] outputs, int[] outputsIndices, Aggregator aggregator, ExecutionTimer timer)
         {
             var block = _builder.ToBlock();
 
@@ -53,6 +53,8 @@ namespace VectorAccelerator.DeferredExecution.Expressions
 
             //var operations = Simplify(executor, provider);
 
+            timer.MarkExecutionTemporaryStorageAllocationComplete();
+
             //Parallel.For(0, chunkCount, options, (i) =>
             for (int i = 0; i < chunkCount; ++i)
             {
@@ -68,7 +70,7 @@ namespace VectorAccelerator.DeferredExecution.Expressions
                             arrayPoolStack, temporaryArrays, 
                             getter, aggregator,
                             vectorLength,
-                            i, startIndex);
+                            i, startIndex, timer);
                     }
                 }
                 foreach (var array in temporaryArrays)
@@ -83,8 +85,8 @@ namespace VectorAccelerator.DeferredExecution.Expressions
             ArrayPoolStack<T> arrayPoolStack, List<T[]> temporaryArrays, 
             OutputGetter<T> getter, Aggregator aggregator,
             int vectorLength,
-            int chunkIndex, int startIndex)
-        {   
+            int chunkIndex, int startIndex, ExecutionTimer timer)
+        {            
             if (operation == null || operation.NodeType != ExpressionType.Assign) return;
 
             if (operation == null) return;
@@ -143,7 +145,6 @@ namespace VectorAccelerator.DeferredExecution.Expressions
             if (operation.Right is BinaryExpression)
             {
                 var binaryOperation = operation.Right as BinaryExpression;
-
                 (provider as IElementWise<T>).BinaryElementWiseOperation(Slice<T>(binaryOperation.Left, chunkIndex, startIndex, vectorLength),
                     Slice<T>(binaryOperation.Right, chunkIndex, startIndex, vectorLength),
                     Slice(result, chunkIndex, startIndex, vectorLength),
@@ -154,6 +155,7 @@ namespace VectorAccelerator.DeferredExecution.Expressions
             {
                 if (aggregator != Aggregator.ElementwiseAdd) throw new NotImplementedException();
                 if (aggregationTarget.IsScalar) throw new Exception();
+                //return;
                 var slice = Slice<T>(aggregationTarget, chunkIndex, startIndex, vectorLength);
                 (provider as IElementWise<T>).BinaryElementWiseOperation(
                     slice,

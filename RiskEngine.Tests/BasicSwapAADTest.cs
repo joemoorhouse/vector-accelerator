@@ -52,6 +52,41 @@ namespace VectorAccelerator.Tests
             Console.WriteLine(); Console.WriteLine("Deferred execution single flow, single thread");
             var tempStorage = new List<NArray> { new NArray(StorageLocation.Host, 
                 simulationCount, 1) };
+
+            Stopwatch watch;
+            for (int i = 0; i < 10; ++i)
+            {
+                //watch = new Stopwatch(); watch.Start();
+                NArray.Evaluate(() =>
+                {
+                    NArray pv;
+                    pricers.First().Price(10, out pv);
+                    return pv;
+                },
+                    new List<NArray>(), Aggregator.ElementwiseAdd, tempStorage);
+                //watch.Stop();
+                //double elapsedTime = (double)watch.ElapsedTicks * 1000 / (double)Stopwatch.Frequency;
+                //Console.WriteLine(elapsedTime);
+                //Console.WriteLine(watch.ElapsedMilliseconds);
+            }
+            watch = new Stopwatch(); watch.Start();
+            for (int i = 0; i < 10; ++i)
+            {
+                NArray.Evaluate(() =>
+                {
+                    NArray pv;
+                    pricers.First().Price(10, out pv);
+                    return pv;
+                },
+                    new List<NArray>(), Aggregator.ElementwiseAdd, tempStorage);
+            }
+            watch.Stop();
+            double elapsed = (double)watch.ElapsedTicks * 1000/ (double)Stopwatch.Frequency;
+            Console.WriteLine(elapsed);
+            Console.WriteLine(watch.ElapsedMilliseconds);
+
+            return;
+
             VectorAccelerator.Tests.TestHelpers.Timeit(() =>
             {
                 NArray.Evaluate(() =>
@@ -68,7 +103,7 @@ namespace VectorAccelerator.Tests
             {
                 for (int i = 0; i < timePointCount; ++i)
                 {
-                    foreach (var pricer in pricers)
+                    foreach (var pricer in pricers.Take(40))
                     {
                         NArray.Evaluate(() =>
                         {
@@ -95,6 +130,13 @@ namespace VectorAccelerator.Tests
 
             VectorAccelerator.Plot.PlotHelper.QuickPlot(times, profile90);
             //return;
+
+            Console.WriteLine(); Console.WriteLine(string.Format("Deferred execution, {0} flows, {1} derivatives, multiple threads", pricers.Count, allDiscountFactorT0.Count()));
+            VectorAccelerator.Tests.TestHelpers.Timeit(() =>
+            {
+                Calculations.Calculate(graph, pricers);
+                //Calculations.Calculate(graph, pricers, allDiscountFactorT0.ToList());
+            }, 1, 1);
 
             Console.WriteLine(); Console.WriteLine(string.Format("Deferred execution, {0} flows, {1} derivatives, single thread", pricers.Count, allDiscountFactorT0.Count()));
             VectorAccelerator.Tests.TestHelpers.Timeit(() =>
@@ -125,6 +167,28 @@ namespace VectorAccelerator.Tests
 
             SimulateModel(out model, out allDiscountFactorT0, out timePoints, out graph, out pricers);
             CheckBasics(model, allDiscountFactorT0, timePoints);
+        }
+
+        public void PerformanceTest()
+        {
+            LinearGaussianModel model;
+            IEnumerable<NArray> allDiscountFactorT0;
+            TimePoint[] timePoints;
+            SimulationGraph graph;
+            List<IPricer> pricers;
+
+            SimulateModel(out model, out allDiscountFactorT0, out timePoints, out graph, out pricers);
+
+            var storage = new NArray(StorageLocation.Host, 5000, 1);
+
+            for (int i = 0; i < 20; ++i)
+            {
+                var result3 = NArray.Evaluate(() =>
+                {
+                    var df = model.ForwardRate(10, timePoints[10].DateTime.AddMonths(3), timePoints[10].DateTime.AddMonths(6));
+                    return df;
+                }, new List<NArray>(), Aggregator.ElementwiseAdd, new NArray[] { storage }); // allDiscountFactorT0.ToArray()
+            }
         }
 
         public void CheckPerformance()
@@ -301,7 +365,7 @@ namespace VectorAccelerator.Tests
                     .DebugDataView.ToArray();
 
                 Assert.IsTrue(TestHelpers.AgreesAbsolute(expected, obtained2));
-                Assert.IsTrue(TestHelpers.AgreesAbsolute(expected_deriv, obtained2_Deriv, 5e-6));
+                Assert.IsTrue(TestHelpers.AgreesAbsolute(expected_deriv, obtained2_Deriv, 1e-5));
 
                 var result3 = NArray.Evaluate(() =>
                 {
@@ -312,6 +376,8 @@ namespace VectorAccelerator.Tests
                 var expected3 = model.ForwardRate(10, timePoints[10].DateTime.AddMonths(3), timePoints[10].DateTime.AddMonths(6))
                     .DebugDataView.ToArray();
                 var obtained3 = result3[0].DebugDataView.ToArray();
+
+                Assert.IsTrue(TestHelpers.AgreesAbsolute(expected3, obtained3));
             }
 
             bool checkTimings = true;

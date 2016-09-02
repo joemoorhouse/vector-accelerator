@@ -101,6 +101,7 @@
     <Compile Include="DeferredExecution\DeferredOperations.cs" />
     <Compile Include="DeferredExecution\Expressions\AssignBinaryExpression.cs" />
     <Compile Include="DeferredExecution\Expressions\BinaryExpression.cs" />
+    <Compile Include="DeferredExecution\ExecutionTimer.cs" />
     <Compile Include="DeferredExecution\Expressions\ConstantExpression.cs" />
     <Compile Include="DeferredExecution\Expressions\CUDACodeBuilder.cs" />
     <Compile Include="DeferredExecution\Expressions\Expression.cs" />
