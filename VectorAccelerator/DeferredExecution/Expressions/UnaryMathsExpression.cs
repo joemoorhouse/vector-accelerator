@@ -44,6 +44,8 @@ namespace VectorAccelerator.DeferredExecution.Expressions
         {
             switch (UnaryType)
             {
+                case UnaryElementWiseOperation.Negate:
+                    return "-({0})";
                 case UnaryElementWiseOperation.Exp:
                     return "exp({0})";
                 case UnaryElementWiseOperation.SquareRoot:

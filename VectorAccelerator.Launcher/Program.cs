@@ -38,8 +38,9 @@ namespace VectorAccelerator.Launcher
             //var illustrative = new Illustrative();
             //illustrative.Example1();
 
-            var extendedExpressionBuilding = new BasicSwapAADTest();
-            extendedExpressionBuilding.SimulateAll();
+            var swapAADTest = new BasicSwapAADTest();
+            swapAADTest.TestBasics();
+            swapAADTest.TestEndToEnd();
 
             //var test3 = new AcceleratorTestsCPU();
             //test3.SimpleSpeedTest();

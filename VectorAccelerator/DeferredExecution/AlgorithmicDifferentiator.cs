@@ -171,6 +171,7 @@ namespace VectorAccelerator.DeferredExecution
                 {
                     return new ConstantExpression<double>((unaryExpression as ScaleOffsetExpression<double>).Scale);
                 }
+                else if (unaryExpression.UnaryType == UnaryElementWiseOperation.Negate) return new ConstantExpression<double>(-1);
                 else if (unaryExpression.UnaryType == UnaryElementWiseOperation.ScaleInverse) 
                 {
                     return builder.AddNegateDivideExpression(function.Parameter, unaryExpression.Operand); // i.e. x/y => x/y * -1/y 

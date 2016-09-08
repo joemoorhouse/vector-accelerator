@@ -159,7 +159,8 @@ namespace VectorAccelerator
                 }
                 else
                 {
-                    result = NewScalarNArray(scalarOperation(operand.First()));
+                    result = NewScalarLocalNArray(scalarOperation(operand.First()));
+                    result.IsIndependentVariable = true;
                 }
             }
             else

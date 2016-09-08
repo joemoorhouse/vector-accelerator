@@ -63,7 +63,7 @@ namespace VectorAccelerator.DeferredExecution
                     //variable.IsIndependentVariable = false;
                 }
             }
-            Console.WriteLine(timer.Report());
+            //Console.WriteLine(timer.Report());
             return outputs;
         }
 

@@ -19,24 +19,27 @@ using RiskEngine.Data;
 namespace VectorAccelerator.Tests
 {
     public class BasicSwapAADTest
-    {
-               
-        public void SimulateAll()
+    {       
+        /// <summary>
+        /// Calculate exposure profile for uncollateralised interest rate swap trade
+        /// and derivatives against all points on time zero rates curve.
+        /// </summary>
+        public void TestEndToEnd()
         {
             LinearGaussianModel model;
-            IEnumerable<NArray> allDiscountFactorT0;
+            IEnumerable<NArray> allZeroRatesT0;
             TimePoint[] timePoints;
             SimulationGraph graph;
             List<IPricer> pricers;
 
-            SimulateModel(out model, out allDiscountFactorT0, out timePoints, out graph, out pricers);
+            SimulateModel(out model, out allZeroRatesT0, out timePoints, out graph, out pricers);
 
             var simulationCount = graph.Context.Settings.SimulationCount;
             var timePointCount = graph.Context.Settings.SimulationTimePoints.Length;
 
             var resultStorage = 
                 Enumerable.Range(0, timePointCount).Select(i =>
-                Enumerable.Range(0, 1 + allDiscountFactorT0.Count()).
+                Enumerable.Range(0, 1 + allZeroRatesT0.Count()).
                 Select(j => new NArray(StorageLocation.Host, simulationCount, 1)).ToArray()).
                 ToArray();
 
@@ -49,7 +52,7 @@ namespace VectorAccelerator.Tests
 
             foreach (var pricer in pricers) pricer.PrePrice();
 
-            //#region AddedSpeedTests
+            #region AddedSpeedTests
 
             //for (int round = 0; round < 2; ++round)
             //{
@@ -79,35 +82,13 @@ namespace VectorAccelerator.Tests
 
             //return;
 
-            //#endregion
+            #endregion
 
             Console.WriteLine(); Console.WriteLine("Deferred execution single flow, single thread");
             var tempStorage = new List<NArray> { new NArray(StorageLocation.Host, 
                 simulationCount, 1) };
-            
-            //VectorAccelerator.Tests.TestHelpers.Timeit(() =>
-            //{
-            //    NArray.Evaluate(() =>
-            //    {
-            //        NArray pv;
-            //        pricers.First().Price(10, out pv);
-            //        return pv;
-            //    },
-            //        new List<NArray>(), Aggregator.ElementwiseAdd, tempStorage);
-            //}, 10, 1);
 
-            //VectorAccelerator.Tests.TestHelpers.Timeit(() =>
-            //{
-            //    NArray.Evaluate(() =>
-            //    {
-            //        NArray pv;
-            //        pricers.First().Price(10, out pv);
-            //        return pv;
-            //    },
-            //        new List<NArray>(), Aggregator.ElementwiseAdd, tempStorage);
-            //}, 10, 1);
-
-            //return;
+            //model.ZeroRatesT0.Data[16] = new DataPoint(model.ZeroRatesT0.Data[16].Time, model.ZeroRatesT0.Data[16].Value + 1e-6);
 
             Console.WriteLine(); Console.WriteLine(string.Format("Deferred execution, {0} flows, no derivatives, single thread", pricers.Count));
             VectorAccelerator.Tests.TestHelpers.Timeit(() =>
@@ -137,32 +118,30 @@ namespace VectorAccelerator.Tests
             var measures = new List<IList<double>>();
             for (int i = 0; i < timePoints.Length; ++i)
             {
-                var values = NMath.Percentiles(resultStorageSingle[i].First(), percentiles).ToList();
+                var values = NMath.Percentiles(resultStorageSingle[i].First(), percentiles)
+                    .Concat(new double[] { resultStorageSingle[i].First().DebugDataView
+                        .Select(v => Math.Max(0, v)).Average() })
+                    .ToList();
                 measures.Add(values);
             }
 
             var times = timePoints.Select(p => p.YearsFromBaseDate).ToArray();
             var profile10 = measures.Select(p => p[1]).ToArray();
             var profile90 = measures.Select(p => p[3]).ToArray();
+            var meanPositive = measures.Select(p => p[5]).ToArray();
+            var maxMeanPositive = meanPositive.Max();
+            var maxMeanPositiveIndex = Array.IndexOf(meanPositive, maxMeanPositive);
 
             VectorAccelerator.Plot.PlotHelper.QuickPlot(times, profile90, new Tuple<double,double>(0, 11));
-            //return;
 
-            Console.WriteLine(); Console.WriteLine(string.Format("Deferred execution, {0} flows, Calculate, single thread", pricers.Count));
-            VectorAccelerator.Tests.TestHelpers.Timeit(() =>
-            {
-                Calculations.Calculate(graph, pricers, false);
-                //Calculations.Calculate(graph, pricers, allDiscountFactorT0.ToList());
-            }, 1, 1);
+            //Console.WriteLine(); Console.WriteLine(string.Format("Deferred execution, {0} flows, Calculate, multiple threads", pricers.Count));
+            //VectorAccelerator.Tests.TestHelpers.Timeit(() =>
+            //{
+            //    Calculations.Calculate(graph, pricers, true);
+            //    //Calculations.Calculate(graph, pricers, allDiscountFactorT0.ToList());
+            //}, 1, 1);
 
-            Console.WriteLine(); Console.WriteLine(string.Format("Deferred execution, {0} flows, Calculate, multiple threads", pricers.Count));
-            VectorAccelerator.Tests.TestHelpers.Timeit(() =>
-            {
-                Calculations.Calculate(graph, pricers, true);
-                //Calculations.Calculate(graph, pricers, allDiscountFactorT0.ToList());
-            }, 1, 1);
-
-            Console.WriteLine(); Console.WriteLine(string.Format("Deferred execution, {0} flows, {1} derivatives, single thread", pricers.Count, allDiscountFactorT0.Count()));
+            Console.WriteLine(); Console.WriteLine(string.Format("Deferred execution, {0} flows, {1} derivatives, single thread", pricers.Count, allZeroRatesT0.Count()));
             VectorAccelerator.Tests.TestHelpers.Timeit(() =>
             {
                 for (int i = 0; i < timePointCount; ++i)
@@ -175,47 +154,226 @@ namespace VectorAccelerator.Tests
                             pricer.Price(i, out pv);
                             return pv;
                         },
-                        allDiscountFactorT0.ToArray(), Aggregator.ElementwiseAdd, resultStorage[i]);
+                        allZeroRatesT0.ToArray(), Aggregator.ElementwiseAdd, resultStorage[i]);
                     }
                 }
             }, 1, 1);
+
+
+            // we check that 
+            var maxMeanPositiveSims = resultStorage[maxMeanPositiveIndex].First();
+            List<double> gradients = new List<double>();
+            for (int i = 0; i < allZeroRatesT0.Count(); ++i)
+            {
+                var maxMeanPositiveDerivs = resultStorage[maxMeanPositiveIndex][i + 1];
+                gradients.Add(maxMeanPositiveSims.DebugDataView
+                    .Zip(maxMeanPositiveDerivs.DebugDataView,
+                    (s, d) => (s > 0) ? d : 0)
+                    .Average()
+                    );
+            }
+
+            Assert.IsTrue(TestHelpers.AgreesAbsolute(gradients[16], 8795.970434));
+
+            Console.WriteLine(string.Format(
+                "Calculated gradient of maximum positive exposure ({0:F4} EUR) to change of the zero rate with maturity {1:F2} years: {2:F5}",
+                maxMeanPositive, 2556 / 365.25, gradients[16]));
+
+            // result from bumping by 1e-6: 
+            double resultFromBumping = (42224.246191936923 - 42224.237395987817) * 1e6;
+            //
+            Console.WriteLine(string.Format("Value from using bump of 1e-6: {0}", resultFromBumping));
+
+            //model.ZeroRatesT0.Data[6] = new DataPoint(model.ZeroRatesT0.Data[6].Time, model.ZeroRatesT0.Data[6].Value + 1e-6);
+
         }
         
-        public void CheckBasics()
+        /// <summary>
+        /// Test building blocks of interest rate swap exposure calculation.
+        /// </summary>
+        public void TestBasics()
         {
             LinearGaussianModel model;
-            IEnumerable<NArray> allDiscountFactorT0;
+            IEnumerable<NArray> allZeroRatesT0;
             TimePoint[] timePoints;
             SimulationGraph graph;
             List<IPricer> pricers;
 
-            SimulateModel(out model, out allDiscountFactorT0, out timePoints, out graph, out pricers);
-            CheckBasics(model, allDiscountFactorT0, timePoints);
+            SimulateModel(out model, out allZeroRatesT0, out timePoints, out graph, out pricers);
+            TestBasics(model, allZeroRatesT0, timePoints, graph);
         }
 
-        public void PerformanceTest()
+        /// <summary>
+        /// Test building blocks of interest rate swap exposure calculation.
+        /// </summary>
+        public void TestBasics(LinearGaussianModel model, IEnumerable<NArray> allZeroRatesT0,
+            TimePoint[] timePoints, SimulationGraph graph)
         {
-            LinearGaussianModel model;
-            IEnumerable<NArray> allDiscountFactorT0;
-            TimePoint[] timePoints;
-            SimulationGraph graph;
-            List<IPricer> pricers;
-
-            SimulateModel(out model, out allDiscountFactorT0, out timePoints, out graph, out pricers);
-
-            var storage = new NArray(StorageLocation.Host, 5000, 1);
-
-            for (int i = 0; i < 20; ++i)
+            bool testModel = true;
+            if (testModel)
             {
+                var check1 = model[1, timePoints[1].DateTime.AddDays(182)].First();
+                Assert.IsTrue(TestHelpers.AgreesAbsolute(check1, 1.0015413542587288));
+
+                var check2 = model[1, timePoints[1].DateTime.AddDays(91)].First();
+                Assert.IsTrue(TestHelpers.AgreesAbsolute(check2, 1.0007485460169532));
+
+                var check3 = model.ForwardRate(1,
+                    timePoints[1].DateTime.AddDays(91), timePoints[1].DateTime.AddDays(182)).First();
+                Assert.IsTrue(TestHelpers.AgreesAbsolute(check3, -0.0031772259594406715));
+            }
+
+            bool testProfile = true;
+            if (testProfile)
+            {
+                var testVariates0 = graph.RegisterFactor<NormalVariates>("IR_DiscountFactor_EUR_Factor0");
+                var testVariates1 = graph.RegisterFactor<NormalVariates>("IR_DiscountFactor_EUR_Factor1");
+                var testVariates2 = graph.RegisterFactor<NormalVariates>("IR_DiscountFactor_EUR_Factor2");
+                
+                var check = Descriptive.Correlation(testVariates1.Value, testVariates2.Value);
+
+                // check 3M rolling tenor
+                var percentiles = new double[] { 1, 10, 50, 90, 99 };
+                var measures = new List<IList<double>>();
+                for (int i = 0; i < timePoints.Length; ++i)
+                {
+                    var tenorMonths = 3;
+                    var tenorYears = tenorMonths / 12.0;
+                    var df = model[i, timePoints[i].DateTime.AddMonths(3)];
+                    var zeroRate = -NMath.Log(df) / tenorYears;
+                    var values = NMath.Percentiles(zeroRate, percentiles).ToList();
+                    measures.Add(values);
+                }
+
+                var times = timePoints.Select(p => p.YearsFromBaseDate).ToArray();
+                var profile10 = measures.Select(p => p[1]).ToArray();
+                var profile90 = measures.Select(p => p[3]).ToArray();
+            }
+
+            bool testForwardRate = true;
+            if (testForwardRate)
+            {
+                // check 3M rolling tenor
+                var percentiles = new double[] { 1, 10, 50, 90, 99 };
+                var measures = new List<IList<double>>();
+                for (int i = 0; i < timePoints.Length; ++i)
+                {
+                    var tenorMonths = 3;
+                    var tenorYears = tenorMonths / 12.0;
+                    var forwardRate = model.ForwardRate(i, timePoints[i].DateTime.AddMonths(3), timePoints[i].DateTime.AddMonths(6));
+                    var values = NMath.Percentiles(forwardRate, percentiles).ToList();
+                    measures.Add(values);
+                }
+
+                var times = timePoints.Select(p => p.YearsFromBaseDate).ToArray();
+                var profile10 = measures.Select(p => p[1]).ToArray();
+                var profile90 = measures.Select(p => p[3]).ToArray();
+            }
+
+            bool testAAD = true;
+            if (testAAD)
+            {
+                // just get the result
+                var result0 = NArray.Evaluate(() =>
+                {
+                    var df = model[10, timePoints[10].DateTime.AddMonths(3)];
+                    return df;
+                });
+                
+                // get the result and single derivative
+                var result1 = NArray.Evaluate(() =>
+                {
+                    var df = model[10, timePoints[10].DateTime.AddMonths(3)];
+                    return df;
+                }, model.ZeroRatesT0[6].Value);
+
+                var log = new StringBuilder();
+
+                // get the result and all derivatives (and log output)
+                var result2 = NArray.Evaluate(() =>
+                {
+                    var df = model[10, timePoints[10].DateTime.AddMonths(3)];
+                    return df;
+                }, log, allZeroRatesT0.ToArray());
+
+                // now forward rate and all derivatives
                 var result3 = NArray.Evaluate(() =>
                 {
                     var df = model.ForwardRate(10, timePoints[10].DateTime.AddMonths(3), timePoints[10].DateTime.AddMonths(6));
                     return df;
-                }, new List<NArray>(), Aggregator.ElementwiseAdd, new NArray[] { storage }); // allDiscountFactorT0.ToArray()
+                }, allZeroRatesT0.ToArray());
+
+                var unbumped0 = model[10, timePoints[10].DateTime.AddMonths(3)];
+
+                var expected0 = unbumped0.DebugDataView.ToArray();
+                var unbumped3 = model.ForwardRate(10, timePoints[10].DateTime.AddMonths(3), timePoints[10].DateTime.AddMonths(6));
+                var expected3 = unbumped3.DebugDataView.ToArray();
+
+                var obtained0 = result1[0].DebugDataView.ToArray();
+                var obtained1 = result1[0].DebugDataView.ToArray();
+                var obtained2 = result2[0].DebugDataView.ToArray();
+                var obtained3 = result3[0].DebugDataView.ToArray();
+
+                Assert.IsTrue(TestHelpers.AgreesAbsolute(expected0, obtained0));
+                Assert.IsTrue(TestHelpers.AgreesAbsolute(expected0, obtained1));
+                Assert.IsTrue(TestHelpers.AgreesAbsolute(expected0, obtained2));
+                Assert.IsTrue(TestHelpers.AgreesAbsolute(expected3, obtained3));
+
+                var logCheck = log.ToString();
+
+                var obtained_deriv1 = result1[1].DebugDataView.ToArray();
+                var obtained_deriv2 = result2[7].DebugDataView.ToArray();
+                var obtained_deriv3 = result3[7].DebugDataView.ToArray();
+
+                model.ZeroRatesT0.Data[6] = new DataPoint(model.ZeroRatesT0.Data[6].Time, model.ZeroRatesT0.Data[6].Value + 1e-6);
+
+                var bumped0 = model[10, timePoints[10].DateTime.AddMonths(3)];
+                var bumped3 = model.ForwardRate(10, timePoints[10].DateTime.AddMonths(3), timePoints[10].DateTime.AddMonths(6));
+
+                var expected_deriv1 = ((bumped0 - unbumped0) / 1e-6)
+                    .DebugDataView.ToArray();
+
+                var expected_deriv3 = ((bumped3 - unbumped3) / 1e-6)
+                    .DebugDataView.ToArray();
+
+                Assert.IsTrue(TestHelpers.AgreesAbsolute(expected_deriv1, obtained_deriv1, 1e-5));
+                Assert.IsTrue(TestHelpers.AgreesAbsolute(expected_deriv1, obtained_deriv2, 1e-5));
+                Assert.IsTrue(TestHelpers.AgreesAbsolute(expected_deriv3, obtained_deriv3, 1e-5));  
+            }
+
+            bool checkTimings = true;
+            if (checkTimings)
+            {
+                // check timings
+                Console.WriteLine("Immediate execution");
+                VectorAccelerator.Tests.TestHelpers.Timeit(() =>
+                {
+                    var df = model[10, timePoints[10].DateTime.AddMonths(3)];
+                }, 10, 10);
+
+                Console.WriteLine(); Console.WriteLine("Deferred execution no derivatives");
+                VectorAccelerator.Tests.TestHelpers.Timeit(() =>
+                {
+                    NArray.Evaluate(() =>
+                    {
+                        var df = model[10, timePoints[10].DateTime.AddMonths(3)];
+                        return df;
+                    });
+                }, 10, 10);
+
+                Console.WriteLine(); Console.WriteLine("Deferred execution all derivatives");
+                VectorAccelerator.Tests.TestHelpers.Timeit(() =>
+                    {
+                        NArray.Evaluate(() =>
+                        {
+                            var df = model[10, timePoints[10].DateTime.AddMonths(3)];
+                            return df;
+                        }, allZeroRatesT0.ToArray());
+                    }, 10, 10);
             }
         }
 
-        public void CheckPerformance()
+        public void TestPerformance()
         {
             LinearGaussianModel model;
             IEnumerable<NArray> allDiscountFactorT0;
@@ -235,13 +393,21 @@ namespace VectorAccelerator.Tests
                 {
                     var df = model[10, timePoints[10].DateTime.AddMonths(3)];
                     return df;
-                }, 
+                },
                 allDiscountFactorT0.ToArray(), Aggregator.ElementwiseAdd, resultStorage);
             }, 10, 10);
         }
-       
 
-        public void SimulateModel(out LinearGaussianModel model, out IEnumerable<NArray> allDiscountFactorT0,
+        /// <summary>
+        /// Simulate state variables needed for the pricing step of the exposure calculation. State variables
+        /// are not independent variables of the adjoint algorithmic differentation, and therefore can be simulated in advance.
+        /// </summary>
+        /// <param name="model"></param>
+        /// <param name="allZeroRatesT0"></param>
+        /// <param name="timePoints"></param>
+        /// <param name="graph"></param>
+        /// <param name="pricers"></param>
+        public void SimulateModel(out LinearGaussianModel model, out IEnumerable<NArray> allZeroRatesT0,
             out TimePoint[] timePoints, out SimulationGraph graph, out List<IPricer> pricers)
         {
             var testDate = new DateTime(2015, 12, 1);
@@ -251,21 +417,21 @@ namespace VectorAccelerator.Tests
             context.Settings.SimulationCount = 5000;
 
             var fixedLeg = Enumerable.Range(0, 40).Select(i => new FixedCashflowDeal()
-                {
-                    Notional = -1e6,
-                    Rate = 0.002,
-                    Currency = Currency.EUR,
-                    StartDate = testDate.AddMonths(3 * i),
-                    EndDate = testDate.AddMonths(3 * (i + 1))
-                });
+            {
+                Notional = -1e6,
+                Rate = 0.002,
+                Currency = Currency.EUR,
+                StartDate = testDate.AddMonths(3 * i),
+                EndDate = testDate.AddMonths(3 * (i + 1))
+            });
 
             var floatingLeg = Enumerable.Range(0, 40).Select(i => new FloatingCashflowDeal()
-                {
-                    Notional = 1e6,
-                    Currency = Currency.EUR,
-                    StartDate = testDate.AddMonths(3 * i),
-                    EndDate = testDate.AddMonths(3 * (i + 1))
-                });
+            {
+                Notional = 1e6,
+                Currency = Currency.EUR,
+                StartDate = testDate.AddMonths(3 * i),
+                EndDate = testDate.AddMonths(3 * (i + 1))
+            });
 
             var correlationMatrix = context.Factory.CreateNArray(new double[,] {
                 { 1.0,      -0.947,   0.529},
@@ -296,10 +462,10 @@ namespace VectorAccelerator.Tests
             var zeroRatesInPercent = new double[] { -0.25, -0.25, -0.25, -0.25, -0.25, -0.25, -0.25 - 0.18, -0.08, 0.03, 0.16, 0.3, 0.4, 0.55, 0.75, 1, 1.15, 1.2, 1.2, 1.2 };
             zeroRatesInPercent = new double[] { -0.3, -0.3, -0.29, -0.29, -0.3, -0.31, -0.31, -0.32, -0.32, -0.33, -0.34, -0.35, -0.35, -0.33, -0.28, -0.2, -0.11, -0.01, 0.1, 0.2, 0.37, 0.56, 0.71, 0.75, 0.76, 0.75, 0.75, 0.72, 0.7, 0.67, 0.64 };
 
-            model.DiscountFactorT0 = new Curve(years.Zip(zeroRatesInPercent,
+            model.ZeroRatesT0 = new Curve(years.Zip(zeroRatesInPercent,
                 (y, r) => new DataPoint(
-                    testDate.AddDays(y * 365.25), 
-                    NArray.CreateScalar(Math.Exp(-y * r / 100))
+                    testDate.AddDays(y * 365.25),
+                    NArray.CreateScalar(r / 100)
                     )).ToArray());
 
             var runner = graph.ToSimulationRunner();
@@ -307,151 +473,7 @@ namespace VectorAccelerator.Tests
             runner.Simulate();
 
             timePoints = graph.Context.Settings.SimulationTimePoints;
-            allDiscountFactorT0 = model.DiscountFactorT0.Data.Select(d => d.Value);
-
-            var check1 = model[1, timePoints[1].DateTime.AddDays(182)].First();
-
-            var check2 = model[1, timePoints[1].DateTime.AddDays(91)].First();
-
-            var check3 = model.ForwardRate(1, 
-                timePoints[1].DateTime.AddDays(91), timePoints[1].DateTime.AddDays(182)).First();
-
-            bool checkProfile = true;
-            if (checkProfile)
-            {
-                var check = Descriptive.Correlation(testVariates1.Value, testVariates2.Value);
-
-                // check 3M rolling tenor
-                var percentiles = new double[] { 1, 10, 50, 90, 99 };
-                var measures = new List<IList<double>>();
-                for (int i = 0; i < timePoints.Length; ++i)
-                {
-                    var tenorMonths = 3;
-                    var tenorYears = tenorMonths / 12.0;
-                    var df = model[i, timePoints[i].DateTime.AddMonths(3)];
-                    var zeroRate = -NMath.Log(df) / tenorYears;
-                    var values = NMath.Percentiles(zeroRate, percentiles).ToList();
-                    measures.Add(values);
-                }
-
-                var times = timePoints.Select(p => p.YearsFromBaseDate).ToArray();
-                var profile10 = measures.Select(p => p[1]).ToArray();
-                var profile90 = measures.Select(p => p[3]).ToArray();
-            }
-
-            bool checkForwardRate = true;
-            if (checkForwardRate)
-            {
-                // check 3M rolling tenor
-                var percentiles = new double[] { 1, 10, 50, 90, 99 };
-                var measures = new List<IList<double>>();
-                for (int i = 0; i < timePoints.Length; ++i)
-                {
-                    var tenorMonths = 3;
-                    var tenorYears = tenorMonths / 12.0;
-                    var forwardRate = model.ForwardRate(i, timePoints[i].DateTime.AddMonths(3), timePoints[i].DateTime.AddMonths(6));
-                    var values = NMath.Percentiles(forwardRate, percentiles).ToList();
-                    measures.Add(values);
-                }
-
-                var times = timePoints.Select(p => p.YearsFromBaseDate).ToArray();
-                var profile10 = measures.Select(p => p[1]).ToArray();
-                var profile90 = measures.Select(p => p[3]).ToArray();
-            }
-        }
-
-        public void CheckBasics(LinearGaussianModel model, IEnumerable<NArray> allDiscountFactorT0,
-            TimePoint[] timePoints)
-        {
-
-            bool checkResults = true;
-            if (checkResults)
-            {
-                var result1 = NArray.Evaluate(() =>
-                {
-                    var df = model[10, timePoints[10].DateTime.AddMonths(3)];
-                    return df;
-                }, model.DiscountFactorT0[3].Value);
-
-                var unbumped = model[10, timePoints[10].DateTime.AddMonths(3)];
-                var expected = unbumped.DebugDataView.ToArray();
-
-                var obtained = result1[0].DebugDataView.ToArray();
-
-                Assert.IsTrue(TestHelpers.AgreesAbsolute(expected, obtained));
-
-                var log = new StringBuilder();
-                var result2 = NArray.Evaluate(() =>
-                {
-                    var df = model[10, timePoints[10].DateTime.AddMonths(3)];
-                    return df;
-                }, log, allDiscountFactorT0.ToArray());
-
-                var logCheck = log.ToString();
-
-                var obtained2 = result2[0].DebugDataView.ToArray();
-                var obtained2_Deriv = result2[1].DebugDataView.ToArray();
-
-                model.DiscountFactorT0.Data[0] = new DataPoint(model.DiscountFactorT0.Data[0].Time, model.DiscountFactorT0.Data[0].Value + 1e-6);
-
-                var bumped = model[10, timePoints[10].DateTime.AddMonths(3)];
-
-                var expected_deriv = ((bumped - unbumped) / 1e-6)
-                    .DebugDataView.ToArray();
-
-                Assert.IsTrue(TestHelpers.AgreesAbsolute(expected, obtained2));
-                Assert.IsTrue(TestHelpers.AgreesAbsolute(expected_deriv, obtained2_Deriv, 1e-5));
-
-                var result3 = NArray.Evaluate(() =>
-                {
-                    var df = model.ForwardRate(10, timePoints[10].DateTime.AddMonths(3), timePoints[10].DateTime.AddMonths(6));
-                    return df;
-                }, allDiscountFactorT0.ToArray());
-
-                var expected3 = model.ForwardRate(10, timePoints[10].DateTime.AddMonths(3), timePoints[10].DateTime.AddMonths(6))
-                    .DebugDataView.ToArray();
-                var obtained3 = result3[0].DebugDataView.ToArray();
-
-                Assert.IsTrue(TestHelpers.AgreesAbsolute(expected3, obtained3));
-            }
-
-            bool checkTimings = true;
-            if (checkTimings)
-            {
-                // check timings
-                Console.WriteLine("Immediate execution");
-                VectorAccelerator.Tests.TestHelpers.Timeit(() =>
-                {
-                    var df = model[10, timePoints[10].DateTime.AddMonths(3)];
-                }, 10, 10);
-
-                Console.WriteLine(); Console.WriteLine("Deferred execution no derivatives");
-                VectorAccelerator.Tests.TestHelpers.Timeit(() =>
-                {
-                    NArray.Evaluate(() =>
-                    {
-                        var df = model[10, timePoints[10].DateTime.AddMonths(3)];
-                        return df;
-                    });
-                }, 10, 10);
-
-                Console.WriteLine(); Console.WriteLine("Deferred execution all derivatives");
-                VectorAccelerator.Tests.TestHelpers.Timeit(() =>
-                    {
-                        NArray.Evaluate(() =>
-                        {
-                            var df = model[10, timePoints[10].DateTime.AddMonths(3)];
-                            return df;
-                        }, allDiscountFactorT0.ToArray());
-                    }, 10, 10);
-            }
-
-            //VectorAccelerator.Plot.PlotHelper.QuickPlot(new double[] { 1, 2, 3 }, new double[] { 1.2, 5.6, 2.3 });
-        }
-
-        public IList<double[]> CalculateProfiles(IPath path, double[] percentiles)
-        {
-            return null;
+            allZeroRatesT0 = model.ZeroRatesT0.Data.Select(d => d.Value);
         }
     }
 }

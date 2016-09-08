@@ -15,7 +15,8 @@ namespace RiskEngine.Models
     {
         #region Model Properties
 
-        public Curve DiscountFactorT0 { get; set; }
+        public Curve ZeroRatesT0 { get; set; }
+
         public MeanRevertingNormalProcess[] Factors
         {
             get { return _factors; }
@@ -61,14 +62,14 @@ namespace RiskEngine.Models
 
         public override void Prepare(Context context)
         {
-            var simulationT0 = _timePoints.First().DateTime;
+            //var simulationT0 = _timePoints.First().DateTime;
             
-            _zeroRateT0 = new Curve(
-                DiscountFactorT0.Data
-                .Select(c => new DataPoint(c.Time, -NMath.Log(c.Value) / IntervalInYears(simulationT0, c.Time))
-                ));
+            //_zeroRateT0 = new Curve(
+            //    DiscountFactorT0.Data
+            //    .Select(c => new DataPoint(c.Time, -NMath.Log(c.Value) / IntervalInYears(simulationT0, c.Time))
+            //    ));
 
-            _zeroRateT0.Data[0] = new DataPoint(_zeroRateT0[0].Time, _zeroRateT0[1].Value);
+            //_zeroRateT0.Data[0] = new DataPoint(_zeroRateT0[0].Time, _zeroRateT0[1].Value);
         }
 
         /// <summary>
@@ -90,8 +91,8 @@ namespace RiskEngine.Models
                     * _factorPaths[factorIndex][timeIndex];
             }
 
-            var lnDF0t2 = -_zeroRateT0.GetValue(t2) * IntervalInYears(simulationT0, t2);
-            var lnDF0t1 = -_zeroRateT0.GetValue(_timePoints[timeIndex].DateTime) 
+            var lnDF0t2 = -ZeroRatesT0.GetValue(t2) * IntervalInYears(simulationT0, t2);
+            var lnDF0t1 = -ZeroRatesT0.GetValue(_timePoints[timeIndex].DateTime) 
                 * _timePoints[timeIndex].YearsFromBaseDate;
 
             //var d0t2 = DiscountFactorT0.GetValue(t2);
@@ -123,8 +124,8 @@ namespace RiskEngine.Models
                     * _factorPaths[factorIndex][timeIndex];
             }
 
-            var lnDF0t1 = -_zeroRateT0.GetValue(t1) * IntervalInYears(simulationT0, t1);
-            var lnDF0t2 = -_zeroRateT0.GetValue(t2) * IntervalInYears(simulationT0, t2);
+            var lnDF0t1 = -ZeroRatesT0.GetValue(t1) * IntervalInYears(simulationT0, t1);
+            var lnDF0t2 = -ZeroRatesT0.GetValue(t2) * IntervalInYears(simulationT0, t2);
 
             //var d0t1 = DiscountFactorT0.GetValue(t1);
             //var d0t2 = DiscountFactorT0.GetValue(t2);
@@ -181,6 +182,6 @@ namespace RiskEngine.Models
         MeanRevertingNormalProcess[] _factors;
         double[,] _factorCorrelation;
         int factorCount;
-        Curve _zeroRateT0;
+        //Curve _zeroRateT0;
     }
 }
