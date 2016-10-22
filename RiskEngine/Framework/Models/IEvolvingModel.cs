@@ -7,10 +7,10 @@ using System.Threading.Tasks;
 namespace RiskEngine.Framework
 {
     /// <summary>
-    /// A Model that can evolve itself to the next simulation time point.
+    /// Implemented by a Model that can evolve itself to the next simulation time point.
     /// </summary>
-    public abstract class EvolvingModel : Model
+    public interface IEvolvingModel
     {
-        public abstract void StepNext();
+        void StepNext(TimeInterval interval);
     }
 }

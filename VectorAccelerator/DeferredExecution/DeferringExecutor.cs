@@ -95,8 +95,8 @@ namespace VectorAccelerator
                 var block = _builder.ToBlock();
                 expressionsOut.AppendLine("Result in expression " 
                     + dependentVariableExpression.ToString());
-                
-                if (derivativeExpressions.Any())
+
+                if (derivativeExpressions != null && derivativeExpressions.Any())
                 {
                     expressionsOut.AppendLine("Derivatives in expressions " + String.Join(", ",
                         derivativeExpressions.Select(e => e.ToString())));
@@ -104,7 +104,7 @@ namespace VectorAccelerator
                 foreach (var item in block.Operations)
                 {
                     var display = item.ToString();
-                    expressionsOut.AppendLine(new string(display.Skip(1).Take(display.Length - 2).ToArray()));
+                    expressionsOut.AppendLine(new string(display.ToArray()));
                 }
             }
         }

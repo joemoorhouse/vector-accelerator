@@ -6,7 +6,6 @@ using VectorAccelerator.LinearAlgebraProviders;
 using VectorAccelerator.NArrayStorage;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
-using System.Linq.Expressions;
 
 namespace VectorAccelerator.DeferredExecution.Expressions
 {

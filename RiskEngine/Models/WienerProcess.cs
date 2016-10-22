@@ -11,20 +11,16 @@ using RiskEngine.Models;
 namespace RiskEngine.Models
 {
     [ModelAppliesTo(typeof(NormalVariates))]
-    public class NormalModel : SnapshotModel<NormalProcess> { }
+    public class WienerModel : SnapshotModel<WienerProcess> { }
 
     [ModelAppliesTo(typeof(NormalVariatesPath))]
-    public class NormalPathModel : PathModel<NormalProcess> { }
+    public class WienerPathModel : PathModel<WienerProcess> { }
 
-    public class NormalProcess : Process, IProcess
+    public class WienerProcess : Process, IProcess
     {
         public override void Initialise(SimulationGraph graph)
         {
-            // we get the (single) instance of the MultiVariateNormalModel
-            var model = graph.RegisterModel<MultiVariateNormalModel>("General");
-
-            // and store the factor
-            _factor = model.AddFactor(Identifier, graph);
+            _normalVariates = graph.RegisterFactor<NormalVariates>(Identifier);
         }
 
         public override NArray Prepare(Context context)
@@ -34,9 +30,10 @@ namespace RiskEngine.Models
 
         public override NArray Step(TimeInterval timeStep, NArray previous)
         {
-            return _factor;
+            var t = timeStep.IntervalInYears;
+            return previous + Math.Sqrt(t) * _normalVariates.Value;
         }
 
-        private NArray _factor;
+        NormalVariates _normalVariates;
     }
 }

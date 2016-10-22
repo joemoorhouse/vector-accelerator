@@ -11,7 +11,6 @@ using RiskEngine.Factors;
 
 namespace RiskEngine.Tests
 {    
-    
     [TestClass]
     public class BasicModelTests
     {

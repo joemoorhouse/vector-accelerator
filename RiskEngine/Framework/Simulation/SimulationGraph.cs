@@ -76,7 +76,7 @@ namespace RiskEngine.Framework
 
         public SimulationRunner ToSimulationRunner()
         {
-            var simulatingNodes = _nodes.Values.Where(n => typeof(EvolvingModel).IsAssignableFrom(n.Key.Type));
+            var simulatingNodes = _nodes.Values.Where(n => typeof(IEvolvingModel).IsAssignableFrom(n.Key.Type));
 
             var orderedNodes = simulatingNodes.
                 GroupBy(n => new NodeGroupKey(n.Key.Type, n.GetTreeLevel())).

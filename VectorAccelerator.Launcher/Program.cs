@@ -29,14 +29,17 @@ namespace VectorAccelerator.Launcher
             //            )
             //    );
 
+            //var expressionBuilding = new BasicExpressionBuildingTests();
+            //expressionBuilding.ForPresentation();
+
             //var test2 = new CheckApplicationLevelThreadingMKL();
             //test2.TranscendentalFunctionTest();
 
             //var test2 = new PureTranscendentalWork();
             //test2.SimpleSpeedTest();
 
-            //var illustrative = new Illustrative();
-            //illustrative.Example1();
+            var illustrative = new Illustrative();
+            illustrative.Example1();
 
             var swapAADTest = new BasicSwapAADTest();
             swapAADTest.TestBasics();

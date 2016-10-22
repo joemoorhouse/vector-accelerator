@@ -9,51 +9,51 @@ namespace VectorAccelerator.LinearAlgebraProviders
 {
     public unsafe class IntelMathKernelLibraryRandom 
     {
-        [DllImport("mkl_rt.dll", CallingConvention = CallingConvention.Cdecl,
+        [DllImport(IntelMathKernelLibrary.DllName, CallingConvention = CallingConvention.Cdecl,
             ExactSpelling = true, SetLastError = false)]
         internal static extern int vdRngGaussian(int method, IntPtr stream, int length, double* vector, double mean, double sigma);
 
-        [DllImport("mkl_rt.dll", CallingConvention = CallingConvention.Cdecl,
+        [DllImport(IntelMathKernelLibrary.DllName, CallingConvention = CallingConvention.Cdecl,
             ExactSpelling = true, SetLastError = false)]
         internal static extern int vdRngGaussian(int method, IntPtr stream, int length, [In, Out] double[] vector, double mean, double sigma);
 
-        [DllImport("mkl_rt.dll", CallingConvention = CallingConvention.Cdecl,
+        [DllImport(IntelMathKernelLibrary.DllName, CallingConvention = CallingConvention.Cdecl,
             ExactSpelling = true, SetLastError = false)]
         internal static extern int vdRngGaussian(int method, IntPtr stream, int length, [In, Out] double[,] matrix, double mean, double sigma);
 
-        [DllImport("mkl_rt.dll", CallingConvention = CallingConvention.Cdecl,
+        [DllImport(IntelMathKernelLibrary.DllName, CallingConvention = CallingConvention.Cdecl,
             ExactSpelling = true, SetLastError = false)]
         internal static extern int vsRngGaussian(int method, IntPtr stream, int length, [In, Out] float[,] matrix, float mean, float sigma);
 
-        [DllImport("mkl_rt.dll", CallingConvention = CallingConvention.Cdecl,
+        [DllImport(IntelMathKernelLibrary.DllName, CallingConvention = CallingConvention.Cdecl,
             ExactSpelling = true, SetLastError = false)]
         internal static extern int vdRngGaussian(int method, IntPtr stream, int length, [In, Out] ref double single, double mean, double sigma);
 
-        [DllImport("mkl_rt.dll", CallingConvention = CallingConvention.Cdecl,
+        [DllImport(IntelMathKernelLibrary.DllName, CallingConvention = CallingConvention.Cdecl,
             ExactSpelling = true, SetLastError = false)]
         internal static extern int viRngPoisson(int method, IntPtr stream, int length, [In, Out] int[] vector, double lambda);
 
-        [DllImport("mkl_rt.dll", CallingConvention = CallingConvention.Cdecl,
+        [DllImport(IntelMathKernelLibrary.DllName, CallingConvention = CallingConvention.Cdecl,
             ExactSpelling = true, SetLastError = false)]
         internal static extern int viRngPoisson(int method, IntPtr stream, int length, [In, Out] ref int single, double lambda);
 
-        [DllImport("mkl_rt.dll", CallingConvention = CallingConvention.Cdecl,
+        [DllImport(IntelMathKernelLibrary.DllName, CallingConvention = CallingConvention.Cdecl,
             ExactSpelling = true, SetLastError = false)]
         internal static extern int vdRngUniform(int method, IntPtr stream, int length, [In, Out] double[] vector, double a, double b);
 
-        [DllImport("mkl_rt.dll", CallingConvention = CallingConvention.Cdecl,
+        [DllImport(IntelMathKernelLibrary.DllName, CallingConvention = CallingConvention.Cdecl,
             ExactSpelling = true, SetLastError = false)]
         internal static extern int vdRngUniform(int method, IntPtr stream, int length, [In, Out] ref double single, double a, double b);
 
-        [DllImport("mkl_rt.dll", CallingConvention = CallingConvention.Cdecl,
+        [DllImport(IntelMathKernelLibrary.DllName, CallingConvention = CallingConvention.Cdecl,
             ExactSpelling = true, SetLastError = false)]
         internal static extern int vdRngExponential(int method, IntPtr stream, int length, [In, Out] double[] vector, double displacement, double rate);
 
-        [DllImport("mkl_rt.dll", CallingConvention = CallingConvention.Cdecl,
+        [DllImport(IntelMathKernelLibrary.DllName, CallingConvention = CallingConvention.Cdecl,
             ExactSpelling = true, SetLastError = false)]
         internal static extern int MKL_Set_Threading_Layer(int threading);
 
-        [DllImport("mkl_rt.dll", CallingConvention = CallingConvention.Cdecl,
+        [DllImport(IntelMathKernelLibrary.DllName, CallingConvention = CallingConvention.Cdecl,
             ExactSpelling = true, SetLastError = false)]
         internal static extern int MKL_Set_Num_Threads(int nThreads);
 

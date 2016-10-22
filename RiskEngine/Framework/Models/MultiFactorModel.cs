@@ -12,7 +12,7 @@ namespace RiskEngine.Framework
     /// A MultiFactorModel simulates and stores a number of factors (each factor being vector NArray). 
     /// A call to Step updates the stored simulations with the new values.
     /// </summary>
-    public abstract class MultiFactorModel : EvolvingModel
+    public abstract class MultiFactorModel : Model, IEvolvingModel
     {
         public List<NArray> Factors { get { return _factors; } }
         
@@ -24,6 +24,8 @@ namespace RiskEngine.Framework
             _factorIdentifiers.Add(identifier);
             return factor;
         }
+
+        public abstract void StepNext(TimeInterval interval);
 
         protected List<NArray> _factors = new List<NArray>();
         protected List<string> _factorIdentifiers = new List<string>();

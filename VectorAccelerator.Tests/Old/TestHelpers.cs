@@ -14,6 +14,12 @@ namespace VectorAccelerator.Tests
     {
         public static void Timeit(Action action, int repetitions = 10, int innerRepetitions = 50)
         {
+            double dummy;
+            Timeit(action, out dummy, repetitions, innerRepetitions);
+        }
+        
+        public static void Timeit(Action action, out double averageTime, int repetitions = 10, int innerRepetitions = 50)
+        {
             var watch = new Stopwatch();
             var tickMillisecs = new double[repetitions];
             var millisecs = new double[repetitions];
@@ -32,10 +38,12 @@ namespace VectorAccelerator.Tests
             if (repetitions == 1)
             {
                 Console.WriteLine(String.Format("Average time: {0} ms", millisecs.First()));
+                averageTime = millisecs.First();
             }
             else
             {
-                Console.WriteLine(String.Format("Average time: {0} tick ms", tickMillisecs.Skip(2).Average()));
+                averageTime = tickMillisecs.Skip(2).Average();
+                Console.WriteLine(String.Format("Average time: {0} tick ms", averageTime));
                 Array.Sort(tickMillisecs);
                 Console.WriteLine(String.Format("Fastest time: {0} tick ms", tickMillisecs.Min()));
                 Console.WriteLine(String.Format("75 percentile fastest time: {0} tick ms", tickMillisecs[(int)Math.Floor(repetitions * 0.75)]));

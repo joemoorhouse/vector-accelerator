@@ -9,16 +9,21 @@ namespace RiskEngine.Framework
     /// <summary>
     /// This stores NArrays that evolve over time according to a Process.
     /// </summary>
-    public abstract class StoringModel<T> : EvolvingModel where T : Process, new()
+    public abstract class StoringModel<T> : Model, IEvolvingModel where T : Process, new()
     {
         public override string Identifier
         {
             internal set
             {
-                base.Identifier = _singleFactorProcess.Identifier = value;
+                base.Identifier = value;
+                _singleFactorProcess.Identifier = value;
             }
         }
-        
+
+        public abstract void StepNext(TimeInterval interval);
+
+        public T Process { get { return _singleFactorProcess; } }
+
         protected T _singleFactorProcess;
         protected int _timeIndex;
 

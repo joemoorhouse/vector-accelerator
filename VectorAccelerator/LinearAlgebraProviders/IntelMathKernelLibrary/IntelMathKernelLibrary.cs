@@ -10,12 +10,14 @@ namespace VectorAccelerator.LinearAlgebraProviders
 {    
     public unsafe static class IntelMathKernelLibrary
     {
-        [DllImport("mkl_rt.dll", CallingConvention = CallingConvention.Cdecl,
+        public const string DllName = "mkl_vector_accelerator.dll"; //"mkl_rt.dll";
+
+        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl,
             ExactSpelling = true, SetLastError = false)]
         internal static extern double cblas_ddot(
             int n, double* x, int inc_x, double* y, int inc_y);
 
-        [DllImport("mkl_rt.dll", CallingConvention = CallingConvention.Cdecl,
+        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl,
             ExactSpelling = true, SetLastError = false)]
         internal static extern int cblas_dgemm(
             int order, int transA, int transB, int m, int n, int k,
@@ -23,112 +25,112 @@ namespace VectorAccelerator.LinearAlgebraProviders
             double beta, double* C, int ldc);
 
         // Cholesky decomposition
-        [DllImport("mkl_rt.dll", CallingConvention = CallingConvention.Cdecl,
+        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl,
             ExactSpelling = true, SetLastError = false)]
         internal static extern void DPOTRF(ref char uplo, ref int n, double* A, ref int lda, ref int info);
 
         // Eigenvalue decomposition
-        [DllImport("mkl_rt.dll", EntryPoint = "DSYEVR", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport(DllName, EntryPoint = "DSYEVR", CallingConvention = CallingConvention.Cdecl)]
         private static extern void DSYEVR(ref char jobz, ref char range, ref char uplo, ref int n, 
             double* A, ref int lda, ref double vl, ref double vu, ref int il, ref int iu, 
             ref double abstol, ref int m, double* w, double* z, ref int ldz, 
             int[] isuppz, double[] work, ref int lwork, int[] iwork, ref int liwork, ref int info);
 
-        [DllImport("mkl_rt.dll", EntryPoint = "DSYEVR", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport(DllName, EntryPoint = "DSYEVR", CallingConvention = CallingConvention.Cdecl)]
         private static extern void DSYEVR2(ref char jobz, ref char range, ref char uplo, ref int n, 
             double[] A, ref int lda, ref double vl, ref double vu, ref int il, ref int iu, 
             ref double abstol, ref int m, double[] w, double[] z, ref int ldz, 
             int[] isuppz, double[] work, ref int lwork, int[] iwork, ref int liwork, ref int info);
 
-        [DllImport("mkl_rt.dll", EntryPoint = "LAPACKE_dlasrt", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport(DllName, EntryPoint = "LAPACKE_dlasrt", CallingConvention = CallingConvention.Cdecl)]
         internal static extern int LAPACKE_dlasrt(char id, int n, double* d);
 
-        [DllImport("mkl_rt.dll", CallingConvention = CallingConvention.Cdecl,
+        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl,
             ExactSpelling = true, SetLastError = false)]
         internal static extern int vdLinearFrac(int n,
             double* a, double* b, double scale_a, double shift_a, double scale_b, double shift_b, double* y);
 
-        [DllImport("mkl_rt.dll", CallingConvention = CallingConvention.Cdecl,
+        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl,
             ExactSpelling = true, SetLastError = false)]
         internal static extern int vdAdd(int n,
             double* a, double* b, double* y);
 
-        [DllImport("mkl_rt.dll", CallingConvention = CallingConvention.Cdecl,
+        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl,
             ExactSpelling = true, SetLastError = false)]
         internal static extern int vdSub(int n,
             double* a, double* b, double* y);
 
-        [DllImport("mkl_rt.dll", CallingConvention = CallingConvention.Cdecl,
+        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl,
             ExactSpelling = true, SetLastError = false)]
         internal static extern int vdMul(int n,
             double* a, double* b, double* y);
 
-        [DllImport("mkl_rt.dll", CallingConvention = CallingConvention.Cdecl,
+        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl,
             ExactSpelling = true, SetLastError = false)]
         internal static extern int vdDiv(int n,
             double* a, double* b, double* y);
 
-        [DllImport("mkl_rt.dll", CallingConvention = CallingConvention.Cdecl,
+        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl,
             ExactSpelling = true, SetLastError = false)]
         internal static extern int vdInv(int n,
             double* a, double* y);
 
-        [DllImport("mkl_rt.dll", CallingConvention = CallingConvention.Cdecl,
+        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl,
             ExactSpelling = true, SetLastError = false)]
         internal static extern int vdExp(int n,
             double* a, double* y);
 
-        [DllImport("mkl_rt.dll", CallingConvention = CallingConvention.Cdecl,
+        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl,
             ExactSpelling = true, SetLastError = false)]
         internal static extern int vdLn(int n,
             double* a, double* y);
 
-        [DllImport("mkl_rt.dll", CallingConvention = CallingConvention.Cdecl,
+        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl,
             ExactSpelling = true, SetLastError = false)]
         internal static extern int vdSqrt(int n,
             double* a, double* y);
 
-        [DllImport("mkl_rt.dll", CallingConvention = CallingConvention.Cdecl,
+        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl,
             ExactSpelling = true, SetLastError = false)]
         internal static extern int vdInvSqrt(int n,
             double* a, double* y);
 
-        [DllImport("mkl_rt.dll", CallingConvention = CallingConvention.Cdecl,
+        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl,
             ExactSpelling = true, SetLastError = false)]
         internal static extern int vdCdfNorm(int n,
             double* a, double* y);
 
-        [DllImport("mkl_rt.dll", CallingConvention = CallingConvention.Cdecl,
+        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl,
             ExactSpelling = true, SetLastError = false)]
         internal static extern int vdCdfNormInv(int n,
             double* a, double* y);
 
-        [DllImport("mkl_rt.dll", CallingConvention = CallingConvention.Cdecl,
+        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl,
             ExactSpelling = true, SetLastError = false)]
         internal static extern int cblas_daxpy(int n,
             double a, double* x, int inc_x, double[] y, int inc_y);
 
-        [DllImport("mkl_rt.dll", CallingConvention = CallingConvention.Cdecl,
+        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl,
             ExactSpelling = true, SetLastError = false)]
         public static extern int vmlSetMode(ref int mode);
 
-        [DllImport("mkl_rt.dll", CallingConvention = CallingConvention.Cdecl,
+        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl,
             ExactSpelling = true, SetLastError = false)]
         public static extern void mkl_set_num_threads(ref int n);
 
-        [DllImport("mkl_rt.dll", CallingConvention = CallingConvention.Cdecl,
+        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl,
             ExactSpelling = true, SetLastError = false)]
         public static extern int mkl_get_max_threads();
 
-        [DllImport("mkl_rt.dll", CallingConvention = CallingConvention.Cdecl,
+        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl,
             ExactSpelling = true, SetLastError = false)]
         public static extern void mkl_set_dynamic(ref int n);
 
-        [DllImport("mkl_rt.dll", CallingConvention = CallingConvention.Cdecl,
+        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl,
             ExactSpelling = true, SetLastError = false)]
         public static extern int mkl_get_dynamic();
 
-        [DllImport("mkl_rt.dll", CallingConvention = CallingConvention.Cdecl,
+        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl,
             ExactSpelling = true, SetLastError = false)]
         public static extern int mkl_set_threading_layer(ref int layer);
 

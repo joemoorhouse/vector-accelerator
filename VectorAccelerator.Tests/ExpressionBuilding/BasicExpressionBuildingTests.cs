@@ -26,6 +26,53 @@ namespace VectorAccelerator.Tests
             });
         }
 
+        public void ForPresentation()
+        {
+            var location = StorageLocation.Host;
+            
+            var normal = new Normal(new RandomNumberStream(StorageLocation.Host, RandomNumberGeneratorType.MRG32K3A), 0, 1);
+            var x0 = NArray.CreateRandom(5000, normal);
+            var x1 = NArray.CreateRandom(5000, normal);
+
+            var result = NArray.Evaluate(() =>
+            {
+                return x0 * x1 + x0 * NMath.Exp(2 * x1);
+            }, x0, x1);
+
+            Console.WriteLine(result[0]); // function
+            Console.WriteLine(result[1]); // derivative wrt x1
+
+            var check = x0 + 2 * x0 * NMath.Exp(2 * x1);
+
+            System.Text.StringBuilder builder = new System.Text.StringBuilder();
+            
+            var s = 100 * NMath.Exp(NArray.CreateRandom(5, normal) * 0.2);
+            double k = 90;
+            var r = 0.005;
+            var volatility = 0.2;
+            var t = 5;
+
+            //var result2 = NArray.Evaluate(() =>
+            //{
+            //    var f = s * Math.Exp(r * t); 
+            //    return Finance.BlackScholes(CallPut.Call, f, k, volatility, t);
+            //}, builder, s);
+
+            var result2 = NArray.Evaluate(() =>
+            {
+                return x0 * x1 + x0 * NMath.Exp(2 * x1);
+            }, builder, x0, x1);
+
+            var sds = s + 1e-6;
+            var check2 = (Finance.BlackScholes(CallPut.Call, sds * Math.Exp(r * t), k, volatility, t)
+                - Finance.BlackScholes(CallPut.Call, s * Math.Exp(r * t), k, volatility, t)) * 1e6;
+
+
+
+            var log = builder.ToString();
+            Console.WriteLine(log);
+        }
+
         /// <summary>
         /// Adjoint algorithmic differentiation test
         /// </summary>

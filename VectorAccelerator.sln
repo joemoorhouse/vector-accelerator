@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2013
-VisualStudioVersion = 12.0.30501.0
+# Visual Studio 14
+VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VectorAccelerator", "VectorAccelerator\VectorAccelerator.csproj", "{2BA4F945-3704-4C6D-8B1E-7482AB9DD9A8}"
 EndProject
@@ -35,16 +35,16 @@ Global
 		{BE3808F7-0EDB-41CB-8CE2-50947222431B}.Release|x64.Build.0 = Release|x64
 		{65AC1200-5CC9-4CDD-B42A-63E5A3519B36}.Debug|x64.ActiveCfg = Debug|x64
 		{65AC1200-5CC9-4CDD-B42A-63E5A3519B36}.Debug|x64.Build.0 = Debug|x64
-		{65AC1200-5CC9-4CDD-B42A-63E5A3519B36}.Release|x64.ActiveCfg = Release|Any CPU
-		{65AC1200-5CC9-4CDD-B42A-63E5A3519B36}.Release|x64.Build.0 = Release|Any CPU
+		{65AC1200-5CC9-4CDD-B42A-63E5A3519B36}.Release|x64.ActiveCfg = Release|x64
+		{65AC1200-5CC9-4CDD-B42A-63E5A3519B36}.Release|x64.Build.0 = Release|x64
 		{C12A33ED-22DE-405F-8DEC-3B3EA9FE53B4}.Debug|x64.ActiveCfg = Debug|x64
 		{C12A33ED-22DE-405F-8DEC-3B3EA9FE53B4}.Debug|x64.Build.0 = Debug|x64
-		{C12A33ED-22DE-405F-8DEC-3B3EA9FE53B4}.Release|x64.ActiveCfg = Release|Any CPU
-		{C12A33ED-22DE-405F-8DEC-3B3EA9FE53B4}.Release|x64.Build.0 = Release|Any CPU
+		{C12A33ED-22DE-405F-8DEC-3B3EA9FE53B4}.Release|x64.ActiveCfg = Release|x64
+		{C12A33ED-22DE-405F-8DEC-3B3EA9FE53B4}.Release|x64.Build.0 = Release|x64
 		{4CA14A12-D924-4A6C-A5D1-FC22CBD4CC37}.Debug|x64.ActiveCfg = Debug|x64
 		{4CA14A12-D924-4A6C-A5D1-FC22CBD4CC37}.Debug|x64.Build.0 = Debug|x64
-		{4CA14A12-D924-4A6C-A5D1-FC22CBD4CC37}.Release|x64.ActiveCfg = Release|Any CPU
-		{4CA14A12-D924-4A6C-A5D1-FC22CBD4CC37}.Release|x64.Build.0 = Release|Any CPU
+		{4CA14A12-D924-4A6C-A5D1-FC22CBD4CC37}.Release|x64.ActiveCfg = Release|x64
+		{4CA14A12-D924-4A6C-A5D1-FC22CBD4CC37}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

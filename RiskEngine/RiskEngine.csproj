@@ -72,6 +72,8 @@
     <Compile Include="Factors\MeanRevertingNormal.cs" />
     <Compile Include="Factors\MeanRevertingNormalPath.cs" />
     <Compile Include="Factors\NormalVariates.cs" />
+    <Compile Include="Factors\NormalVariatesPath.cs" />
+    <Compile Include="Factors\Numeraire.cs" />
     <Compile Include="Framework\Context.cs" />
     <Compile Include="Framework\Deal.cs" />
     <Compile Include="Framework\Factors\Factor.cs" />
@@ -80,7 +82,7 @@
     <Compile Include="Framework\Factory.cs" />
     <Compile Include="Framework\IdentifiedNArray.cs" />
     <Compile Include="Framework\IdentifierTypeKey.cs" />
-    <Compile Include="Framework\Models\EvolvingModel.cs">
+    <Compile Include="Framework\Models\IEvolvingModel.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Framework\Models\Model.cs" />
@@ -102,9 +104,12 @@
     <Compile Include="Framework\TimeInterval.cs" />
     <Compile Include="Framework\TimePoints.cs" />
     <Compile Include="Models\LinearGaussianModel.cs" />
+    <Compile Include="Models\LinearGaussianModelBase.cs" />
     <Compile Include="Models\MeanRevertingNormalProcess.cs" />
     <Compile Include="Models\MultiVariateNormalModel.cs" />
     <Compile Include="Models\NormalProcess.cs" />
+    <Compile Include="Models\NumeraireModel.cs" />
+    <Compile Include="Models\WienerProcess.cs" />
     <Compile Include="Pricers\FixedCashflowDeal.cs" />
     <Compile Include="Pricers\FloatingCashflowDeal.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

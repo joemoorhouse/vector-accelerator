@@ -6,7 +6,6 @@ using ManagedCuda.CudaRand;
 using ManagedCuda;
 using ManagedCuda.NVRTC;
 using ManagedCuda.CudaBlas;
-using ManagedCuda.CudaRand;
 using VectorAccelerator.NArrayStorage;
 using VectorAccelerator.Distributions;
 

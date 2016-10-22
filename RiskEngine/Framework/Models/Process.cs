@@ -8,6 +8,8 @@ namespace RiskEngine.Framework
 {
     public interface IProcess
     {
+        string Identifier { get; }
+        
         NArray Prepare(Context context);
 
         NArray Step(TimeInterval timeStep, NArray previous);

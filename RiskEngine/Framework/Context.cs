@@ -34,14 +34,18 @@ namespace RiskEngine.Framework
         public SimulationSettings(DateTime closeOfBusinessDate)
         {
             SimulationCount = 5000;
-            //var simulationDateTimes = SimulationDateTimes(closeOfBusinessDate).ToList();
+            var reportingDateTimes = ReportingDateTimes(closeOfBusinessDate).ToList();
 
-            var simulationDateTimes = AddLastMarginCallAndCloseoutPoints(ReportingPoints())
-                .Select(i => closeOfBusinessDate.AddDays(i))
-                .ToList();
+            var simulationDateTimes = reportingDateTimes; //IncludeMarginCallAndCloseoutPoints(reportingDateTimes).ToArray();
+
+            var check = simulationDateTimes.Select(d => (d - closeOfBusinessDate).TotalDays).ToArray();
+
+            var check2 = reportingDateTimes.Select(d => (d - closeOfBusinessDate).TotalDays).ToArray();
 
             SimulationIntervals = simulationDateTimes.Skip(1)
-                .Zip(simulationDateTimes, (n, p) => new TimeInterval(p, n))
+                .Zip(
+                simulationDateTimes.Select((d, i) => new { Index = i, Date = d }), 
+                (n, p) => new TimeInterval(p.Date, n, p.Index))
                 .ToArray();
 
             SimulationTimePoints = simulationDateTimes
@@ -54,112 +58,46 @@ namespace RiskEngine.Framework
         /// </summary>
         /// <param name="start"></param>
         /// <returns></returns>
-        private IEnumerable<DateTime> SimulationDateTimes(DateTime start)
+        private IEnumerable<DateTime> ReportingDateTimes(DateTime start)
         {
             var startDateTime = start;
-            var startWeekly = startDateTime.AddMonths(1);
-            var startMonthly = startDateTime.AddYears(2);
-            var startAnnual = startDateTime.AddYears(5);
-            var start5Yearly = startDateTime.AddYears(20); // 5
+            var startWeekly = startDateTime.AddDays(30);
+            var startMonthly = startDateTime.AddMonths(6);
+            var startQuarterly = startDateTime.AddYears(2);
+            var startAnnual = startDateTime.AddYears(15);
+            var start5Yearly = startDateTime.AddYears(25);
             var end = startDateTime.AddYears(60);
 
-            var currentDateTime = startDateTime;
-            while (currentDateTime < startWeekly)
-            {
-                yield return currentDateTime;
-                currentDateTime = currentDateTime.AddDays(1);
-            }
-            
-            currentDateTime = startWeekly;
-            while (currentDateTime < startMonthly)
-            {
-                yield return currentDateTime;
-                currentDateTime = currentDateTime.AddDays(7);
-            }
+            return GetSchedule(startDateTime, startWeekly, (c) => c.AddDays(1))
+                .Concat(GetSchedule(startWeekly, startMonthly, (c) => c.AddDays(7)))
+                .Concat(GetSchedule(startMonthly, startQuarterly, (c) => c.AddMonths(1)))
+                .Concat(GetSchedule(startQuarterly, startAnnual, (c) => c.AddMonths(3)))
+                .Concat(GetSchedule(startAnnual, start5Yearly, (c) => c.AddYears(1)))
+                .Concat(GetSchedule(start5Yearly, end, (c) => c.AddYears(5)))
+                .Distinct();
+        }
 
-            currentDateTime = startMonthly;
-            while (currentDateTime < startAnnual)
+        private IEnumerable<DateTime> GetSchedule(DateTime start, DateTime stop, Func<DateTime, DateTime> increment)
+        {
+            var current = start;
+            while (current <= stop)
             {
-                yield return currentDateTime;
-                currentDateTime = currentDateTime.AddMonths(1);
-            }
-
-            currentDateTime = startAnnual;
-            while (currentDateTime < start5Yearly)
-            {
-                yield return currentDateTime;
-                currentDateTime = currentDateTime.AddYears(1);
-            }
-
-            currentDateTime = start5Yearly;
-            while (currentDateTime <= end)
-            {
-                yield return currentDateTime;
-                currentDateTime = currentDateTime.AddYears(5);
+                yield return current;
+                current = increment(current);
             }
         }
 
-        private static IEnumerable<int> AddLastMarginCallAndCloseoutPoints(IEnumerable<int> reportingSet)
+        private static IEnumerable<DateTime> IncludeMarginCallAndCloseoutPoints(IEnumerable<DateTime> reportingSet)
         {
-            var reporting = reportingSet.ToArray();
-            foreach (var item in Enumerable.Range(0, 28)) yield return item;
-            for (int i = 16; i < reporting.Length; ++i)
-            {
-                if ((reporting[i] - reporting[i - 1]) > 7) yield return reporting[i] - 6;
-                if (reporting[i] >= 16)
-                    yield return reporting[i];
-                if ((i == reporting.Length - 1) || (reporting[i + 1] - reporting[i]) > 7)
-                {
-                    yield return reporting[i] + 7;
-                    yield return reporting[i] + 14;
-                }
-            }
-        }
+            var first = reportingSet.First();
 
-        private static IEnumerable<int> ReportingPoints()
-        {
-            var startWeekly = 14; // i.e. from day 28 onwards: 27-28 last daily interval
-            var startQuarterly = 1099;
-            var startAnnual = 3656 - 1;
-            var start30Months = 7308;
-            var start5Years = 10048;
-
-            var currentDay = 0.0;
-            while (currentDay < startWeekly)
-            {
-                yield return (int)currentDay;
-                currentDay += 1;
-            }
-
-            while (currentDay < startQuarterly)
-            {
-                yield return (int)currentDay;
-                currentDay += 7;
-            }
-
-            while (currentDay < startAnnual)
-            {
-                yield return (int)Math.Round(currentDay + 0.01);
-                currentDay += 365.25 / 4.0;
-            }
-
-            while (currentDay < start30Months)
-            {
-                yield return (int)Math.Round(currentDay + 0.01);
-                currentDay += 365.25;
-            }
-
-            while (currentDay < start5Years)
-            {
-                yield return (int)Math.Round(currentDay + 0.01);
-                currentDay += 365.25 * 2.5;
-            }
-
-            yield return 10961;
-            yield return 12784;
-            yield return 14610;
-            yield return 18263;
-
+            return reportingSet
+                .Concat(reportingSet.Select(d => d.AddDays(-6))) // do not add if within 1 day?
+                .Concat(reportingSet.Select(d => d.AddDays(7)))
+                .Concat(reportingSet.Select(d => d.AddDays(14)))
+                .Where(d => d > first)
+                .Distinct()
+                .OrderBy(d => d);
         }
     }
 }

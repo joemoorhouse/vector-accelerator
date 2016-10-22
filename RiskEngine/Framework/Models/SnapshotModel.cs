@@ -36,9 +36,9 @@ namespace RiskEngine.Framework
             _value = _singleFactorProcess.Prepare(context);
         }
 
-        public override void StepNext()
+        public override void StepNext(TimeInterval interval)
         {
-            _value = _singleFactorProcess.Step(_timeIntervals[_timeIndex], _value);
+            _value = _singleFactorProcess.Step(interval, _value);
         }
     }
 }

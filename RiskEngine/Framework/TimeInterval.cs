@@ -11,11 +11,13 @@ namespace RiskEngine.Framework
         public readonly double IntervalInYears;
         public readonly DateTime Previous;
         public readonly DateTime Next;
+        public readonly int Index;
 
-        public TimeInterval(DateTime previous, DateTime next)
+        public TimeInterval(DateTime previous, DateTime next, int index)
         {
             Previous = previous;
             Next = next;
+            Index = index;
             IntervalInYears = (next - previous).TotalDays / 365.25;
         }
     }

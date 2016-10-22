@@ -9,7 +9,7 @@ using RiskEngine.Models;
 namespace RiskEngine.Framework
 {
     /// <summary>
-    /// Factor that holds all factors values (per scenario) for each simulation time point.
+    /// Factor that can return all factors values (per scenario) for each simulation time point.
     /// </summary>
     public class PathFactor : Factor<IPath>
     {
@@ -20,7 +20,7 @@ namespace RiskEngine.Framework
     }
 
     /// <summary>
-    /// Factor that holds all factors values (per scenario) for each simulation time point.
+    /// Factor that can return factor values (per scenario) for each simulation time point.
     /// </summary>
     /// <typeparam name="T">Interface implemented by the Process.</typeparam>
     public class PathFactor<T> : Factor<IPath<T>> where T : IProcess

@@ -20,8 +20,6 @@ namespace VectorAccelerator.InputOutput
             {
                 format = "G6";
             }
-            double a;
-
             return ToMatrixString(array, 8, 4, 5, 2, 76, "..", "..", "..", "  ", Environment.NewLine, x => x.ToString(format, provider));
         }
 

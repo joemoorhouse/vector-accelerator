@@ -26,8 +26,6 @@ namespace RiskEngine.Framework
             get { return _storage[timeIndex]; }
         }
 
-        public T Process { get { return _singleFactorProcess; } }
-
         public PathModel() : base() { }
 
         public override void Initialise(SimulationGraph graph)
@@ -41,10 +39,10 @@ namespace RiskEngine.Framework
             _storage.Add(_singleFactorProcess.Prepare(context));
         }
 
-        public override void StepNext()
+        public override void StepNext(TimeInterval interval)
         {
             _storage.Add(
-                _singleFactorProcess.Step(_timeIntervals[_timeIndex], _storage[_timeIndex])
+                _singleFactorProcess.Step(interval, _storage[_timeIndex])
                 );
             _timeIndex++;
         }

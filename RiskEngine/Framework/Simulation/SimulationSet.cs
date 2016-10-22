@@ -8,7 +8,7 @@ namespace RiskEngine.Framework
 {
     public class SimulationSet
     {
-        public readonly EvolvingModel[] Models;
+        public readonly IEvolvingModel[] Models;
 
         public readonly Type Type;
 
@@ -17,7 +17,7 @@ namespace RiskEngine.Framework
             Type = nodes.First().Key.Type;
             if (nodes.Where(n => n.Key.Type != Type).Any())
                 throw new Exception("ISimulation types must all be the same.");
-            Models = nodes.Select(n => n.Model as EvolvingModel).ToArray();
+            Models = nodes.Select(n => n.Model as IEvolvingModel).ToArray();
         }
     }
 }

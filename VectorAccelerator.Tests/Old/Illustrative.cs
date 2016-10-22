@@ -54,6 +54,7 @@ namespace VectorAccelerator.Tests
             var expressionsDiff2 = new StringBuilder();
             
             var s = NMath.Exp(a) + 5;
+
             var resultDiff2 = NArray.Evaluate(() =>
             {
                 return Finance.BlackScholes(CallPut.Call, s, 5, 1, 1);
@@ -66,6 +67,14 @@ namespace VectorAccelerator.Tests
 
             var output2 = expressionsDiff2.ToString();
             Console.Write(output2);
+
+            VectorAccelerator.Tests.TestHelpers.Timeit(() =>
+            {
+                var resultTiming = NArray.Evaluate(() =>
+                {
+                    return Finance.BlackScholes(CallPut.Call, s, 5, 1, 1);
+                }, expressionsDiff2);
+            });
         }
     }
 }

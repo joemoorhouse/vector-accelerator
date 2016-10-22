@@ -41,7 +41,7 @@ namespace RiskEngine.Models
             }
         }
 
-        public override void StepNext()
+        public override void StepNext(TimeInterval interval)
         {
             // do not care about timeStep: batches are simply normal variates
             _uncorrelated.FillRandom(_normalDistribution);

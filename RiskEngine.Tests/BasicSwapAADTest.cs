@@ -18,12 +18,14 @@ using RiskEngine.Data;
 
 namespace VectorAccelerator.Tests
 {
+    [TestClass]
     public class BasicSwapAADTest
-    {       
+    {
         /// <summary>
         /// Calculate exposure profile for uncollateralised interest rate swap trade
         /// and derivatives against all points on time zero rates curve.
         /// </summary>
+        [TestMethod]
         public void TestEndToEnd()
         {
             LinearGaussianModel model;
@@ -52,46 +54,13 @@ namespace VectorAccelerator.Tests
 
             foreach (var pricer in pricers) pricer.PrePrice();
 
-            #region AddedSpeedTests
-
-            //for (int round = 0; round < 2; ++round)
-            //{
-            //    var store = Enumerable.Range(0, timePointCount).Select(i => new NArray(StorageLocation.Host, simulationCount, 1)).ToArray();
-                
-            //    VectorAccelerator.Tests.TestHelpers.Timeit(() =>
-            //    {
-            //        var options = new ParallelOptions() { MaxDegreeOfParallelism = round + 1 };
-
-            //        Parallel.For(0, timePointCount, options, (i) =>
-            //        {
-            //            var tempResult = store[i]; //new NArray(StorageLocation.Host, simulationCount, 1);
-            //            for (int j = 0; j < pricers.Count; ++j)
-            //            {
-            //                NArray.Evaluate(() =>
-            //                {
-            //                    NArray pv;
-            //                    pricers[j].Price(i, out pv);
-            //                    return pv;
-            //                    //return model.DiscountFactor(10, timePoints.First().DateTime.AddDays(182));
-            //                }, new List<NArray>(), Aggregator.ElementwiseAdd, new List<NArray> { tempResult });
-
-            //            }
-            //        });
-            //    }, 1, 1);
-            //}
-
-            //return;
-
-            #endregion
-
             Console.WriteLine(); Console.WriteLine("Deferred execution single flow, single thread");
             var tempStorage = new List<NArray> { new NArray(StorageLocation.Host, 
                 simulationCount, 1) };
 
-            //model.ZeroRatesT0.Data[16] = new DataPoint(model.ZeroRatesT0.Data[16].Time, model.ZeroRatesT0.Data[16].Value + 1e-6);
-
             Console.WriteLine(); Console.WriteLine(string.Format("Deferred execution, {0} flows, no derivatives, single thread", pricers.Count));
-            VectorAccelerator.Tests.TestHelpers.Timeit(() =>
+            double averageTime;
+            TestHelpers.Timeit(() =>
             {
                 for (int i = 0; i < timePointCount; ++i)
                 {
@@ -106,13 +75,16 @@ namespace VectorAccelerator.Tests
                         new List<NArray>(), Aggregator.ElementwiseAdd, resultStorageSingle[i]);
                     }
                 }
-            }, 1, 1);
+            }, out averageTime, 1, 1);
 
             var pricingOperationCount = 0;
             for (int i = 0; i < timePointCount; ++i)
             {
                 pricingOperationCount += pricers.Count(p => p.ExposureEndDate < timePoints[i].DateTime);
             }
+
+            double timeForSinglePrice = averageTime * 1e6 / (pricingOperationCount * simulationCount);
+            Console.WriteLine(string.Format("Average time for single flow: {0:F1} ns", timeForSinglePrice));
 
             var percentiles = new double[] { 1, 10, 50, 90, 99 };
             var measures = new List<IList<double>>();
@@ -134,13 +106,6 @@ namespace VectorAccelerator.Tests
 
             VectorAccelerator.Plot.PlotHelper.QuickPlot(times, profile90, new Tuple<double,double>(0, 11));
 
-            //Console.WriteLine(); Console.WriteLine(string.Format("Deferred execution, {0} flows, Calculate, multiple threads", pricers.Count));
-            //VectorAccelerator.Tests.TestHelpers.Timeit(() =>
-            //{
-            //    Calculations.Calculate(graph, pricers, true);
-            //    //Calculations.Calculate(graph, pricers, allDiscountFactorT0.ToList());
-            //}, 1, 1);
-
             Console.WriteLine(); Console.WriteLine(string.Format("Deferred execution, {0} flows, {1} derivatives, single thread", pricers.Count, allZeroRatesT0.Count()));
             VectorAccelerator.Tests.TestHelpers.Timeit(() =>
             {
@@ -159,7 +124,6 @@ namespace VectorAccelerator.Tests
                 }
             }, 1, 1);
 
-
             // we check that 
             var maxMeanPositiveSims = resultStorage[maxMeanPositiveIndex].First();
             List<double> gradients = new List<double>();
@@ -173,10 +137,12 @@ namespace VectorAccelerator.Tests
                     );
             }
 
+            Console.ReadKey();
+
             Assert.IsTrue(TestHelpers.AgreesAbsolute(gradients[16], 8795.970434));
 
             Console.WriteLine(string.Format(
-                "Calculated gradient of maximum positive exposure ({0:F4} EUR) to change of the zero rate with maturity {1:F2} years: {2:F5}",
+                "Calculated gradient of maximum positive exposure ({0:F2} EUR) to change of the zero rate with maturity {1:F2} years: {2:F3}",
                 maxMeanPositive, 2556 / 365.25, gradients[16]));
 
             // result from bumping by 1e-6: 
@@ -184,13 +150,12 @@ namespace VectorAccelerator.Tests
             //
             Console.WriteLine(string.Format("Value from using bump of 1e-6: {0}", resultFromBumping));
 
-            //model.ZeroRatesT0.Data[6] = new DataPoint(model.ZeroRatesT0.Data[6].Time, model.ZeroRatesT0.Data[6].Value + 1e-6);
-
         }
         
         /// <summary>
         /// Test building blocks of interest rate swap exposure calculation.
         /// </summary>
+        [TestMethod]
         public void TestBasics()
         {
             LinearGaussianModel model;
@@ -213,14 +178,14 @@ namespace VectorAccelerator.Tests
             if (testModel)
             {
                 var check1 = model[1, timePoints[1].DateTime.AddDays(182)].First();
-                Assert.IsTrue(TestHelpers.AgreesAbsolute(check1, 1.0015413542587288));
+                Assert.IsTrue(TestHelpers.AgreesAbsolute(check1, 1.0015314301020275));
 
                 var check2 = model[1, timePoints[1].DateTime.AddDays(91)].First();
-                Assert.IsTrue(TestHelpers.AgreesAbsolute(check2, 1.0007485460169532));
+                Assert.IsTrue(TestHelpers.AgreesAbsolute(check2, 1.0007451895710209));
 
                 var check3 = model.ForwardRate(1,
                     timePoints[1].DateTime.AddDays(91), timePoints[1].DateTime.AddDays(182)).First();
-                Assert.IsTrue(TestHelpers.AgreesAbsolute(check3, -0.0031772259594406715));
+                Assert.IsTrue(TestHelpers.AgreesAbsolute(check3, -0.0031509366920208916));
             }
 
             bool testProfile = true;
@@ -434,10 +399,11 @@ namespace VectorAccelerator.Tests
             });
 
             var correlationMatrix = context.Factory.CreateNArray(new double[,] {
-                { 1.0,      -0.947,   0.529},
-                { -0.947,     1.0,    -0.767},
-                { 0.529,    -0.767,   1.0}
+                { 1.0,      -0.92,   0.5},
+                { -0.92,     1.0,    -0.8},
+                { 0.5,    -0.8,   1.0}
             });
+
             var identifiers = new string[] { "IR_DiscountFactor_EUR_Factor0", "IR_DiscountFactor_EUR_Factor1", 
                 "IR_DiscountFactor_EUR_Factor2"};
             CorrelationHelper.AddMultivariateModelWeightsProvider(context, identifiers, correlationMatrix);
@@ -451,16 +417,14 @@ namespace VectorAccelerator.Tests
             var testVariates2 = graph.RegisterFactor<NormalVariates>("IR_DiscountFactor_EUR_Factor2");
             var testFactor = graph.RegisterModel<MeanRevertingNormalPathModel>("IR_DiscountFactor_EUR_Factor0");
             model = graph.RegisterModel<LinearGaussianModel>("EUR");
+            var numeraire = graph.RegisterModel<NumeraireModel>("EUR");
 
-            model.Factors[0].Sigma = 0.0197; model.Factors[0].Lambda = 0.05;
-            model.Factors[1].Sigma = 0.0268; model.Factors[1].Lambda = 0.188;
-            model.Factors[2].Sigma = 0.0114; model.Factors[2].Lambda = 0.957;
+            model.Factors[0].Sigma = 0.02; model.Factors[0].Lambda = 0.05;
+            model.Factors[1].Sigma = 0.03; model.Factors[1].Lambda = 0.2;
+            model.Factors[2].Sigma = 0.01; model.Factors[2].Lambda = 1.0;
 
-            var years = new double[] { 0.1, 0.25, 0.5, 0.75, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 15, 20, 25, 40, 60 };
-            years = new int[] { 0, 1, 7, 14, 30, 60, 91, 182, 273, 365, 547, 730, 1095, 1461, 1826, 2191, 2556, 2922, 3287, 3652, 4383, 5478, 7305, 9131, 10957, 12783, 14610, 16436, 18262, 20088, 21915 }
-                .Select(d => d / 365.25).ToArray();
-            var zeroRatesInPercent = new double[] { -0.25, -0.25, -0.25, -0.25, -0.25, -0.25, -0.25 - 0.18, -0.08, 0.03, 0.16, 0.3, 0.4, 0.55, 0.75, 1, 1.15, 1.2, 1.2, 1.2 };
-            zeroRatesInPercent = new double[] { -0.3, -0.3, -0.29, -0.29, -0.3, -0.31, -0.31, -0.32, -0.32, -0.33, -0.34, -0.35, -0.35, -0.33, -0.28, -0.2, -0.11, -0.01, 0.1, 0.2, 0.37, 0.56, 0.71, 0.75, 0.76, 0.75, 0.75, 0.72, 0.7, 0.67, 0.64 };
+            var years = new double[] { 0, 1/365.35, 7/365.25, 14/365.25, 1/12, 2/12, 0.25, 0.5, 0.75, 1, 1.5, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60 };
+            var zeroRatesInPercent = new double[] { -0.3, -0.3, -0.29, -0.29, -0.3, -0.31, -0.31, -0.32, -0.32, -0.33, -0.34, -0.35, -0.35, -0.33, -0.28, -0.2, -0.11, -0.01, 0.1, 0.2, 0.37, 0.56, 0.71, 0.75, 0.76, 0.75, 0.75, 0.72, 0.7, 0.67, 0.64 };
 
             model.ZeroRatesT0 = new Curve(years.Zip(zeroRatesInPercent,
                 (y, r) => new DataPoint(

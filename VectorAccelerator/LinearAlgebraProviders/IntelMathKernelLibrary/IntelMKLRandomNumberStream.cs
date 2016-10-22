@@ -9,15 +9,15 @@ namespace VectorAccelerator.LinearAlgebraProviders
 {
     public class IntelMKLRandomNumberStream : IDisposable
     {
-        [DllImport("mkl_rt.dll", CallingConvention = CallingConvention.Cdecl,
+        [DllImport(IntelMathKernelLibrary.DllName, CallingConvention = CallingConvention.Cdecl,
             ExactSpelling = true, SetLastError = false)]
         internal static extern int vslNewStream(ref IntPtr stream, int brng, int seed);
 
-        [DllImport("mkl_rt.dll", CallingConvention = CallingConvention.Cdecl,
+        [DllImport(IntelMathKernelLibrary.DllName, CallingConvention = CallingConvention.Cdecl,
             ExactSpelling = true, SetLastError = false)]
         internal static extern int vslNewStreamEx(ref IntPtr stream, int brng, int nparams, uint[] parameters);
 
-        [DllImport("mkl_rt.dll", CallingConvention = CallingConvention.Cdecl,
+        [DllImport(IntelMathKernelLibrary.DllName, CallingConvention = CallingConvention.Cdecl,
             ExactSpelling = true, SetLastError = false)]
         internal static extern int vslDeleteStream(ref IntPtr stream);
 
