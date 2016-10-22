@@ -10,7 +10,7 @@ namespace VectorAccelerator.NArrayStorage
     public class DeviceStorage<T> where T : struct //: NArrayStorage<T> 
     {
         CudaDeviceVariable<T> _storage; // column-major storage
-        // note no storgae start offset: if this is a view into another vector / matrix,
+        //note no storage start offset: if this is a view into another vector / matrix,
         // this is done in the pointer
         int _stride; // number of elements between adjacent columns of same row
 
@@ -24,11 +24,17 @@ namespace VectorAccelerator.NArrayStorage
             get { return _stride; }
         }
 
-        private static CudaDeviceVariable<T> Offset<T>(CudaDeviceVariable<T> original,
-            int offset) where T : struct
+        public DeviceStorage(CudaDeviceVariable<T> storage, int stride)
         {
-            var typeSize = (uint)Marshal.SizeOf(typeof(T));
-            return new CudaDeviceVariable<T>(original.DevicePointer + typeSize * offset); 
+            _storage = storage;
+            _stride = stride;
+        }
+
+        private static CudaDeviceVariable<S> Offset<S>(CudaDeviceVariable<S> original,
+            int offset) where S : struct
+        {
+            var typeSize = (uint)Marshal.SizeOf(typeof(S));
+            return new CudaDeviceVariable<S>(original.DevicePointer + typeSize * offset);
         }
     }
 }

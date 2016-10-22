@@ -4,7 +4,12 @@ using System.Linq;
 using System.Text;
 
 namespace VectorAccelerator.DeferredExecution
-{   
+{
+    public class VectorExecutionOptions
+    {
+        public bool MultipleThreads = false;
+    }
+
     public class DeferredExecutionContext 
     {
         DeferringExecutor _executor;
@@ -34,7 +39,7 @@ namespace VectorAccelerator.DeferredExecution
             {
                 foreach (var variable in independentVariables)
                 {
-                    variable.IsIndependentVariable = true; // revisit?
+                    variable.IsIndependentVariable = true; // TODO need to store as dictionary, or else not thread safe
                 }
                 var context = new DeferredExecutionContext(new VectorExecutionOptions());
                 NArray dependentVariable;
@@ -60,7 +65,7 @@ namespace VectorAccelerator.DeferredExecution
             {
                 foreach (var variable in independentVariables)
                 {
-                    //variable.IsIndependentVariable = false;
+                    variable.IsIndependentVariable = false;
                 }
             }
             //Console.WriteLine(timer.Report());

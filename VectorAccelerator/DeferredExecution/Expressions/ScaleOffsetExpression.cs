@@ -8,7 +8,7 @@ namespace VectorAccelerator.DeferredExecution.Expressions
 {
     public class ScaleOffsetExpression<T> : UnaryMathsExpression
     {
-        public readonly VectorParameterExpression Operand;
+        public new readonly VectorParameterExpression Operand;
         public readonly T Scale;
         public readonly T Offset;
 

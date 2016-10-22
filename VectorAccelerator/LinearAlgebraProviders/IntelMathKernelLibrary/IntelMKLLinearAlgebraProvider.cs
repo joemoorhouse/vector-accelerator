@@ -77,7 +77,6 @@ namespace VectorAccelerator.LinearAlgebraProviders
 
         public override void ScaleInverse(NArray<double> a, double scale, NArray<double> result)
         {
-            return;
             double[] aArray, resultArray;
             int aStart, resultStart;
             GetArray(a, out aArray, out aStart);

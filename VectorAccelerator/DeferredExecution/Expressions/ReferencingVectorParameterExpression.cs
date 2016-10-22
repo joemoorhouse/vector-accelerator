@@ -39,10 +39,10 @@ namespace VectorAccelerator.DeferredExecution.Expressions
             IsScalar = true;
         }
 
-        private static Type GetType<T>()
+        private static Type GetType<S>()
         {
-            if (typeof(T) == typeof(double)) return typeof(NArray);
-            else return typeof(NArray<T>);
+            if (typeof(S) == typeof(double)) return typeof(NArray);
+            else return typeof(NArray<S>);
         }
 
         public override string ToString()

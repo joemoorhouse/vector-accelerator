@@ -90,9 +90,6 @@ namespace VectorAccelerator.DeferredExecution.Expressions
 
             if (operation == null) return;
 
-            if (operation is AssignOperation<T>)
-                return;
-
             NArray<T> result;
             var left = operation.Left as ReferencingVectorParameterExpression<T>;
 

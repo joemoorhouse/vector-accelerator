@@ -74,15 +74,15 @@ namespace VectorAccelerator
             return ExecutionContext.Executor.RelativeOperation(operand1, operand2, RelativeOperator.LessThanEquals);
         }
 
-        public static NArrayBool operator ==(NArrayInt operand1, NArrayInt operand2)
-        {
-            return ExecutionContext.Executor.RelativeOperation(operand1, operand2, RelativeOperator.Equals);
-        }
+        //public static NArrayBool operator ==(NArrayInt operand1, NArrayInt operand2)
+        //{
+        //    return ExecutionContext.Executor.RelativeOperation(operand1, operand2, RelativeOperator.Equals);
+        //}
 
-        public static NArrayBool operator !=(NArrayInt operand1, NArrayInt operand2)
-        {
-            return ExecutionContext.Executor.RelativeOperation(operand1, operand2, RelativeOperator.NotEquals);
-        }
+        //public static NArrayBool operator !=(NArrayInt operand1, NArrayInt operand2)
+        //{
+        //    return ExecutionContext.Executor.RelativeOperation(operand1, operand2, RelativeOperator.NotEquals);
+        //}
 
         public static NArrayBool operator >=(NArrayInt operand1, NArrayInt operand2)
         {
