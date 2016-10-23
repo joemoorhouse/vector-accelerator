@@ -3,3 +3,12 @@
 ################################################################################
 
 /bin/x64/Debug
+/packages/ManagedCuda-70-x64.7.0.27
+/packages/OxyPlot.Core.1.0.0-unstable1904
+/packages/OxyPlot.Wpf.1.0.0-unstable1904
+/RiskEngine/obj/x64/Debug
+/RiskEngine.Tests/obj/x64/Debug
+/VectorAccelerator/obj/x64/Debug
+/VectorAccelerator.Launcher/obj/x64/Debug
+/VectorAccelerator.Plot/obj/x64/Debug
+/VectorAccelerator.Tests/obj/x64/Debug
