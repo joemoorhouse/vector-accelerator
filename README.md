@@ -1,2 +1,2 @@
 # vector-accelerator
-.NET library for accelerated vector math
+.NET library for accelerated vector maths and adjoint algorithmic differentiation.
