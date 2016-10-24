@@ -104,10 +104,10 @@ namespace VectorAccelerator.Tests
             var maxMeanPositive = meanPositive.Max();
             var maxMeanPositiveIndex = Array.IndexOf(meanPositive, maxMeanPositive);
 
-            VectorAccelerator.Plot.PlotHelper.QuickPlot(times, profile90, new Tuple<double,double>(0, 11));
+            //Plot.PlotHelper.QuickPlot(times, profile90, new Tuple<double,double>(0, 11));
 
             Console.WriteLine(); Console.WriteLine(string.Format("Deferred execution, {0} flows, {1} derivatives, single thread", pricers.Count, allZeroRatesT0.Count()));
-            VectorAccelerator.Tests.TestHelpers.Timeit(() =>
+            TestHelpers.Timeit(() =>
             {
                 for (int i = 0; i < timePointCount; ++i)
                 {
@@ -137,19 +137,11 @@ namespace VectorAccelerator.Tests
                     );
             }
 
-            Console.ReadKey();
-
-            Assert.IsTrue(TestHelpers.AgreesAbsolute(gradients[16], 8795.970434));
+            Assert.IsTrue(TestHelpers.AgreesAbsolute(gradients[16], 8748.38858299));
 
             Console.WriteLine(string.Format(
                 "Calculated gradient of maximum positive exposure ({0:F2} EUR) to change of the zero rate with maturity {1:F2} years: {2:F3}",
                 maxMeanPositive, 2556 / 365.25, gradients[16]));
-
-            // result from bumping by 1e-6: 
-            double resultFromBumping = (42224.246191936923 - 42224.237395987817) * 1e6;
-            //
-            Console.WriteLine(string.Format("Value from using bump of 1e-6: {0}", resultFromBumping));
-
         }
         
         /// <summary>

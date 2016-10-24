@@ -60,7 +60,7 @@ namespace RiskEngine.Framework
             _dataPoints.Add(new DataPoint(time, value));
         }
 
-        List<DataPoint> _dataPoints;
+        List<DataPoint> _dataPoints = new List<DataPoint>();
     }
 
     public class SimulationResult

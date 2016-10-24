@@ -1,52 +1,48 @@
-﻿using System;
-using System.Linq;
-using VectorAccelerator;
-using System.Diagnostics;
-using System.Collections.Generic;
+﻿
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using VectorAccelerator.NArrayStorage;
-using System.Threading.Tasks;
 using VectorAccelerator.Distributions;
-using VectorAccelerator.LinearAlgebraProviders;
 
 namespace VectorAccelerator.Tests
 {
+    [TestClass]
     public class BasicDifferentiationTests
     {
-        public void TestDivision()
+        [TestMethod]
+        public void DivisionTest()
         {
-            var stream = new RandomNumberStream(StorageLocation.Host);
-            var test = NArray.CreateRandom(1000, new Normal(stream, 0, 1));
-            var test2 = NArray.CreateRandom(1000, new Normal(stream, 0, 1));
+            NArray a, b;
+            using (var stream = new RandomNumberStream(StorageLocation.Host))
+            {
+                a = NArray.CreateRandom(1000, new Normal(stream, 0, 1));
+                b = NArray.CreateRandom(1000, new Normal(stream, 0, 1));
+            }
 
-            // first test
+            // First test
+            var expected1 = 5.0 / a;
+            var expectedDiff1 = -5.0 / (a * a);
 
             var obtained1 = NArray.Evaluate(() =>
             {
-                return 5.0 / test;
-            }, test);
+                return 5.0 / a;
+            }, a);
 
-            var expected1 = 5.0 / test;
-            var expectedDiff1 = -5.0 / (test * test);
 
-            var pass = TestHelpers.AgreesAbsolute(obtained1[0], expected1);
-            pass = pass && TestHelpers.AgreesAbsolute(obtained1[1], expectedDiff1);
+            Assert.IsTrue(TestHelpers.AgreesAbsolute(obtained1[0], expected1));
+            Assert.IsTrue(TestHelpers.AgreesAbsolute(obtained1[1], expectedDiff1));
 
-            // second test
+            // Second test
+            var expected2 = a / b;
+            var expectedDiff2_1 = 1 / b;
+            var expectedDiff2_2 = -a / (b * b);
 
             var obtained2 = NArray.Evaluate(() =>
             {
-                return test / test2;
-            }, test, test2);
+                return a / b;
+            }, a, b);
 
-            var expected2 = test / test2;
-            var expectedDiff2_1 = 1 / test2;
-            var expectedDiff2_2 = -test / (test2 * test2);
-
-            pass = TestHelpers.AgreesAbsolute(obtained2[0], expected2);
-            pass = pass && TestHelpers.AgreesAbsolute(obtained2[1], expectedDiff2_1);
-            pass = pass && TestHelpers.AgreesAbsolute(obtained2[2], expectedDiff2_2);
-
+            Assert.IsTrue(TestHelpers.AgreesAbsolute(obtained2[0], expected2));
+            Assert.IsTrue(TestHelpers.AgreesAbsolute(obtained2[1], expectedDiff2_1));
+            Assert.IsTrue(TestHelpers.AgreesAbsolute(obtained2[2], expectedDiff2_2));
         }
     }
 }

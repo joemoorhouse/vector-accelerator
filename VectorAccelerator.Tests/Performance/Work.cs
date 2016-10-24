@@ -1,13 +1,5 @@
-﻿using System;
-using System.Linq;
-using System.Diagnostics;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using VectorAccelerator;
-using VectorAccelerator.NArrayStorage;
+﻿using VectorAccelerator.NArrayStorage;
 using VectorAccelerator.Distributions;
-using VectorAccelerator.LinearAlgebraProviders;
 
 namespace VectorAccelerator.Tests.Performance
 {

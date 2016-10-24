@@ -12,3 +12,14 @@
 /VectorAccelerator.Launcher/obj/x64/Debug
 /VectorAccelerator.Plot/obj/x64/Debug
 /VectorAccelerator.Tests/obj/x64/Debug
+/bin/x64/Release
+/RiskEngine/bin/x64/Release
+/RiskEngine/obj/x64/Release
+/RiskEngine.Tests/bin/x64/Release
+/.vs/VectorAccelerator/v14
+/VectorAccelerator/obj/x64/Release
+/VectorAccelerator.Launcher/obj/x64/Release
+/VectorAccelerator.Plot/bin/x64/Release
+/VectorAccelerator.Plot/obj/x64/Release
+/VectorAccelerator.Tests/obj/x64/Release
+/RiskEngine.Tests/obj/x64/Release

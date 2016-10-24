@@ -20,7 +20,7 @@ namespace RiskEngine.Framework
     /// </summary>
     public abstract class Process : Model, IProcess
     {
-        public abstract NArray Prepare(Context context);
+        public new abstract NArray Prepare(Context context);
 
         public abstract NArray Step(TimeInterval timeStep, NArray previous);
     }

@@ -32,6 +32,6 @@ namespace RiskEngine.Framework
     /// <typeparam name="T">Interface implemented by the generating model.</typeparam>
     public class Factor<T> : Factor where T : class
     {
-        public T Model { get { return _model as T; } }
+        public new T Model { get { return _model as T; } }
     }
 }
