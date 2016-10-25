@@ -1,13 +1,13 @@
 ﻿
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NUnit.Framework;
 using VectorAccelerator.Distributions;
 
 namespace VectorAccelerator.Tests
 {
-    [TestClass]
+    [TestFixture]
     public class BasicDifferentiationTests
     {
-        [TestMethod]
+        [Test]
         public void DivisionTest()
         {
             NArray a, b;

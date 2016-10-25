@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NUnit.Framework;
 using RiskEngine.Framework;
 using RiskEngine.Calibration;
 using RiskEngine.Models;
@@ -11,10 +11,10 @@ using RiskEngine.Factors;
 
 namespace RiskEngine.Tests
 {    
-    [TestClass]
+    [TestFixture]
     public class BasicModelTests
     {
-        [TestMethod]
+        [Test]
         public void NearestCorrelation()
         {
             var factory = new NArrayFactory(StorageLocation.Host);
@@ -30,7 +30,7 @@ namespace RiskEngine.Tests
             Console.WriteLine(nearestCorrelation.ToString());
         }
 
-        [TestMethod]
+        [Test]
         public void MeanRevertingModel()
         {
             var testDate = new DateTime(2015, 12, 1);
@@ -60,7 +60,7 @@ namespace RiskEngine.Tests
             }
         }
 
-        [TestMethod]
+        [Test]
         public void MultiVariateNormalModel()
         {
             var testDate = new DateTime(2015, 12, 1);

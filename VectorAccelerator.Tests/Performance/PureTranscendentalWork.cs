@@ -1,5 +1,4 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using VectorAccelerator.NArrayStorage;
+﻿using VectorAccelerator.NArrayStorage;
 using VectorAccelerator.Distributions;
 using VectorAccelerator.LinearAlgebraProviders;
 
@@ -12,7 +11,6 @@ namespace VectorAccelerator.Tests
             return (a.Storage as ManagedStorage<double>).Array;
         }
         
-        [TestMethod]
         public void SimpleSpeedTest()
         {
             using (var randomStream = new RandomNumberStream(StorageLocation.Host, RandomNumberGeneratorType.MRG32K3A, 111))

@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Text;
 using System.Collections.Generic;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NUnit.Framework;
 using VectorAccelerator;
 using RiskEngine.Framework;
 using RiskEngine.Pricers;
@@ -13,14 +13,14 @@ using RiskEngine.Data;
 
 namespace VectorAccelerator.Tests
 {
-    [TestClass]
+    [TestFixture]
     public class BasicSwapAADTest
     {
         /// <summary>
         /// Calculate exposure profile for uncollateralised interest rate swap trade
         /// and derivatives against all points on time zero rates curve.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void TestEndToEnd()
         {
             LinearGaussianModel model;
@@ -142,7 +142,7 @@ namespace VectorAccelerator.Tests
         /// <summary>
         /// Test building blocks of interest rate swap exposure calculation.
         /// </summary>
-        [TestMethod]
+        [Test]
         public void TestBasics()
         {
             LinearGaussianModel model;

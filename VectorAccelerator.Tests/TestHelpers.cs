@@ -1,12 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Diagnostics;
 using VectorAccelerator.NArrayStorage;
-using VectorAccelerator.LinearAlgebraProviders;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace VectorAccelerator.Tests
 {

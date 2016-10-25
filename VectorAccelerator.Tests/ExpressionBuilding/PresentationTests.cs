@@ -1,16 +1,13 @@
 ﻿using System;
-using System.Linq;
-using System.Diagnostics;
-using System.Collections.Generic;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NUnit.Framework;
 using VectorAccelerator.Distributions;
 
 namespace VectorAccelerator.Tests
 {
-    [TestClass]
+    [TestFixture]
     public class PresentationTests
     {
-        [TestMethod]
+        [Test]
         public void WorkedExample()
         {
             NArray x0, x1;
@@ -33,7 +30,7 @@ namespace VectorAccelerator.Tests
             Assert.IsTrue(TestHelpers.AgreesAbsolute(derivativeWRTx1, x0 + 2 * x0 * NMath.Exp(2 * x1)));
         }
 
-        [TestMethod]
+        [Test]
         public void BlackScholes()
         {
             NArray s;
