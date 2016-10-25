@@ -11,6 +11,7 @@ namespace VectorAccelerator.Launcher
             var swapAADTest = new BasicSwapAADTest();
             swapAADTest.TestEndToEnd();
 
+
             //var mult = new MultiplyAggregateTests();
             //mult.SimpleTest();
         }
