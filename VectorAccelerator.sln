@@ -13,8 +13,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RiskEngine", "RiskEngine\Ri
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RiskEngine.Tests", "RiskEngine.Tests\RiskEngine.Tests.csproj", "{C12A33ED-22DE-405F-8DEC-3B3EA9FE53B4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VectorAccelerator.Plot", "VectorAccelerator.Plot\VectorAccelerator.Plot.csproj", "{4CA14A12-D924-4A6C-A5D1-FC22CBD4CC37}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -41,10 +39,6 @@ Global
 		{C12A33ED-22DE-405F-8DEC-3B3EA9FE53B4}.Debug|x64.Build.0 = Debug|x64
 		{C12A33ED-22DE-405F-8DEC-3B3EA9FE53B4}.Release|x64.ActiveCfg = Release|x64
 		{C12A33ED-22DE-405F-8DEC-3B3EA9FE53B4}.Release|x64.Build.0 = Release|x64
-		{4CA14A12-D924-4A6C-A5D1-FC22CBD4CC37}.Debug|x64.ActiveCfg = Debug|x64
-		{4CA14A12-D924-4A6C-A5D1-FC22CBD4CC37}.Debug|x64.Build.0 = Debug|x64
-		{4CA14A12-D924-4A6C-A5D1-FC22CBD4CC37}.Release|x64.ActiveCfg = Release|x64
-		{4CA14A12-D924-4A6C-A5D1-FC22CBD4CC37}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
