@@ -1,14 +1,9 @@
 ﻿using System;
 using System.Linq;
 using System.Text;
-using VectorAccelerator;
-using System.Diagnostics;
 using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using VectorAccelerator.NArrayStorage;
-using System.Threading.Tasks;
-using VectorAccelerator.Distributions;
-using VectorAccelerator.LinearAlgebraProviders;
+using VectorAccelerator;
 using RiskEngine.Framework;
 using RiskEngine.Pricers;
 using RiskEngine.Calibration;

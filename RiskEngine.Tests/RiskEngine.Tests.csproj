@@ -79,10 +79,6 @@
       <Project>{65ac1200-5cc9-4cdd-b42a-63e5a3519b36}</Project>
       <Name>RiskEngine</Name>
     </ProjectReference>
-    <ProjectReference Include="..\VectorAccelerator.Plot\VectorAccelerator.Plot.csproj">
-      <Project>{4ca14a12-d924-4a6c-a5d1-fc22cbd4cc37}</Project>
-      <Name>VectorAccelerator.Plot</Name>
-    </ProjectReference>
     <ProjectReference Include="..\VectorAccelerator.Tests\VectorAccelerator.Tests.csproj">
       <Project>{857f0b20-d443-4ce0-88a0-a4f176e3bcdd}</Project>
       <Name>VectorAccelerator.Tests</Name>

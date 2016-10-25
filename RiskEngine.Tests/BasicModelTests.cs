@@ -52,7 +52,7 @@ namespace RiskEngine.Tests
             var result = new SimulationResult(percentiles.Select(p => new PercentileMeasure(p)));
             // simulate to the first time point; factors will hold values used to simulate across the specified interval 
 
-            VectorAccelerator.Plot.PlotHelper.QuickPlot(new double[] { 1, 2, 3 }, new double[] { 1.2, 5.6, 2.3 });
+            //VectorAccelerator.Plot.PlotHelper.QuickPlot(new double[] { 1, 2, 3 }, new double[] { 1.2, 5.6, 2.3 });
             
             while (runner.StepNext())
             {
