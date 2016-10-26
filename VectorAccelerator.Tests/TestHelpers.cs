@@ -33,7 +33,7 @@ namespace VectorAccelerator.Tests
             watch.Stop();
             if (repetitions == 1)
             {
-                Console.WriteLine(String.Format("Average time: {0} ms", millisecs.First()));
+                Console.WriteLine(String.Format("Time: {0} ms", millisecs.First()));
                 averageTime = millisecs.First();
             }
             else

@@ -49,11 +49,7 @@ namespace VectorAccelerator.Tests
 
             foreach (var pricer in pricers) pricer.PrePrice();
 
-            Console.WriteLine(); Console.WriteLine("Deferred execution single flow, single thread");
-            var tempStorage = new List<NArray> { new NArray(StorageLocation.Host, 
-                simulationCount, 1) };
-
-            Console.WriteLine(); Console.WriteLine(string.Format("Deferred execution, {0} flows, no derivatives, single thread", pricers.Count));
+            Console.WriteLine(string.Format("Running calculation: deferred execution, {0} flows, no derivatives, single thread", pricers.Count));
             double averageTime;
             TestHelpers.Timeit(() =>
             {
@@ -99,9 +95,15 @@ namespace VectorAccelerator.Tests
             var maxMeanPositive = meanPositive.Max();
             var maxMeanPositiveIndex = Array.IndexOf(meanPositive, maxMeanPositive);
 
+            Console.WriteLine("Simulated profile:");
+            Console.WriteLine(String.Format("{0,-5}   {1,-10}", "Date", "Mean positive", "90%"));
+            for (int i = 0; i < times.Length && times[i] <= 10.25; ++i)
+            {
+                Console.WriteLine(String.Format("{0,-5:F2}  {1,-10:F2}  {2,-10:F2}", times[i], meanPositive[i], profile90[i]));
+            }
             //Plot.PlotHelper.QuickPlot(times, profile90, new Tuple<double,double>(0, 11));
 
-            Console.WriteLine(); Console.WriteLine(string.Format("Deferred execution, {0} flows, {1} derivatives, single thread", pricers.Count, allZeroRatesT0.Count()));
+            Console.WriteLine(string.Format("Running calculation: deferred execution, {0} flows, {1} derivatives, single thread", pricers.Count, allZeroRatesT0.Count()));
             TestHelpers.Timeit(() =>
             {
                 for (int i = 0; i < timePointCount; ++i)
@@ -135,7 +137,8 @@ namespace VectorAccelerator.Tests
             Assert.IsTrue(TestHelpers.AgreesAbsolute(gradients[16], 8748.38858299));
 
             Console.WriteLine(string.Format(
-                "Calculated gradient of maximum positive exposure ({0:F2} EUR) to change of the zero rate with maturity {1:F2} years: {2:F3}",
+                "Calculated gradient of maximum positive exposure ({0:F2} EUR)" + Environment.NewLine 
+                + "with respect to change of the zero rate with maturity {1:F2} years: {2:F3}",
                 maxMeanPositive, 2556 / 365.25, gradients[16]));
         }
         

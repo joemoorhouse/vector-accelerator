@@ -8,11 +8,31 @@ namespace VectorAccelerator.Launcher
     {     
         static void Main(string[] args)
         {
+            Console.WriteLine("Running demonstrations");
+            RunDemonstrations();
+        }
+
+        static void RunDemonstrations()
+        {
+            var presentationTests = new PresentationTests();
+            Console.WriteLine("Running worked example test");
+            presentationTests.WorkedExample();
+            Console.WriteLine("Running Black-Scholes test");
+            presentationTests.BlackScholes();
+
+            Console.WriteLine();
+            Console.WriteLine("Running swap portfolio AAD calculation test");
             var swapAADTest = new BasicSwapAADTest();
             swapAADTest.TestEndToEnd();
 
-            //var mult = new MultiplyAggregateTests();
-            //mult.SimpleTest();
+            Console.WriteLine("Any key to end");
+            Console.ReadKey();
+        }
+
+        static void RunInDevelopment()
+        {
+            var test = new MultiplyAggregateTests();
+            test.SimpleTest();
         }
     }
 }
