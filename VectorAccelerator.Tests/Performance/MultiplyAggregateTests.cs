@@ -10,9 +10,14 @@ namespace VectorAccelerator.Tests
     [TestFixture]
     public class MultiplyAggregateTests
     {
+        /// <summary>
+        /// Test of efficiency for a large number of simple vector operations.
+        /// In particular, tests enhanced recycling of locals.
+        /// </summary>
         public void SimpleTest()
         {
             // create 500 random vectors
+            var vectorLength = 5000;
             var vectors = new NArray[500];
             using (var randomStream = new RandomNumberStream(StorageLocation.Host, RandomNumberGeneratorType.MRG32K3A, 111))
             {
@@ -20,7 +25,7 @@ namespace VectorAccelerator.Tests
 
                 for (int i = 0; i < vectors.Length; ++i)
                 {
-                    vectors[i] = NArray.CreateRandom(5000, normalDistribution);
+                    vectors[i] = NArray.CreateRandom(vectorLength, normalDistribution);
                 }
             }
             var watch = new System.Diagnostics.Stopwatch(); watch.Start();

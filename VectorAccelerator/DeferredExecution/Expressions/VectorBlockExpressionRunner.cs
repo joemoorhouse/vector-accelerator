@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using VectorAccelerator.LinearAlgebraProviders;
 using VectorAccelerator.NArrayStorage;
-using System.Linq.Expressions;
 using System.Threading.Tasks;
 
 namespace VectorAccelerator.DeferredExecution.Expressions
@@ -33,55 +31,48 @@ namespace VectorAccelerator.DeferredExecution.Expressions
             int chunksLength = _builder.VectorLength; //5000;
             var arrayPoolStack = ExecutionContext.ArrayPool.GetStack(chunksLength);
 
-            while (arrayPoolStack.Count < 10)
-            {
-                arrayPoolStack.Push(new double[chunksLength]);
-            }
-
             int length = (block.ArgumentParameters.First() as ReferencingVectorParameterExpression<double>)
                 .Array.Length;
 
             int chunkCount = length / chunksLength;
             if (length % chunksLength != 0) chunkCount++;
 
-            AssignNArrayStorage<double>(block, chunkCount, chunksLength, length);
-            // and integers too?
+            List<NArray<double>>[] localsToFree; // the storage that can be freed up after each operation is complete
+            AssignNArrayStorage<double>(block, chunkCount, chunksLength, length, out localsToFree);
+            // for integer support, add here
 
             var options = new ParallelOptions();
             if (!vectorOptions.MultipleThreads) options.MaxDegreeOfParallelism = 1;
 
-            //var operations = Simplify(executor, provider);
-
             timer.MarkExecutionTemporaryStorageAllocationComplete();
 
+            // can multi-thread here, but better to do so at higher level
             //Parallel.For(0, chunkCount, options, (i) =>
             for (int i = 0; i < chunkCount; ++i)
             {
                 int startIndex = i * chunksLength;
-                List<double[]> temporaryArrays = new List<double[]>();
                 int vectorLength = Math.Min(chunksLength, length - startIndex);
-                foreach (var operation in block.Operations)
+                for (int j = 0; j < block.Operations.Count; ++j)
                 {
+                    var operation = block.Operations[j];
                     if (operation.Type == typeof(NArray))
                     {
                         var newOperation = _builder.SimplifyOperation(operation); // deal with any expressions containing scalars that can be simplified
                         ExecuteSingleVectorOperation<double>(newOperation, provider,
-                            arrayPoolStack, temporaryArrays, 
+                            arrayPoolStack, localsToFree[j], 
                             getter, aggregator,
                             vectorLength,
                             i, startIndex, timer);
                     }
                 }
-                foreach (var array in temporaryArrays)
-                {
-                    arrayPoolStack.Push(array);
-                }
-            };//);
+            };
+
+            if (!arrayPoolStack.StackCountEqualsCreated) throw new Exception("not all storage arrays created returned to stack");
         }
 
         private static void ExecuteSingleVectorOperation<T>(BinaryExpression operation,
             LinearAlgebraProvider provider,
-            ArrayPoolStack<T> arrayPoolStack, List<T[]> temporaryArrays, 
+            ArrayPoolStack<T> arrayPoolStack, List<NArray<T>> localsToFree,
             OutputGetter<T> getter, Aggregator aggregator,
             int vectorLength,
             int chunkIndex, int startIndex, ExecutionTimer timer)
@@ -101,8 +92,8 @@ namespace VectorAccelerator.DeferredExecution.Expressions
                 var chunkyStorage = result.Storage as ChunkyStorage<T>;
                 if (chunkyStorage != null)
                 {
-                    temporaryArrays.Add(arrayPoolStack.Pop());
-                    chunkyStorage.SetChunk(chunkIndex, temporaryArrays.Last());
+                    var newStorage = arrayPoolStack.Pop();
+                    chunkyStorage.SetChunk(chunkIndex, newStorage);
                 }
                 aggregationTarget = getter.TryGetNext(left.Index);
             }
@@ -151,13 +142,14 @@ namespace VectorAccelerator.DeferredExecution.Expressions
             {
                 if (aggregator != Aggregator.ElementwiseAdd) throw new NotImplementedException();
                 if (aggregationTarget.IsScalar) throw new Exception();
-                //return;
+
                 var slice = Slice<T>(aggregationTarget, chunkIndex, startIndex, vectorLength);
                 (provider as IElementWise<T>).BinaryElementWiseOperation(
                     slice,
                     Slice(result, chunkIndex, startIndex, vectorLength),
                     slice, ExpressionType.Add);
             }
+            foreach (var item in localsToFree) arrayPoolStack.Push((item.Storage as ChunkyStorage<T>).GetChunk(chunkIndex));
         }
 
         private static NArray<T> Slice<T>(Expression expression, int chunkIndex, int startIndex, int length)
@@ -179,15 +171,43 @@ namespace VectorAccelerator.DeferredExecution.Expressions
             }
         }
 
+        /// <summary>
+        /// Assign ChunkyStorage to locals and determines when each local can be freed-up
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="localsToFree">Contains the idices of the locals that can be freed once the operation is complete</param>
         private static void AssignNArrayStorage<T>(VectorBlockExpression block,
-            int chunkCount, int chunksLength, int vectorLength)
+            int chunkCount, int chunksLength, int vectorLength, out List<NArray<T>>[] localsToFree)
         {
-            var localNArrays = block.LocalParameters.Select(r => (r as ReferencingVectorParameterExpression<T>).Array);
+            var localNArrays = block.LocalParameters.Select(r => r as ReferencingVectorParameterExpression<T>).
+                ToList();
+
+            var lastUseOfLocal = Enumerable.Repeat(block.Operations.Count - 1, block.LocalParameters.Last().Index + 1).ToArray(); 
+            // the operation index that represents the last time a result is used
+            int firstLocal = block.LocalParameters.First().Index;
+            for (int i = 0; i < block.Operations.Count; ++i)
+            {
+                foreach (int index in GetOperandIndices<T>(block.Operations[i]))
+                {
+                    if (index >= firstLocal) lastUseOfLocal[index] = i;
+                } 
+            }
+            localsToFree = Enumerable.Range(0, block.Operations.Count)
+                .Select(i => new List<NArray<T>>()).ToArray();
 
             foreach (var localNArray in localNArrays)
             {
-                if (localNArray == null) continue;
-                localNArray.Storage = new ChunkyStorage<T>(chunkCount, chunksLength);
+                if (localNArray.Array == null) continue;
+                localNArray.Array.Storage = new ChunkyStorage<T>(chunkCount, chunksLength);
+            }
+
+            for (int i = firstLocal; i < lastUseOfLocal.Length; ++i)
+            {
+                if (lastUseOfLocal[i] >= 0)
+                {
+                    var local = localNArrays[i - firstLocal];
+                    if (local.Array != null) localsToFree[lastUseOfLocal[i]].Add(local.Array);
+                }
             }
         }
 
@@ -200,8 +220,23 @@ namespace VectorAccelerator.DeferredExecution.Expressions
         {
             return (expression as ReferencingVectorParameterExpression<T>).Array;
         }
-    }
 
+        private static IEnumerable<int> GetOperandIndices<T>(Expression expression)
+        {
+            var right = (expression as BinaryExpression).Right;
+            if (right is UnaryMathsExpression)
+            {
+                yield return ((right as UnaryMathsExpression).Operand as ReferencingVectorParameterExpression<T>).Index;
+            }
+            else if (right is BinaryExpression)
+            {
+                var binaryExpression = right as BinaryExpression;
+                yield return (binaryExpression.Left as ReferencingVectorParameterExpression<T>).Index;
+                yield return (binaryExpression.Right as ReferencingVectorParameterExpression<T>).Index;
+            }
+            else yield break;
+        }
+    }
     public class OutputGetter<T>
     {
         public int[] OutputsIndices;

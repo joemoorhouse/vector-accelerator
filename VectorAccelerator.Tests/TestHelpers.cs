@@ -14,6 +14,15 @@ namespace VectorAccelerator.Tests
             Timeit(action, out dummy, repetitions, innerRepetitions);
         }
         
+        public static double TimeitSeconds(Action action)
+        {
+            var watch = new Stopwatch();
+            watch.Start();
+            action();
+            watch.Stop();
+            return (double)watch.ElapsedMilliseconds / 1000.0;
+        }
+
         public static void Timeit(Action action, out double averageTime, int repetitions = 10, int innerRepetitions = 50)
         {
             var watch = new Stopwatch();

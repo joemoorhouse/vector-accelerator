@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Threading;
+using System.Diagnostics;
 using VectorAccelerator.Tests;
 
 namespace VectorAccelerator.Launcher
@@ -10,6 +10,12 @@ namespace VectorAccelerator.Launcher
         {
             Console.WriteLine("Running demonstrations");
             RunDemonstrations();
+
+            if (Debugger.IsAttached)
+            {
+                Console.WriteLine("Press any key to continue...");
+                Console.ReadKey();
+            }
         }
 
         static void RunDemonstrations()
@@ -17,16 +23,20 @@ namespace VectorAccelerator.Launcher
             var presentationTests = new PresentationTests();
             Console.WriteLine("Running worked example test");
             presentationTests.WorkedExample();
+            Console.WriteLine();
+
             Console.WriteLine("Running Black-Scholes test");
             presentationTests.BlackScholes();
-
             Console.WriteLine();
+
+            Console.WriteLine("Running Black-Scholes performance test");
+            presentationTests.BlackScholesPerformance();
+            Console.WriteLine();
+
             Console.WriteLine("Running swap portfolio AAD calculation test");
             var swapAADTest = new BasicSwapAADTest();
             swapAADTest.TestEndToEnd();
-
-            Console.WriteLine("Any key to end");
-            Console.ReadKey();
+            Console.WriteLine();
         }
 
         static void RunInDevelopment()

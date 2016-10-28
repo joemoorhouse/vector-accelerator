@@ -40,7 +40,6 @@ namespace VectorAccelerator.DeferredExecution
                 return;
             }
             
-            builder.UpdateLocalsNumbering();
             var block = builder.ToBlock();
             // change the numbering of variables; arguments first, then locals      
             List<int>[] jLookup;

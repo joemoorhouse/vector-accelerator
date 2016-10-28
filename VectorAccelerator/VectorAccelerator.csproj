@@ -107,7 +107,6 @@
     <Compile Include="Assertions.cs" />
     <Compile Include="DeferredExecution\AlgorithmicDifferentiator.cs" />
     <Compile Include="DeferredExecution\DeferredExecutionContext.cs" />
-    <Compile Include="DeferredExecution\DeferredOperations.cs" />
     <Compile Include="DeferredExecution\Expressions\AssignBinaryExpression.cs" />
     <Compile Include="DeferredExecution\Expressions\BinaryExpression.cs" />
     <Compile Include="DeferredExecution\ExecutionTimer.cs" />

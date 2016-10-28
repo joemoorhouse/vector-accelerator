@@ -13,18 +13,6 @@ namespace VectorAccelerator.NArrayStorage
         SortedDictionary<int, ArrayPoolStack<double>> _storage = new SortedDictionary<int, ArrayPoolStack<double>>();
         const int maxSize = 100000;
 
-        public double[] GetFromPool(int length)
-        {
-            var stack = GetStack(length);
-            return stack.Pop();
-        }
-
-        public void AddToPool(double[] array)
-        {
-            var stack = GetStack(array.Length);
-            stack.Push(array);
-        }
-
         public ArrayPoolStack<double> GetStack(int length)
         {
             ArrayPoolStack<double> stack;
@@ -41,6 +29,7 @@ namespace VectorAccelerator.NArrayStorage
     {
         private readonly Stack<T[]> _stack;
         private readonly int _arrayLength;
+        private int _arraysCreated = 0;
 
         public ArrayPoolStack(int arrayLength)
         {
@@ -59,6 +48,7 @@ namespace VectorAccelerator.NArrayStorage
             {
                 if (_stack.Count == 0)
                 {
+                    _arraysCreated++;
                     return new T[_arrayLength];
                 }
                 else return _stack.Pop();
@@ -73,6 +63,11 @@ namespace VectorAccelerator.NArrayStorage
                     throw new ArgumentException("length mismatch", "array");
                 _stack.Push(array);
             }
+        }
+
+        public bool StackCountEqualsCreated
+        {
+            get { return _stack.Count == _arraysCreated; }
         }
     }
 }

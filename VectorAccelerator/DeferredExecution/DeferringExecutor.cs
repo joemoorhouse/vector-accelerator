@@ -49,6 +49,8 @@ namespace VectorAccelerator
                 return;
             }
 
+            _builder.UpdateLocalsNumbering();
+
             timer.MarkEvaluateSetupComplete();
 
             // differentiate, extending the block as necessary
