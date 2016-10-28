@@ -74,7 +74,6 @@ namespace VectorAccelerator.Tests
         public void BlackScholesPerformance()
         {
             double k = 90;
-            var r = 0.005;
             var volatility = 0.2;
             var t = 5;
 
