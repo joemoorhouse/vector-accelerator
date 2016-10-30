@@ -74,12 +74,6 @@ namespace VectorAccelerator
         public bool IsVector { get { return (Length > 1) && (RowCount == 1 || ColumnCount == 1); } }
         public bool IsMatrix { get { return RowCount > 1 && ColumnCount > 1; } }
         
-        /// <summary>
-        /// Whether this NArray is an independent variable for the purposes of differentiation
-        /// </summary>
-        public bool IsIndependentVariable { get { return _isIndependentVariable; } set { _isIndependentVariable = value; } }
-
-        protected bool _isIndependentVariable = false;
         protected NArrayStorage<T> _storage;
 
         public virtual NArrayStorage<T> Storage

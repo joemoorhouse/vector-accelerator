@@ -18,9 +18,14 @@ namespace VectorAccelerator
     /// </summary>
     public class DeferringExecutor : BaseExecutor, IExecutor
     {
-        public BlockExpressionBuilder _builder = new BlockExpressionBuilder();
+        public BlockExpressionBuilder _builder;
 
         public int VectorsLength { get { return _builder.VectorLength; } }
+
+        public DeferringExecutor(IList<NArray> independentVariables) : base()
+        {
+            _builder = new BlockExpressionBuilder(independentVariables);
+        }
 
         public void Execute(VectorExecutionOptions options)
         {
@@ -79,7 +84,6 @@ namespace VectorAccelerator
                     {
                         // we increase the storage, copying the scalar value
                         outputs[i] = new NArray(new VectorAccelerator.NArrayStorage.ManagedStorage<double>(_builder.VectorLength, 1, outputs[i].First()));
-                        //outputs[i].Storage = new VectorAccelerator.NArrayStorage.ManagedStorage<double>(_builder.VectorLength, 1, outputs[i].First());
                     }
                 }
             }
@@ -155,14 +159,13 @@ namespace VectorAccelerator
                     default:
                         throw new NotImplementedException();
                 }
-                if (!operand.IsIndependentVariable)
+                if (!IsIndependentVariable(operand))
                 {
                     return NewScalarNArray(scalarOperation(operand.First()));
                 }
                 else
                 {
-                    result = NewScalarLocalNArray(scalarOperation(operand.First()));
-                    result.IsIndependentVariable = true;
+                    result = NewScalarLocalNArray(scalarOperation(operand.First()), true);
                 }
             }
             else
@@ -180,14 +183,13 @@ namespace VectorAccelerator
             NArray<T> result = null;
             if (operand1.IsScalar && operand2.IsScalar)
             {
-                if (!operand1.IsIndependentVariable && !operand2.IsIndependentVariable)
+                if (!IsIndependentVariable(operand1) && !IsIndependentVariable(operand2))
                 {
                     return NewScalarNArray(scalarOperation(operand1.First(), operand2.First())); // this is a scalar that does not depend on any independent variable: can simply return
                 }
                 else
                 {
-                    result = NewScalarLocalNArray(scalarOperation(operand1.First(), operand2.First()));
-                    result.IsIndependentVariable = true;
+                    result = NewScalarLocalNArray(scalarOperation(operand1.First(), operand2.First()), true);
                 }
             }
             else if (operand1.IsScalar) result = NewNArrayLike(operand2);
@@ -198,9 +200,9 @@ namespace VectorAccelerator
             return result;
         }
 
-        public NArray<T> NewScalarLocalNArray<T>(T scalarValue)
+        public NArray<T> NewScalarLocalNArray<T>(T scalarValue, bool isIndependentVariable = false)
         {
-            return CreateScalarLocal<T>(scalarValue) as NArray<T>;
+            return CreateScalarLocal<T>(scalarValue, isIndependentVariable) as NArray<T>;
         }
 
         public override NArray<T> NewNArrayLike<T>(NArray<T> array)
@@ -344,20 +346,23 @@ namespace VectorAccelerator
 
         #endregion
 
-        private ILocalNArray CreateScalarLocal<T>(T value)
+        private ILocalNArray CreateScalarLocal<T>(T value, bool isIndependentVariable)
         {
-            return _builder.CreateScalarLocal<T>(value);
+            return _builder.CreateScalarLocal<T>(value, isIndependentVariable);
         }
 
         private ILocalNArray CreateLocalLike<S, T>(NArray<T> array)
         {
-            //if (array.IsScalar) return _builder.CreateScalarLocal<T>(); // can happen when deferring if we want to calculate derivatives
-            
             if (_builder.VectorLength == -1) _builder.VectorLength = array.Length;
             if (array.Length != _builder.VectorLength)
                 throw new ArgumentException("length mismatch", "array");
 
             return _builder.CreateLocal<T>();
+        }
+
+        private bool IsIndependentVariable(INArray array)
+        {
+            return _builder.IsIndependentVariable(array);
         }
     }
 }

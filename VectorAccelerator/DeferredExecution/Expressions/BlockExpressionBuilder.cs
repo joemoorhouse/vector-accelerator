@@ -11,9 +11,16 @@ namespace VectorAccelerator.DeferredExecution.Expressions
     public class BlockExpressionBuilder
     {
         List<VectorParameterExpression> _localParameters = new List<VectorParameterExpression>();
-        Dictionary<INArray, VectorParameterExpression> _argumentLookup = new Dictionary<INArray, VectorParameterExpression>(); 
+        Dictionary<INArray, VectorParameterExpression> _argumentLookup = new Dictionary<INArray, VectorParameterExpression>();
+        HashSet<INArray> _independentVariables = new HashSet<INArray>(); 
         List<BinaryExpression> _operations = new List<BinaryExpression>();
         int _vectorLength = -1;
+
+        public BlockExpressionBuilder(IList<NArray> independentVariables)
+        {
+            // for fast look-up
+            _independentVariables = new HashSet<INArray>(independentVariables);
+        }
 
         public VectorBlockExpression ToBlock()
         {
@@ -208,10 +215,11 @@ namespace VectorAccelerator.DeferredExecution.Expressions
             return lhs;
         }
 
-        public ILocalNArray CreateScalarLocal<T>(T value)
+        public ILocalNArray CreateScalarLocal<T>(T value, bool isIndependentVariable)
         {
             ILocalNArray array;
             CreateScalarLocal<T>(value, out array);
+            if (isIndependentVariable) _independentVariables.Add(array);
             return array;
         }
 
@@ -267,7 +275,7 @@ namespace VectorAccelerator.DeferredExecution.Expressions
             {
                 // if the array is a scalar and not an independent variable of any derivative calculation, we do not care where it came from; do not 
                 // add to argument list
-                if (array.IsScalar && !array.IsIndependentVariable) return new ConstantExpression<T>(array.First());
+                if (array.IsScalar && !IsIndependentVariable(array)) return new ConstantExpression<T>(array.First());
                 VectorParameterExpression argument;
                 // is this fast enough?
                 if (!_argumentLookup.TryGetValue(array, out argument))
@@ -289,6 +297,11 @@ namespace VectorAccelerator.DeferredExecution.Expressions
             {
                 _localParameters[i].Index = i + _argumentLookup.Count;
             }
+        }
+
+        public bool IsIndependentVariable(INArray array)
+        {
+            return _independentVariables.Contains(array);
         }
 
         #region Simplification

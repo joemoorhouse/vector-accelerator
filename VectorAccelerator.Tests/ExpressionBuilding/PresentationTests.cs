@@ -53,19 +53,19 @@ namespace VectorAccelerator.Tests
             }
 
             double k = 90;
-            var r = 0.005;
             var volatility = 0.2;
             var t = 5;
+            var df = Math.Exp(-0.005 * t);
 
             var result = NArray.Evaluate(() =>
-            {
-                var f = s * Math.Exp(r * t); 
-                return Finance.BlackScholes(CallPut.Call, f, k, volatility, t);
+            { 
+                var f = s / df; 
+                return df * Finance.BlackScholes(CallPut.Call, f, k, volatility, t);
             }, s);
 
             var sds = s + 1e-6;
-            var check = (Finance.BlackScholes(CallPut.Call, sds * Math.Exp(r * t), k, volatility, t)
-                - Finance.BlackScholes(CallPut.Call, s * Math.Exp(r * t), k, volatility, t)) * 1e6;
+            var check = (df * Finance.BlackScholes(CallPut.Call, sds / df, k, volatility, t)
+                - df * Finance.BlackScholes(CallPut.Call, s / df, k, volatility, t)) * 1e6;
 
             Assert.IsTrue(TestHelpers.AgreesAbsolute(result[1], check));
         }
@@ -79,13 +79,14 @@ namespace VectorAccelerator.Tests
 
             var s = new List<NArray>();
             int batchCount = 1000;
+            int vectorLength = 5000;
 
             using (var stream = new RandomNumberStream(StorageLocation.Host, RandomNumberGeneratorType.MRG32K3A))
             {
                 var normal = new Normal(stream, 0, 1);
                 for (int i = 0; i < batchCount; ++i)
                 {
-                    s.Add(100 * NMath.Exp(NArray.CreateRandom(5000, normal) * 0.2));
+                    s.Add(100 * NMath.Exp(NArray.CreateRandom(vectorLength, normal) * 0.2));
                 }
             }
 
@@ -102,8 +103,8 @@ namespace VectorAccelerator.Tests
                 }
             });
 
-            Console.WriteLine(string.Format("Time per option price: {0} ns", elapsedTime * 1e9 / (batchCount * 5000)));
-            Console.WriteLine(string.Format("Valuations per second: {0:F0} million", batchCount * 5000 / (elapsedTime * 1e6)));
+            Console.WriteLine(string.Format("Time per option price (single core): {0} ns", elapsedTime * 1e9 / (batchCount * vectorLength)));
+            Console.WriteLine(string.Format("Valuations per second (single core): {0:F0} million", batchCount * vectorLength / (elapsedTime * 1e6)));
         }
 
         public void CUDA()
