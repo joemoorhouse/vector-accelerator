@@ -45,6 +45,11 @@ namespace VectorAccelerator.Tests
         [Test]
         public void BlackScholes()
         {
+            var simpleCheck = Math.Exp(-0.1 * 0.5) * Finance.BlackScholes(
+                CallPut.Call, 42 * Math.Exp(0.1 * 0.5), 40, 0.2, 0.5);
+
+            Assert.IsTrue(TestHelpers.AgreesAbsolute(simpleCheck, NArray.CreateScalar(4.75942239)));
+
             NArray s;
             using (var stream = new RandomNumberStream(StorageLocation.Host, RandomNumberGeneratorType.MRG32K3A))
             {

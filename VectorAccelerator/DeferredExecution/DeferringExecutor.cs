@@ -67,6 +67,7 @@ namespace VectorAccelerator
 
             // arrange output storage
             var outputIndices = new int[1 + independentVariables.Count];
+            bool vectorCalculationsRequired = false;
             for (int i = 0; i < independentVariables.Count + 1; ++i)
             {
                 var referencingExpression = (i > 0) ? derivativeExpressions[i - 1] as ReferencingVectorParameterExpression<double>
@@ -75,10 +76,10 @@ namespace VectorAccelerator
                 {
                     outputs[i].Add(referencingExpression.ScalarValue);
                     outputIndices[i] = int.MaxValue;
-                    // TODO if storage passed in, update here in case of non-zero constant?
                 }
                 else // not a scalar so we will need storage 
                 {
+                    vectorCalculationsRequired = true;
                     outputIndices[i] = referencingExpression.Index;
                     if (outputs[i].IsScalar)
                     {
@@ -90,9 +91,14 @@ namespace VectorAccelerator
 
             timer.MarkStorageSetupComplete();
 
-            // run
-            VectorBlockExpressionRunner.RunNonCompiling(_builder, Provider(StorageLocation.Host),
-                new VectorExecutionOptions(), outputs, outputIndices, aggregator, timer);
+            if (vectorCalculationsRequired)
+            {
+                // put outputs in execution order to be filled:
+                var orderedOutputs = new OrderedOutputs<double>(outputs, outputIndices);
+
+                VectorBlockExpressionRunner.RunNonCompiling(_builder, Provider(StorageLocation.Host),
+                    new VectorExecutionOptions(), orderedOutputs, aggregator, timer);
+            }
 
             timer.MarkExecuteComplete();
 

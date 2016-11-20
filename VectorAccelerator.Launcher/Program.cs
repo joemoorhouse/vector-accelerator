@@ -9,7 +9,9 @@ namespace VectorAccelerator.Launcher
         static void Main(string[] args)
         {
             Console.WriteLine("Running demonstrations");
-            RunDemonstrations();
+            RunInDevelopment();
+
+            //RunDemonstrations();
 
             if (Debugger.IsAttached)
             {
@@ -42,7 +44,7 @@ namespace VectorAccelerator.Launcher
         static void RunInDevelopment()
         {
             var test = new MultiplyAggregateTests();
-            test.SimpleTest();
+            test.TestPerformance();
         }
     }
 }

@@ -186,6 +186,8 @@ namespace VectorAccelerator.LinearAlgebraProviders
             double[] y, int yStartIndex,
             int length)
         {
+            //for (int i = 0; i < a.Length; ++i) y[i] = a[i] * aScale + aOffset;
+            //return;
             fixed (double* p_a = &a[aStartIndex])
             {
                 fixed (double* p_y = &y[yStartIndex])
@@ -200,6 +202,7 @@ namespace VectorAccelerator.LinearAlgebraProviders
             double[] y, int yStartIndex,
             int length)
         {
+            //for (int i = 0; i < a.Length; ++i) y[i] = a[i] + b[i];
             CallUnsafe(a, aStartIndex, b, bStartIndex, y, yStartIndex, length, vdAdd);
         }
 
@@ -216,6 +219,7 @@ namespace VectorAccelerator.LinearAlgebraProviders
             double[] y, int yStartIndex,
             int length)
         {
+            //for (int i = 0; i < a.Length; ++i) y[i] = a[i] * b[i];
             CallUnsafe(a, aStartIndex, b, bStartIndex, y, yStartIndex, length, vdMul);
         }
 

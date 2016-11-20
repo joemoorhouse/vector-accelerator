@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -9,7 +9,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>VectorAccelerator</RootNamespace>
     <AssemblyName>VectorAccelerator</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile>
     </TargetFrameworkProfile>
@@ -120,10 +120,10 @@
     <Compile Include="DeferredExecution\Expressions\UnaryMathsExpression.cs" />
     <Compile Include="DeferredExecution\Expressions\VectorBlockExpression.cs" />
     <Compile Include="DeferredExecution\Expressions\BlockExpressionBuilder.cs" />
-    <Compile Include="DeferredExecution\Expressions\VectorBlockExpressionRunner.cs" />
     <Compile Include="DeferredExecution\Expressions\VectorParameterExpression.cs" />
     <Compile Include="DeferredExecution\Expressions\ScaleOffsetExpression.cs" />
     <Compile Include="DeferredExecution\DeferringExecutor.cs" />
+    <Compile Include="DeferredExecution\VectorBlockExpressionRunner.cs" />
     <Compile Include="Distributions\Normal.cs" />
     <Compile Include="Distributions\RandomNumberStream.cs" />
     <Compile Include="Exceptions.cs" />

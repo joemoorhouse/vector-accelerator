@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Diagnostics;
 using VectorAccelerator.NArrayStorage;
+using System.Text;
 
 namespace VectorAccelerator.Tests
 {
@@ -75,8 +76,37 @@ namespace VectorAccelerator.Tests
         public static bool AgreesAbsolute(IEnumerable<double> first, IEnumerable<double> second, double tolerance = 1e-6)
         {
             if (first.Count() != second.Count()) return false;
-            var diffs = first.Zip(second, (f, s) => (f - s)).Where(d => Math.Abs(d) > tolerance);
+            Func<double, double, bool> passes = (f, s) => Math.Abs(f - s) < tolerance;
+            var diffs = first.Zip(second, (f, s) => new { First = f, Second = s }).Where(d => !passes(d.First, d.Second));
+            if (diffs.Any())
+            {
+                var builder = new StringBuilder();
+                builder.AppendLine(string.Format("Numbers of diffs: {0}", diffs.Count()));
+                foreach (var item in diffs)
+                {
+                    builder.AppendLine(string.Format("{0:F7} versus {1:F7} ({2:E1})", item.First, item.Second, item.First - item.Second));
+                }
+                Console.WriteLine(builder.ToString());
+            }
             return !diffs.Any();
+        }
+
+        /// <summary>
+        /// Check for agreement, but interpret a constant vector to be equal to a scalar with the saem value.
+        /// </summary>
+        /// <param name="first"></param>
+        /// <param name="second"></param>
+        /// <param name="tolerance"></param>
+        /// <returns></returns>
+        public static bool AgreesAbsoluteVectorLike(IEnumerable<double> first, IEnumerable<double> second, double tolerance = 1e-6)
+        {
+            int firstCount = first.Count();
+            int secondCount = second.Count();
+            if (firstCount != secondCount && (firstCount != 1 && secondCount != 1)) return false;
+            int vectorLength = Math.Max(firstCount, secondCount);
+            var firstToCompare = firstCount == 1 ? Enumerable.Repeat(first.First(), vectorLength) : first;
+            var secondToCompare = secondCount == 1 ? Enumerable.Repeat(second.First(), vectorLength) : second;
+            return AgreesAbsolute(firstToCompare, secondToCompare, tolerance);
         }
     }
 }

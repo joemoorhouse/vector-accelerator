@@ -24,3 +24,5 @@
 /VectorAccelerator.Tests/obj/x64/Release
 /RiskEngine.Tests/obj/x64/Release
 /packages/NUnit.3.5.0
+/.vscode
+/.vs

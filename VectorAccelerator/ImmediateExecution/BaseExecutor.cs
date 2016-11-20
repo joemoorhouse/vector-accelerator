@@ -103,7 +103,7 @@ namespace VectorAccelerator
             if (operand2.IsScalar)
             {
                 T scale; Convert(1, out scale);
-                DoScaleOffset(operand1, scale, operand2.First(), operand2);
+                DoScaleOffset(operand1, scale, operand2.First(), operand1);
             }
             else
             {
