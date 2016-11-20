@@ -9,9 +9,8 @@ namespace VectorAccelerator.Launcher
         static void Main(string[] args)
         {
             Console.WriteLine("Running demonstrations");
-            RunInDevelopment();
 
-            //RunDemonstrations();
+            RunDemonstrations();
 
             if (Debugger.IsAttached)
             {
