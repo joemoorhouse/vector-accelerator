@@ -111,19 +111,19 @@ namespace RiskEngine.Tests
             }
             else
             {
-                weightsCount = correlationMatrix.RowCount;
+                weightsCount = correlationMatrix.Rows;
                 weightsMatrix = NMath.CholeskyDecomposition(correlationMatrix);
             }
 
             var weights = context.Data.AddCalibrationParametersProvider
                 (new WeightsProvider(weightsCount));
 
-            var identifiers = Enumerable.Range(1, weightsMatrix.ColumnCount)
+            var identifiers = Enumerable.Range(1, weightsMatrix.Columns)
                 .Select(i => string.Format("TestFactor{0}", i)).ToList();
 
-            for (int i = 0; i < weightsMatrix.ColumnCount; ++i)
+            for (int i = 0; i < weightsMatrix.Columns; ++i)
             {
-                weights.AddValue(identifiers[i], weightsMatrix.Column(i));
+                weights.AddValue(identifiers[i], weightsMatrix.GetColumn(i));
             }
 
             return identifiers;
@@ -133,7 +133,7 @@ namespace RiskEngine.Tests
         {
             var location = StorageLocation.Host;
             var cholesky = NMath.CholeskyDecomposition(correlationMatrix);
-            var variates = new NArray(location, returnsCount, correlationMatrix.RowCount);
+            var variates = new NArray(location, returnsCount, correlationMatrix.Rows);
             using (var stream = new RandomNumberStream(location))
             {
                 var normal = new Normal(stream, 0, 1);

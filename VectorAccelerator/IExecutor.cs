@@ -7,7 +7,7 @@ using VectorAccelerator.Distributions;
 
 namespace VectorAccelerator
 {    
-    public enum RelativeOperator { LessThan, LessThanEquals, Equals, NotEquals, GreaterThanEquals, GreaterThan }
+    public enum RelativeOperation { LessThan, LessThanEquals, Equals, NotEquals, GreaterThanEquals, GreaterThan }
   
     public interface IExecutor
     {
@@ -50,7 +50,7 @@ namespace VectorAccelerator
 
         NArrayBool LogicalOperation(NArrayBool operand1, NArrayBool operand2, LogicalBinaryElementWiseOperation op);
 
-        NArrayBool RelativeOperation<T>(NArray<T> operand1, NArray<T> operand2, RelativeOperator op);
+        NArrayBool RelativeOperation<T>(NArray<T> operand1, NArray<T> operand2, RelativeOperation op);
 
         double DotProduct(NArray a, NArray b);
 

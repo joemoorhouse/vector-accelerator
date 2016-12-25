@@ -13,7 +13,7 @@ namespace RiskEngine.Data
         public static IEnumerable<double> ToEnumerable(this NArray array)
         {
             var storage = array.Storage as ManagedStorage<double>;
-            return storage.Array.Skip(storage.ArrayStart).Take(storage.Length);
+            return storage.Data.Skip(storage.DataStartIndex).Take(storage.Length);
         }
 
         public static double Correlation(NArray returns1, NArray returns2)

@@ -9,7 +9,7 @@ namespace VectorAccelerator.NArrayStorage
     /// NArray where the storage is split into chunks. This is typically useful for cache efficiency.
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public class ChunkyStorage<T> : NArrayStorage<T>
+    public class ChunkyStorage<T> : NArrayStorage<T>, INArrayStorage<T>
     {
         int _chunkLength;
         int _chunksCount;
@@ -36,17 +36,17 @@ namespace VectorAccelerator.NArrayStorage
             _storage[chunkIndex] = chunkStorage;
         }
 
-        internal NArrayStorage<T> Slice(int chunkIndex)
+        public INArrayStorage<T> Slice(int chunkIndex)
         {
             return new ManagedStorage<T>(_storage[chunkIndex], 0, _chunkLength);
         }
 
-        internal override NArrayStorage<T> SliceAsReference(int startIndex, int length)
+        public INArrayStorage<T> SliceAsReference(int startIndex, int length)
         {
             throw new NotImplementedException();
         }
 
-        public override NArrayStorage<T> ColumnAsReference(int columnIndex)
+        public INArrayStorage<T> ColumnAsReference(int columnIndex)
         {
             throw new NotImplementedException();
         }
@@ -56,7 +56,7 @@ namespace VectorAccelerator.NArrayStorage
             return _storage[chunkIndex];
         }
 
-        internal override T this[int index]
+        public T this[int index]
         {
             get
             {
@@ -68,32 +68,44 @@ namespace VectorAccelerator.NArrayStorage
             }
         }
 
-        internal override bool Matches(NArrayStorage<T> other)
+        public T this[int row, int column]
+        {
+            get
+            {
+                throw new NotImplementedException();
+            }
+            set
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        public bool Matches(NArrayStorage<T> other)
         {
             throw new NotImplementedException();
         }
 
-        internal override T First()
+        public T First()
         {
             throw new NotImplementedException();
         }
 
-        internal override void CopySubMatrixTo(NArrayStorage<T> target, int sourceRowIndex, int targetRowIndex, int rowCount, int sourceColumnIndex, int targetColumnIndex, int columnCount)
+        public void CopySubMatrixTo(INArrayStorage<T> target, int sourceRowIndex, int targetRowIndex, int rowCount, int sourceColumnIndex, int targetColumnIndex, int columnCount)
         {
             throw new NotImplementedException();
         }
 
-        internal override NArrayStorage<T> Transpose()
+        public INArrayStorage<T> Transpose()
         {
             throw new NotImplementedException();
         }
 
-        internal override NArrayStorage<T> Diagonal(int rowCount, int columnCount)
+        public INArrayStorage<T> Diagonal(int rowCount, int columnCount)
         {
             throw new NotImplementedException();
         }
 
-        internal override NArrayStorage<T> Clone(MatrixRegion region = MatrixRegion.All)
+        public INArrayStorage<T> Clone(MatrixRegion region = MatrixRegion.All)
         {
             throw new NotImplementedException();
         }

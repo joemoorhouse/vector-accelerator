@@ -39,12 +39,12 @@ namespace VectorAccelerator.LinearAlgebraProviders.CUDA
 
         public void MatrixMultiply(NArray a, NArray b, NArray c)
         {
-            //if (a.ColumnCount != a.RowCount)
+            //if (a.Columns != a.Rows)
             var dev_a = GetDeviceStorage<double>(a);
             var dev_b = GetDeviceStorage<double>(b);
             var dev_c = GetDeviceStorage<double>(c);
             _blas.Gemm(Operation.NonTranspose, Operation.NonTranspose, 
-                a.RowCount, b.ColumnCount, a.ColumnCount, 1.0,
+                a.Rows, b.Columns, a.Columns, 1.0,
                         dev_a.Array, dev_a.Stride, dev_b.Array, dev_b.Stride, 
                         0.0, dev_c.Array, dev_c.Stride);
         }

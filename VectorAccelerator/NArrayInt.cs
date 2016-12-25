@@ -66,12 +66,12 @@ namespace VectorAccelerator
 
         public static NArrayBool operator <(NArrayInt operand1, NArrayInt operand2)
         {
-            return ExecutionContext.Executor.RelativeOperation(operand1, operand2, RelativeOperator.LessThan);
+            return ExecutionContext.Executor.RelativeOperation(operand1, operand2, RelativeOperation.LessThan);
         }
 
         public static NArrayBool operator <=(NArrayInt operand1, NArrayInt operand2)
         {
-            return ExecutionContext.Executor.RelativeOperation(operand1, operand2, RelativeOperator.LessThanEquals);
+            return ExecutionContext.Executor.RelativeOperation(operand1, operand2, RelativeOperation.LessThanEquals);
         }
 
         //public static NArrayBool operator ==(NArrayInt operand1, NArrayInt operand2)
@@ -86,12 +86,12 @@ namespace VectorAccelerator
 
         public static NArrayBool operator >=(NArrayInt operand1, NArrayInt operand2)
         {
-            return ExecutionContext.Executor.RelativeOperation(operand1, operand2, RelativeOperator.GreaterThanEquals);
+            return ExecutionContext.Executor.RelativeOperation(operand1, operand2, RelativeOperation.GreaterThanEquals);
         }
 
         public static NArrayBool operator >(NArrayInt operand1, NArrayInt operand2)
         {
-            return ExecutionContext.Executor.RelativeOperation(operand1, operand2, RelativeOperator.GreaterThan);
+            return ExecutionContext.Executor.RelativeOperation(operand1, operand2, RelativeOperation.GreaterThan);
         }
 
         #endregion

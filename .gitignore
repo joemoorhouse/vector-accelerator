@@ -26,3 +26,11 @@
 /packages/NUnit.3.5.0
 /.vscode
 /.vs
+/NArray/bin/Release
+/NArray/obj/Release
+/NArray.Tests/bin/Release
+/NArray.Tests/obj/Release
+/NArray/bin/Debug
+/NArray/obj/Debug
+/NArray.Tests/bin/Debug
+/NArray.Tests/obj/Debug

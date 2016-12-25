@@ -202,7 +202,6 @@ namespace VectorAccelerator.LinearAlgebraProviders
             double[] y, int yStartIndex,
             int length)
         {
-            //for (int i = 0; i < a.Length; ++i) y[i] = a[i] + b[i];
             CallUnsafe(a, aStartIndex, b, bStartIndex, y, yStartIndex, length, vdAdd);
         }
 
@@ -282,9 +281,9 @@ namespace VectorAccelerator.LinearAlgebraProviders
 
         public static double Dot(ManagedStorage<double> a, ManagedStorage<double> b)
         {
-            fixed (double* p_a = &a.Array[a.ArrayStart])
+            fixed (double* p_a = &a.Data[a.DataStartIndex])
             {
-                fixed (double* p_b = &b.Array[b.ArrayStart])
+                fixed (double* p_b = &b.Data[b.DataStartIndex])
                 {
                     return cblas_ddot(a.Length, p_a, 1, p_b, 1);
                 }
@@ -297,22 +296,22 @@ namespace VectorAccelerator.LinearAlgebraProviders
         public static void MatrixMultiply(ManagedStorage<double> a, ManagedStorage<double> b, ManagedStorage<double> c, 
             bool aShouldTranspose = false, bool bShouldTranspose = false)
         {
-            int aRows = aShouldTranspose ? a.ColumnCount : a.RowCount; int aCols = aShouldTranspose ? a.RowCount : a.ColumnCount;
-            int bRows = bShouldTranspose ? b.ColumnCount : b.RowCount; int bCols = bShouldTranspose ? b.RowCount : b.ColumnCount;
-            int cRows = c.RowCount;
-            int cCols = c.ColumnCount;
+            int aRows = aShouldTranspose ? a.Columns : a.Rows; int aCols = aShouldTranspose ? a.Rows : a.Columns;
+            int bRows = bShouldTranspose ? b.Columns : b.Rows; int bCols = bShouldTranspose ? b.Rows : b.Columns;
+            int cRows = c.Rows;
+            int cCols = c.Columns;
             if (aCols != bRows) throw new Exception("A and B are not compatible sizes.");
             if ((cRows != aRows) || (cCols != bCols)) throw new Exception("C is incorrectly sized for output.");
             int transposeA = aShouldTranspose ? (int)CBLAS_TRANSPOSE.CblasTrans : (int)CBLAS_TRANSPOSE.CblasNoTrans;
             int transposeB = bShouldTranspose ? (int)CBLAS_TRANSPOSE.CblasTrans : (int)CBLAS_TRANSPOSE.CblasNoTrans;
-            fixed (double* p_a = &a.Array[a.ArrayStart])
+            fixed (double* p_a = &a.Data[a.DataStartIndex])
             {
-                fixed (double* p_b = &b.Array[b.ArrayStart])
+                fixed (double* p_b = &b.Data[b.DataStartIndex])
                 {
-                    fixed (double* p_c = &c.Array[c.ArrayStart])
+                    fixed (double* p_c = &c.Data[c.DataStartIndex])
                     {
                         int status = cblas_dgemm((int)CBLAS_ORDER.CblasColMajor, transposeA, transposeB, aRows, bCols,
-                            aCols, 1.0, p_a, a.RowCount, p_b, b.RowCount, 0.0, p_c, c.RowCount);
+                            aCols, 1.0, p_a, a.Rows, p_b, b.Rows, 0.0, p_c, c.Rows);
                     }
                 }
             }
@@ -327,12 +326,12 @@ namespace VectorAccelerator.LinearAlgebraProviders
         public static void CholeskyDecomposition(ManagedStorage<double> a,
             out bool positiveSemiDefinite)
         {
-            if (a.RowCount != a.ColumnCount) throw new ArgumentException("matrix must be square.");
-            int lda = a.ColumnCount;
+            if (a.Rows != a.Columns) throw new ArgumentException("matrix must be square.");
+            int lda = a.Columns;
             int info = -1;
-            int n = a.ColumnCount; //subMatrixDimension; // to only transform sub-matrix 
+            int n = a.Columns; //subMatrixDimension; // to only transform sub-matrix 
             char uplo = 'L'; 
-            fixed (double* p_a = &a.Array[a.ArrayStart])
+            fixed (double* p_a = &a.Data[a.DataStartIndex])
             {
                 DPOTRF(ref uplo, ref n, p_a, ref lda, ref info);
             }
@@ -350,7 +349,7 @@ namespace VectorAccelerator.LinearAlgebraProviders
             ManagedStorage<double> eigenvalues)
         {
             int m = 0, info = 0;
-            int n = a.RowCount; 
+            int n = a.Rows; 
             var aClone = a.Clone();
 
             int[] isuppz = new int[2 * n];
@@ -363,11 +362,11 @@ namespace VectorAccelerator.LinearAlgebraProviders
             double vl, vu, abstol; vl = vu = abstol = 0;
             il = iu = 0;
 
-            fixed (double* p_a = &aClone.Array[aClone.ArrayStart])
+            fixed (double* p_a = &aClone.Data[aClone.DataStartIndex])
             {
-                fixed (double* p_eigenvectors = &eigenvectors.Array[eigenvectors.ArrayStart])
+                fixed (double* p_eigenvectors = &eigenvectors.Data[eigenvectors.DataStartIndex])
                 {
-                    fixed (double* p_eigenvalues = &eigenvalues.Array[eigenvalues.ArrayStart])
+                    fixed (double* p_eigenvalues = &eigenvalues.Data[eigenvalues.DataStartIndex])
                     {
                         DSYEVR(ref jobz, ref range, ref uplo, ref n, p_a, ref lda, ref vl, ref vu, ref il, ref iu, ref abstol, ref m, 
                             p_eigenvalues, p_eigenvectors, ref ldz, isuppz, work, ref lwork, iwork, ref liwork, ref info);
@@ -390,7 +389,7 @@ namespace VectorAccelerator.LinearAlgebraProviders
         public static void SortInPlace(ManagedStorage<double> a)
         {
             char order = 'I'; // 'D'
-            fixed (double* p_a = &a.Array[a.ArrayStart])
+            fixed (double* p_a = &a.Data[a.DataStartIndex])
             {
                 LAPACKE_dlasrt(order, a.Length, p_a);
             }

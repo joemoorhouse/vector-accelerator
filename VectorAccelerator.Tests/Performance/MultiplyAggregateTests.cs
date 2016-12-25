@@ -224,7 +224,7 @@ namespace VectorAccelerator.Tests
                     vectors[i] = NArray.CreateRandom(length, normalDistribution);
                 }
             }
-            arrays = vectors.Select(v => (v.Storage as ManagedStorage<double>).Array).ToArray();
+            arrays = vectors.Select(v => (v.Storage as ManagedStorage<double>).Data).ToArray();
         }
     }
 }

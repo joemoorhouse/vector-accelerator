@@ -16,31 +16,31 @@ namespace VectorAccelerator
     
     public static class StorageCreator
     {
-        public static NArrayStorage<T> NewStorage<T>(StorageLocation location, int rowCount, int columnCount)
+        public static INArrayStorage<T> NewStorage<T>(StorageLocation location, int rowCount, int columnCount)
         {
             if (location == StorageLocation.Host) return new ManagedStorage<T>(rowCount, columnCount);
             else return null;
         }
 
-        public static NArrayStorage<T> NewStorage<T>(StorageLocation location, T[] array)
+        public static INArrayStorage<T> NewStorage<T>(StorageLocation location, T[] array)
         {
             if (location == StorageLocation.Host) return new ManagedStorage<T>(array);
             else return null;
         }
 
-        public static NArrayStorage<T> NewStorage<T>(StorageLocation location, T[,] array)
+        public static INArrayStorage<T> NewStorage<T>(StorageLocation location, T[,] array)
         {
             if (location == StorageLocation.Host) return new ManagedStorage<T>(array);
             else return null;
         }
 
-        public static NArrayStorage<T> NewStorage<T>(StorageLocation location, IEnumerable<T> enumerable)
+        public static INArrayStorage<T> NewStorage<T>(StorageLocation location, IEnumerable<T> enumerable)
         {
             if (location == StorageLocation.Host) return new ManagedStorage<T>(enumerable.ToArray());
             else return null;
         }
 
-        public static NArrayStorage<T> NewStorage<T>(StorageLocation location, T value)
+        public static INArrayStorage<T> NewStorage<T>(StorageLocation location, T value)
         {
             if (location == StorageLocation.Host) return new ManagedStorage<T>(value);
             else return null;
@@ -60,23 +60,34 @@ namespace VectorAccelerator
         }
     }
 
-    public interface INArray
+    public abstract class NArray<T> : INArray<T>
     {
-    }
+        int _rows;
+        int _columns;
+        int _length;
 
-    public abstract class NArray<T> : INArray
-    {
-        public readonly int RowCount; // rows of matrix 
-        public readonly int ColumnCount; // columns of matrix
-        public readonly int Length; // length of vector, or total number of elements in matrix
+        /// <summary>
+        /// Number of rows
+        /// </summary>
+        public int Rows { get { return _rows; } }
+
+        /// <summary>
+        /// Number of columns
+        /// </summary>
+        public int Columns { get { return _columns; } }
+
+        /// <summary>
+        /// Length of vector, or total number of elements in matrix
+        /// </summary>
+        public int Length { get { return _length; } }
 
         public bool IsScalar { get { return (Length == 1); } }
-        public bool IsVector { get { return (Length > 1) && (RowCount == 1 || ColumnCount == 1); } }
-        public bool IsMatrix { get { return RowCount > 1 && ColumnCount > 1; } }
+        public bool IsVector { get { return (Length > 1) && (Rows == 1 || Columns == 1); } }
+        public bool IsMatrix { get { return Rows > 1 && Columns > 1; } }
         
-        protected NArrayStorage<T> _storage;
+        protected INArrayStorage<T> _storage;
 
-        public virtual NArrayStorage<T> Storage
+        public virtual INArrayStorage<T> Storage
         {
             get { return _storage; }
             set 
@@ -88,46 +99,46 @@ namespace VectorAccelerator
 
         public NArray(StorageLocation location, int length)
         {
-            RowCount = Length = length;
-            ColumnCount = 1;
+            _rows = _length = length;
+            _columns = 1;
             _storage = StorageCreator.NewStorage<T>(location, length, 1);
         }
 
         public NArray(StorageLocation location, int rowCount, int columnCount)
         {
-            RowCount = rowCount;
-            ColumnCount = columnCount;
-            Length = RowCount * ColumnCount;
+            _rows = rowCount;
+            _columns = columnCount;
+            _length = _rows * _columns;
             _storage = StorageCreator.NewStorage<T>(location, rowCount, columnCount);
         }
 
         public NArray(StorageLocation location, T value)
         {
-            RowCount = ColumnCount = Length = 1;
+            _rows = _columns = _length = 1;
             _storage = StorageCreator.NewStorage(location, value);
         }
 
         public NArray(StorageLocation location, T[] value)
         {
-            RowCount = Length = value.Length;
-            ColumnCount = 1;
+            _rows = _length = value.Length;
+            _columns = 1;
             _storage = StorageCreator.NewStorage(location, value);
         }
 
         public NArray(StorageLocation location, T[,] value)
         {
-            Length = value.Length;
-            RowCount = value.GetLength(0);
-            ColumnCount = value.GetLength(1);
+            _length = value.Length;
+            _rows = value.GetLength(0);
+            _columns = value.GetLength(1);
             _storage = StorageCreator.NewStorage(location, value);
         }
 
-        public NArray(NArrayStorage<T> storage)
+        public NArray(INArrayStorage<T> storage)
         {
             _storage = storage;
-            RowCount = storage.RowCount;
-            ColumnCount = storage.ColumnCount;
-            Length = storage.Length;
+            _rows = storage.Rows;
+            _columns = storage.Columns;
+            _length = storage.Length;
         }
 
         /// <summary>
@@ -140,7 +151,7 @@ namespace VectorAccelerator
                 if (Storage is ManagedStorage<T>)
                 {
                     var managedStorage = Storage as ManagedStorage<T>;
-                    return managedStorage.Array.Skip(managedStorage.ArrayStart).Take(managedStorage.Length).ToArray();
+                    return managedStorage.Data.Skip(managedStorage.DataStartIndex).Take(managedStorage.Length).ToArray();
                 }
                 else return null;
             }
@@ -156,12 +167,12 @@ namespace VectorAccelerator
             return ExecutionContext.Executor.GetValue(this, index);
         }
 
-        private bool StorageMatches(NArrayStorage<T> storage)
+        private bool StorageMatches(INArrayStorage<T> storage)
         {
-            return storage.RowCount == RowCount && storage.ColumnCount == ColumnCount; 
+            return storage.Rows == Rows && storage.Columns == Columns; 
         }
 
-        internal NArray<T> Slice(int startIndex, int length)
+        public NArray<T> Slice(int startIndex, int length)
         {
             return NMath.CreateNArray(Storage.SliceAsReference(startIndex, length));
         }
@@ -177,7 +188,7 @@ namespace VectorAccelerator
     {
         private string DebuggerDisplay
         {
-            get { return IsScalar ? this.First().ToString() : string.Format("NArray {0}x{1}", RowCount, ColumnCount); }
+            get { return IsScalar ? this.First().ToString() : string.Format("NArray {0}x{1}", Rows, Columns); }
         }
         
         public NArray(StorageLocation location, int length) : base(location, length) { }
@@ -190,7 +201,7 @@ namespace VectorAccelerator
 
         public NArray(StorageLocation location, double[,] array) : base(location, array) { }
 
-        public NArray(NArrayStorage<double> storage) : base(storage) { }
+        public NArray(INArrayStorage<double> storage) : base(storage) { }
 
         public static NArray CreateLike(NArray a)
         {
@@ -280,9 +291,9 @@ namespace VectorAccelerator
         public static NArray operator *(NArray operand1, NArray operand2)
         {
             if ((operand1.IsMatrix && operand2.IsMatrix) || 
-                (operand1.IsVector && operand2.IsVector && operand1.RowCount != operand2.RowCount))
+                (operand1.IsVector && operand2.IsVector && operand1.Rows != operand2.Rows))
             {
-                var result = NArrayFactory.CreateLike(operand1, operand1.RowCount, operand2.ColumnCount);
+                var result = NArrayFactory.CreateLike(operand1, operand1.Rows, operand2.Columns);
                 ExecutionContext.Executor.MatrixMultiply(operand1, operand2, result);
                 return result;
             }
@@ -300,12 +311,12 @@ namespace VectorAccelerator
 
         public static NArrayBool operator <(NArray operand1, NArray operand2)
         {
-            return ExecutionContext.Executor.RelativeOperation(operand1, operand2, RelativeOperator.LessThan);
+            return ExecutionContext.Executor.RelativeOperation(operand1, operand2, RelativeOperation.LessThan);
         }
 
         public static NArrayBool operator <=(NArray operand1, NArray operand2)
         {
-            return ExecutionContext.Executor.RelativeOperation(operand1, operand2, RelativeOperator.LessThanEquals);
+            return ExecutionContext.Executor.RelativeOperation(operand1, operand2, RelativeOperation.LessThanEquals);
         }
 
         //public static NArrayBool operator ==(NArray operand1, NArray operand2)
@@ -320,12 +331,12 @@ namespace VectorAccelerator
 
         public static NArrayBool operator >=(NArray operand1, NArray operand2)
         {
-            return ExecutionContext.Executor.RelativeOperation(operand1, operand2, RelativeOperator.GreaterThanEquals);
+            return ExecutionContext.Executor.RelativeOperation(operand1, operand2, RelativeOperation.GreaterThanEquals);
         }
 
         public static NArrayBool operator >(NArray operand1, NArray operand2)
         {
-            return ExecutionContext.Executor.RelativeOperation(operand1, operand2, RelativeOperator.GreaterThan);
+            return ExecutionContext.Executor.RelativeOperation(operand1, operand2, RelativeOperation.GreaterThan);
         }
 
         #endregion
@@ -390,18 +401,18 @@ namespace VectorAccelerator
             return new NArray(this.Storage.Transpose());     
         }
 
-        public NArray Column(int columnIndex)
+        public NArray GetColumn(int columnIndex)
         {
-            var column = NArrayFactory.CreateLike(this, RowCount, 1);
-            this.Storage.CopySubMatrixTo(column.Storage, 0, 0, RowCount, columnIndex, 0, 1);
+            var column = NArrayFactory.CreateLike(this, Rows, 1);
+            this.Storage.CopySubMatrixTo(column.Storage, 0, 0, Rows, columnIndex, 0, 1);
             return column;
         }
 
-        public IEnumerable<NArray> Columns()
+        public IEnumerable<NArray> GetColumns()
         {
-            for (int i = 0; i < ColumnCount; ++i)
+            for (int i = 0; i < Columns; ++i)
             {
-                yield return Column(i);
+                yield return GetColumn(i);
             }
         }
 
@@ -413,28 +424,28 @@ namespace VectorAccelerator
         public void SetColumn(int columnIndex, NArray column)
         {
             Assertions.AssertColumnMatchesMatrix(this, column, "this", "column");
-            column.Storage.CopySubMatrixTo(this.Storage, 0, 0, RowCount, 0, columnIndex, 1);
+            column.Storage.CopySubMatrixTo(this.Storage, 0, 0, Rows, 0, columnIndex, 1);
         }
 
-        public NArray Row(int rowIndex)
+        public NArray GetRow(int rowIndex)
         {
-            var row = NArrayFactory.CreateLike(this, 1, ColumnCount);
-            this.Storage.CopySubMatrixTo(row.Storage, rowIndex, 0, 1, 0, 0, ColumnCount);
+            var row = NArrayFactory.CreateLike(this, 1, Columns);
+            this.Storage.CopySubMatrixTo(row.Storage, rowIndex, 0, 1, 0, 0, Columns);
             return row;
         }
 
-        public IEnumerable<NArray> Rows(int rowIndex)
+        public IEnumerable<NArray> GetRows(int rowIndex)
         {
-            for (int i = 0; i < RowCount; ++i)
+            for (int i = 0; i < Rows; ++i)
             {
-                yield return Row(i);
+                yield return GetRow(i);
             }
         }
 
         public void SetRow(int rowIndex, NArray row)
         {
             Assertions.AssertRowMatchesMatrix(this, row, "this", "row");
-            row.Storage.CopySubMatrixTo(this.Storage, 0, rowIndex, 1, 0, 0, ColumnCount);
+            row.Storage.CopySubMatrixTo(this.Storage, 0, rowIndex, 1, 0, 0, Columns);
         }
 
         /// <summary>

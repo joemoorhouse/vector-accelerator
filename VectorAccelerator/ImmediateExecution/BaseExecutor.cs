@@ -16,19 +16,19 @@ namespace VectorAccelerator
 
     public abstract class BaseExecutor 
     {
-        public LinearAlgebraProvider Provider(StorageLocation storageLocation)
+        public ILinearAlgebraProvider Provider(StorageLocation storageLocation)
         {
             return _providers[(int)storageLocation];
         }
         
-        public LinearAlgebraProvider Provider<T>(params NArray<T>[] operands)
+        public ILinearAlgebraProvider Provider<T>(params NArray<T>[] operands)
         {
             return GetProviderOrThrow(operands);
         }
         
         public BaseExecutor()
         {
-            _providers = new LinearAlgebraProvider[3];
+            _providers = new ILinearAlgebraProvider[3];
             _providers[(int)StorageLocation.Host] = new IntelMKLLinearAlgebraProvider();
         }
 
@@ -79,13 +79,13 @@ namespace VectorAccelerator
             return ElementWise<T>().Divide(a, b);
         }
 
-        public IElementWise<T> ElementWise<T>(params NArray<T>[] operands)
+        public ILinearAlgebraProvider<T> ElementWise<T>(params NArray<T>[] operands)
         {
             // check that we can operate on all NArrays (i.e. storage is all on host or all
             // on device) and then return the appropriate class to perform the (element-wise) 
             // arithmetic.
-            if (operands.Length == 0) return _providers[(int)StorageLocation.Host] as IElementWise<T>;
-            return GetProviderOrThrow(operands) as IElementWise<T>;
+            if (operands.Length == 0) return _providers[(int)StorageLocation.Host] as ILinearAlgebraProvider<T>;
+            return GetProviderOrThrow(operands) as ILinearAlgebraProvider<T>;
         }
 
         #region Binary Operations
@@ -112,7 +112,7 @@ namespace VectorAccelerator
         }
 
        
-        public NArrayBool RelativeOperation<T>(NArray<T> operand1, NArray<T> operand2, RelativeOperator op)
+        public NArrayBool RelativeOperation<T>(NArray<T> operand1, NArray<T> operand2, RelativeOperation op)
         {
             if (operand1.IsScalar) throw new ArgumentException();
             var result = NewNArrayLike<bool, T>(operand1) as NArrayBool;
@@ -147,7 +147,7 @@ namespace VectorAccelerator
         //    return result;
         //}
 
-        private LinearAlgebraProvider GetProviderOrThrow<T>(params NArray<T>[] operands)
+        private ILinearAlgebraProvider GetProviderOrThrow<T>(params NArray<T>[] operands)
         {
             var storageLocation = GetStorageLocationOrThrow(operands);
             return _providers[(int)storageLocation];
@@ -167,6 +167,6 @@ namespace VectorAccelerator
             return NArrayFactory.GetStorageLocation<T>(operand);
         }
 
-        private LinearAlgebraProvider[] _providers;
+        private ILinearAlgebraProvider[] _providers;
     }
 }

@@ -65,12 +65,12 @@ namespace VectorAccelerator
 
         public static NArray<S> CreateLike<S, T>(NArray<T> a)
         {
-            return CreateNArray<S>(GetStorageLocation<T>(a), a.RowCount, a.ColumnCount);
+            return CreateNArray<S>(GetStorageLocation<T>(a), a.Rows, a.Columns);
         }
 
         public static NArray<T> CreateLike<T>(NArray<T> a)
         {
-            return CreateNArray<T>(GetStorageLocation<T>(a), a.RowCount, a.ColumnCount);
+            return CreateNArray<T>(GetStorageLocation<T>(a), a.Rows, a.Columns);
         }
 
         public static NArray<T> CreateLike<T>(NArray<T> a, int rowCount, int columnCount)
@@ -117,7 +117,7 @@ namespace VectorAccelerator
 
         public static NArray<T> CreateNArray<T>(NArrayStorage<T> storage)
         {
-            if (typeof(T) == typeof(double)) return new NArray(storage as NArrayStorage<double>) as NArray<T>;
+            if (typeof(T) == typeof(double)) return new NArray(storage as INArrayStorage<double>) as NArray<T>;
             //else if (typeof(T) == typeof(int)) return new NArrayInt(storage as NArrayStorage<int>) as NArray<T>;
             else return null;
         }

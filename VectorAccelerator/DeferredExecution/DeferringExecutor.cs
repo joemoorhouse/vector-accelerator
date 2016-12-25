@@ -282,7 +282,7 @@ namespace VectorAccelerator
             throw new NotImplementedException();
         }
 
-        public NArrayBool RelativeOperation(NArray operand1, NArray operand2, RelativeOperator op)
+        public NArrayBool RelativeOperation(NArray operand1, NArray operand2, RelativeOperation op)
         {
             throw new NotImplementedException();
         }

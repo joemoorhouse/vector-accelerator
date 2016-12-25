@@ -5,7 +5,7 @@ using VectorAccelerator.Tests;
 namespace VectorAccelerator.Launcher
 {
     class Program
-    {     
+    {
         static void Main(string[] args)
         {
             Console.WriteLine("Running demonstrations");

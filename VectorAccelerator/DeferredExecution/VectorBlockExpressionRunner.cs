@@ -18,7 +18,7 @@ namespace VectorAccelerator.DeferredExecution.Expressions
         /// <param name="provider"></param>
         /// <param name="vectorOptions"></param>
         public static void RunNonCompiling(BlockExpressionBuilder _builder, 
-            LinearAlgebraProvider provider, VectorExecutionOptions vectorOptions,
+            ILinearAlgebraProvider provider, VectorExecutionOptions vectorOptions,
             OrderedOutputs<double> orderedOutputs, Aggregator aggregator, ExecutionTimer timer)
         {
             var block = _builder.ToBlock();
@@ -26,7 +26,7 @@ namespace VectorAccelerator.DeferredExecution.Expressions
             for (int argumentIndex = 0; argumentIndex < block.ArgumentParameters.Count; ++argumentIndex)
             {
                 var target = orderedOutputs.TryGetNext(argumentIndex);
-                if (target != null) (provider as IElementWise<double>).BinaryElementWiseOperation(target,
+                if (target != null) (provider as IElementWiseOperations<double>).BinaryElementWiseOperation(target,
                     (block.ArgumentParameters[argumentIndex] as ReferencingVectorParameterExpression<double>).Array,
                     target, ExpressionType.Add);
             }
@@ -81,7 +81,7 @@ namespace VectorAccelerator.DeferredExecution.Expressions
         }
 
         private static void ExecuteSingleVectorOperation<T>(BinaryExpression operation,
-            LinearAlgebraProvider provider,
+            ILinearAlgebraProvider provider,
             ArrayPoolStack<T> arrayPoolStack, List<NArray<T>> localsToFree,
             OrderedOutputs<T> orderedOutputs, Aggregator aggregator,
             int vectorLength,
@@ -119,20 +119,20 @@ namespace VectorAccelerator.DeferredExecution.Expressions
                 if (unaryOperation.UnaryType == UnaryElementWiseOperation.ScaleOffset)
                 {
                     var scaleOffset = unaryOperation as ScaleOffsetExpression<T>;
-                    (provider as IElementWise<T>).ScaleOffset(Slice<T>(unaryOperation.Operand, chunkIndex, startIndex, vectorLength),
+                    (provider as IElementWiseOperations<T>).ScaleOffset(Slice<T>(unaryOperation.Operand, chunkIndex, startIndex, vectorLength),
                         scaleOffset.Scale, scaleOffset.Offset,
                         Slice(result, chunkIndex, startIndex, vectorLength));
                 }
                 else if (unaryOperation.UnaryType == UnaryElementWiseOperation.ScaleInverse)
                 {
                     var scaleInverse = unaryOperation as ScaleInverseExpression<T>;
-                    (provider as IElementWise<T>).ScaleInverse(Slice<T>(unaryOperation.Operand, chunkIndex, startIndex, vectorLength),
+                    (provider as IElementWiseOperations<T>).ScaleInverse(Slice<T>(unaryOperation.Operand, chunkIndex, startIndex, vectorLength),
                         scaleInverse.Scale,
                         Slice(result, chunkIndex, startIndex, vectorLength));
                 }
                 else
                 {
-                    (provider as IElementWise<T>).UnaryElementWiseOperation(
+                    (provider as IElementWiseOperations<T>).UnaryElementWiseOperation(
                         Slice<T>(unaryOperation.Operand, chunkIndex, startIndex, vectorLength),
                         Slice(result, chunkIndex, startIndex, vectorLength),
                         unaryOperation.UnaryType);
@@ -142,7 +142,7 @@ namespace VectorAccelerator.DeferredExecution.Expressions
             if (operation.Right is BinaryExpression)
             {
                 var binaryOperation = operation.Right as BinaryExpression;
-                (provider as IElementWise<T>).BinaryElementWiseOperation(Slice<T>(binaryOperation.Left, chunkIndex, startIndex, vectorLength),
+                (provider as IElementWiseOperations<T>).BinaryElementWiseOperation(Slice<T>(binaryOperation.Left, chunkIndex, startIndex, vectorLength),
                     Slice<T>(binaryOperation.Right, chunkIndex, startIndex, vectorLength),
                     Slice(result, chunkIndex, startIndex, vectorLength),
                     binaryOperation.NodeType);
@@ -154,7 +154,7 @@ namespace VectorAccelerator.DeferredExecution.Expressions
                 if (aggregationTarget.IsScalar) throw new Exception();
 
                 var slice = Slice<T>(aggregationTarget, chunkIndex, startIndex, vectorLength);
-                (provider as IElementWise<T>).BinaryElementWiseOperation(
+                (provider as IElementWiseOperations<T>).BinaryElementWiseOperation(
                     slice,
                     Slice(result, chunkIndex, startIndex, vectorLength),
                     slice, ExpressionType.Add);

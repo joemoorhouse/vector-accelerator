@@ -35,7 +35,8 @@ namespace VectorAccelerator.DeferredExecution
             timer.Start();
             NArray[] outputs = new NArray[independentVariables.Count + 1];
 
-            var context = new DeferredExecutionContext(new VectorExecutionOptions(), independentVariables);
+            var context = new DeferredExecutionContext(new VectorExecutionOptions(), independentVariables.
+                Select(i => (NArray)i).ToList());
             NArray dependentVariable;
             try
             {

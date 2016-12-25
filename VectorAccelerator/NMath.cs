@@ -67,7 +67,7 @@ namespace VectorAccelerator
 
         public static NArray Diagonal(NArray a, int rowCount, int columnCount)
         {
-            return new NArray(a.Storage.Diagonal(rowCount, columnCount));
+           return new NArray(a.Storage.Diagonal(rowCount, columnCount));
         }
 
         public static void EigenvalueDecomposition(NArray a, NArray eigenvectors, NArray eigenvalues)
@@ -77,14 +77,14 @@ namespace VectorAccelerator
 
         public static void EigenvalueDecomposition(NArray a, out NArray eigenvectors, out NArray eigenvalues)
         {
-            eigenvectors = NArrayFactory.CreateLike(a, a.RowCount, a.ColumnCount);
-            eigenvalues = NArrayFactory.CreateLike(a, a.RowCount);
+            eigenvectors = NArrayFactory.CreateLike(a, a.Rows, a.Columns);
+            eigenvalues = NArrayFactory.CreateLike(a, a.Rows);
             EigenvalueDecomposition(a, eigenvectors, eigenvalues);
         }
 
-        public static NArray<T> CreateNArray<T>(NArrayStorage<T> storage)
+        public static NArray<T> CreateNArray<T>(INArrayStorage<T> storage)
         {
-            if (typeof(T) == typeof(double)) return new NArray(storage as NArrayStorage<double>) as NArray<T>;
+            if (typeof(T) == typeof(double)) return new NArray(storage as INArrayStorage<double>) as NArray<T>;
             //else if (typeof(T) == typeof(int)) return new NArrayInt(storage as NArrayStorage<int>) as NArray<T>;
             else return null;
         }
@@ -130,20 +130,20 @@ namespace VectorAccelerator
         /// <summary>
         /// New extension
         /// </summary>
-        /// <param name="cubes"></param>
+        /// <param name="arrays"></param>
         /// <param name="func"></param>
         /// <returns></returns>
-        public static IEnumerable<NArray> Select(this IList<NArray> cubes, Func<NArray, int, NArray> func)
+        public static IEnumerable<NArray> Select(this IList<NArray> arrays, Func<NArray, int, NArray> func)
         {
-            return cubes;
+            return arrays;
         }
         
-        public static IEnumerable<NArray> SelectN(this IList<NArray> cubes, Func<NArray, int, NArray> func)
+        public static IEnumerable<NArray> SelectN(this IList<NArray> arrays, Func<NArray, int, NArray> func)
         {
-            return cubes;
+            return arrays;
         }
 
-        public static NArray Sum(this IEnumerable<NArray> cubes)
+        public static NArray Sum(this IEnumerable<NArray> arrays)
         {
             return null;
         }

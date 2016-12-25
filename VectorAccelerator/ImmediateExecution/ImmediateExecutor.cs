@@ -15,8 +15,8 @@ namespace VectorAccelerator
         public void Assign<T>(NArray<T> operand1, NArray<T> operand2)
         {
             var managedStorage = operand2.Storage as ManagedStorage<T>;
-            operand1.Storage = new ManagedStorage<T>((T[])managedStorage.Array.Clone(), 
-                managedStorage.ArrayStart, managedStorage.Length);
+            operand1.Storage = new ManagedStorage<T>((T[])managedStorage.Data.Clone(), 
+                managedStorage.DataStartIndex, managedStorage.Length);
         }
 
         public void Assign<T>(NArray<T> operand1, Func<NArray<T>> operand2, Func<NArrayBool> condition)
@@ -219,7 +219,7 @@ namespace VectorAccelerator
             return result;
         }
 
-        public NArrayBool RelativeOperation(NArray operand1, NArray operand2, RelativeOperator op)
+        public NArrayBool RelativeOperation(NArray operand1, NArray operand2, RelativeOperation op)
         {
             if (operand1.IsScalar) throw new ArgumentException();
             var result = NArrayFactory.CreateLike<bool, double>(operand1) as NArrayBool;

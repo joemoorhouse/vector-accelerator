@@ -59,8 +59,8 @@ namespace VectorAccelerator.Tests
 
         public static string AgreesAbsoluteString(NArray first, NArray second)
         {
-            return AgreesAbsoluteString((first.Storage as ManagedStorage<double>).Array,
-                (second.Storage as ManagedStorage<double>).Array);
+            return AgreesAbsoluteString((first.Storage as ManagedStorage<double>).Data,
+                (second.Storage as ManagedStorage<double>).Data);
         }
 
         public static string AgreesAbsoluteString(IList<double> first, IList<double> second)

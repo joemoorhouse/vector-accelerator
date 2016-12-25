@@ -43,13 +43,13 @@ namespace VectorAccelerator.InputOutput
             minLeftColumns = Math.Max(minLeftColumns, 1);
             maxWidth = Math.Max(maxWidth, 12);
 
-            int upper = nArray.RowCount <= upperRows ? nArray.RowCount : upperRows;
-            int lower = nArray.RowCount <= upperRows ? 0 : nArray.RowCount <= upperRows + lowerRows ? nArray.RowCount - upperRows : lowerRows;
-            bool rowEllipsis = nArray.RowCount > upper + lower;
+            int upper = nArray.Rows <= upperRows ? nArray.Rows : upperRows;
+            int lower = nArray.Rows <= upperRows ? 0 : nArray.Rows <= upperRows + lowerRows ? nArray.Rows - upperRows : lowerRows;
+            bool rowEllipsis = nArray.Rows > upper + lower;
             int rows = rowEllipsis ? upper + lower + 1 : upper + lower;
 
-            int left = nArray.ColumnCount <= minLeftColumns ? nArray.ColumnCount : minLeftColumns;
-            int right = nArray.ColumnCount <= minLeftColumns ? 0 : nArray.ColumnCount <= minLeftColumns + rightColumns ? nArray.ColumnCount - minLeftColumns : rightColumns;
+            int left = nArray.Columns <= minLeftColumns ? nArray.Columns : minLeftColumns;
+            int right = nArray.Columns <= minLeftColumns ? 0 : nArray.Columns <= minLeftColumns + rightColumns ? nArray.Columns - minLeftColumns : rightColumns;
 
             var columnsLeft = new List<Tuple<int, string[]>>();
             for (int j = 0; j < left; j++)
@@ -60,11 +60,11 @@ namespace VectorAccelerator.InputOutput
             var columnsRight = new List<Tuple<int, string[]>>();
             for (int j = 0; j < right; j++)
             {
-                columnsRight.Add(FormatColumn(nArray, nArray.ColumnCount - right + j, rows, upper, lower, rowEllipsis, verticalEllipsis, formatValue));
+                columnsRight.Add(FormatColumn(nArray, nArray.Columns - right + j, rows, upper, lower, rowEllipsis, verticalEllipsis, formatValue));
             }
 
             int chars = columnsLeft.Sum(t => t.Item1 + padding) + columnsRight.Sum(t => t.Item1 + padding);
-            for (int j = left; j < nArray.ColumnCount - right; j++)
+            for (int j = left; j < nArray.Columns - right; j++)
             {
                 var candidate = FormatColumn(nArray, j, rows, upper, lower, rowEllipsis, verticalEllipsis, formatValue);
                 chars += candidate.Item1 + padding;
@@ -76,7 +76,7 @@ namespace VectorAccelerator.InputOutput
             }
 
             int cols = columnsLeft.Count + columnsRight.Count;
-            bool colEllipsis = nArray.ColumnCount > cols;
+            bool colEllipsis = nArray.Columns > cols;
             if (colEllipsis)
             {
                 cols++;
@@ -103,7 +103,7 @@ namespace VectorAccelerator.InputOutput
                 {
                     array[rowIndex++, colIndex] = diagonalEllipsis;
                 }
-                for (var row = nArray.RowCount - lower; row < nArray.RowCount; row++)
+                for (var row = nArray.Rows - lower; row < nArray.Rows; row++)
                 {
                     array[rowIndex++, colIndex] = horizontalEllipsis;
                 }
@@ -133,7 +133,7 @@ namespace VectorAccelerator.InputOutput
             {
                 c[index++] = "";
             }
-            for (var row = nArray.RowCount - lower; row < nArray.RowCount; row++)
+            for (var row = nArray.Rows - lower; row < nArray.Rows; row++)
             {
                 c[index++] = formatValue(storage[row, column]);
             }

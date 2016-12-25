@@ -8,7 +8,7 @@ namespace VectorAccelerator.Tests
     {
         private double[] GetArray(NArray a)
         {
-            return (a.Storage as ManagedStorage<double>).Array;
+            return (a.Storage as ManagedStorage<double>).Data;
         }
         
         public void SimpleSpeedTest()

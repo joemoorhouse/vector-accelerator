@@ -16,15 +16,15 @@ namespace RiskEngine.Calibration
         {
             correlationMatrix = CorrelationHelper.NearestCorrelationMatrix(correlationMatrix);
             
-            var weightsCount = correlationMatrix.RowCount;
+            var weightsCount = correlationMatrix.Rows;
             var weightsMatrix = NMath.CholeskyDecomposition(correlationMatrix).Transpose();
 
             var weights = context.Data.AddCalibrationParametersProvider
                 (new WeightsProvider(weightsCount));
 
-            for (int i = 0; i < weightsMatrix.ColumnCount; ++i)
+            for (int i = 0; i < weightsMatrix.Columns; ++i)
             {
-                weights.AddValue(identifiers[i], weightsMatrix.Column(i));
+                weights.AddValue(identifiers[i], weightsMatrix.GetColumn(i));
             }
         }
         
@@ -50,9 +50,9 @@ namespace RiskEngine.Calibration
             var root = eigenvectors * flooredDiagonal;
 
             // next we normalise the rows
-            for (int i = 0; i < root.RowCount; ++i)
+            for (int i = 0; i < root.Rows; ++i)
             {
-                var row = root.Row(i);
+                var row = root.GetRow(i);
                 root.SetRow(i, row / NMath.Sqrt(row * row.Transpose()));
             }
 
