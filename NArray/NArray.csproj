@@ -46,7 +46,7 @@
     <Compile Include="DeferredExecution\ArrayPool.cs" />
     <Compile Include="DeferredExecution\BlockExpressionBuilder.cs" />
     <Compile Include="DeferredExecution\BlockExpressionEvaluator.cs" />
-    <Compile Include="DeferredExecution\DeferringNCubeOperationExecutor.cs" />
+    <Compile Include="DeferredExecution\DeferringNArrayOperationExecutor.cs" />
     <Compile Include="DeferredExecution\ExecutionTimer.cs" />
     <Compile Include="DeferredExecution\Expressions\AssignBinaryExpression.cs" />
     <Compile Include="DeferredExecution\Expressions\BinaryExpression.cs" />
@@ -63,7 +63,7 @@
     <Compile Include="DeferredExecution\LocalNArray.cs" />
     <Compile Include="DeferredExecution\NArrayDeferred.cs" />
     <Compile Include="ExecutionContext.cs" />
-    <Compile Include="ImmediateNCubeOperationExecutor.cs" />
+    <Compile Include="ImmediateNArrayOperationExecutor.cs" />
     <Compile Include="Interfaces\ILinearAlgebraProvider.cs" />
     <Compile Include="Interfaces\INArrayFactory.cs" />
     <Compile Include="Interfaces\INArrayOperationExecutor.cs" />
