@@ -10,3 +10,5 @@ In deferred-execution mode, it is also possible to evaluate the derivative of a 
 An example of how these techniques can be used to build a high-performance financial risk engine is provided.
 
 A generic version of the vector 'NArray' container was created in the VectorAccelerator project. A simpler, and potentially faster, version is being developed in the NArray project. This will support only double and boolean types.
+
+Note: to run tests please ensure Test -> Test Settings -> Default Processor Architecture -> x64, then Test Explorer should find tests.
