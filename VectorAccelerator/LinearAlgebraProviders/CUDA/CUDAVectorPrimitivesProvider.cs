@@ -16,7 +16,7 @@ namespace VectorAccelerator.LinearAlgebraProviders.CUDA
         {
             using (var ctx = new CudaContext())
             {
-                // with verbaim string @, we only have to double up double quotes: no other escaping
+                // with verbatim string @, we only have to double up double quotes: no other escaping
                 string source = @"
                 extern ""C"" __global__ 
                 void saxpy(float a, float *x, float *y, float *out, size_t n)

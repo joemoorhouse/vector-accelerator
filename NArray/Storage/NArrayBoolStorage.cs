@@ -3,16 +3,17 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using NArray.Interfaces;
 
 namespace NArray.Storage
 {
-    public class NArrayStorage : NArrayShape, INArrayStorage
+    public class NArrayBoolStorage : NArrayShape, INArrayBoolStorage
     {
-        public double[] Data { get; set; }
+        public bool[] Data { get; set; }
 
         public int DataStart { get; set; }
 
-        public double this[params int[] indices]
+        public bool this[params int[] indices]
         {
             get
             {
@@ -31,13 +32,9 @@ namespace NArray.Storage
             else throw new NotImplementedException();
         }
 
-        public NArrayStorage(int rows, int columns, StorageType storageType = StorageType.Managed) : base(rows, columns)
+        public NArrayBoolStorage(int rows, int columns) : base(rows, columns)
         {
-            if (storageType == StorageType.Managed)
-            {
-                Data = new double[rows * columns];
-            }
-            // in case of StorageType.None, this is purely a shape
+            Data = new bool[rows * columns];
         }
     }
 }

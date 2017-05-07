@@ -177,7 +177,24 @@ namespace NArray.DeferredExecution
                 else if (unaryExpression.UnaryType == UnaryElementWiseOperations.CumulativeNormal) return builder.AddGaussian(unaryExpression.Operand);
                 else throw new NotImplementedException();
             }
-            else throw new NotImplementedException();
+
+            if (expression is ConditionalExpression)
+            {
+                var conditionalExpression = expression as ConditionalExpression;
+                if (conditionalExpression.IfTrue == variable)
+                {
+                    return new ConditionalExpression(conditionalExpression.Condition,
+                        new ConstantExpression(1), new ConstantExpression(0), conditionalExpression.Type);
+                }
+                else if (conditionalExpression.IfFalse == variable)
+                {
+                    return new ConditionalExpression(conditionalExpression.Condition,
+                        new ConstantExpression(0), new ConstantExpression(1), conditionalExpression.Type);
+                }
+                else throw new NotImplementedException();
+
+            }
+            throw new NotImplementedException();
         }
 
         private static void GetFunctions(VectorBlockExpression block, 

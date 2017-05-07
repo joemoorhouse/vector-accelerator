@@ -3,12 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using NUnit.Framework;
 using NArray.LinearAlgebraProviders;
 
 namespace NArray
 {
+    [TestFixture]
     public class NArrayTests
     {
+        [Test]
         public static void TestBasic()
         {
             var a = new NArray(5000, 1);
@@ -34,6 +37,7 @@ namespace NArray
             }, new List<NArray> { a });
         }
 
+        [Test]
         public static void WorkedExample()
         {
             var x0 = new NArray(5000, 1);
@@ -88,6 +92,7 @@ namespace NArray
             Console.WriteLine(logger.ToString());
         }
 
+        [Test]
         public static void BlackScholes()
         {
             var simpleCheck = Math.Exp(-0.1 * 0.5) * Finance.BlackScholes(
@@ -187,7 +192,6 @@ namespace NArray
                     for (int i = 0; i < doubleBoolResult.Length; ++i)
                     {
                         doubleBoolResult[i] = (doubleBool1[i] == 1.0) && (doubleBool2[i] == 1.0) ? 1.0 : 0.0;
-                        //doubleBoolResult[i] = doubleBool1[i] & doubleBool2[i];
                     }
 
                 });

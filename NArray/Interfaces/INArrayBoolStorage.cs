@@ -4,14 +4,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace NArray
+namespace NArray.Interfaces
 {
-    public interface INArrayStorage : INArrayShape
+    public interface INArrayBoolStorage : INArrayShape
     {
-        double[] Data { get; set; }
+        bool[] Data { get; set; }
 
         int DataStart { get; set; }
 
-        double this[params int[] indices] { get; set; }
+        bool this[params int[] indices] { get; set; }
     }
 }

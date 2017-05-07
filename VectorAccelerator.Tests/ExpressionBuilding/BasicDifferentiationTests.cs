@@ -3,7 +3,6 @@ using System.Linq;
 using NUnit.Framework;
 using VectorAccelerator.Distributions;
 
-
 namespace VectorAccelerator.Tests
 {
     [TestFixture]

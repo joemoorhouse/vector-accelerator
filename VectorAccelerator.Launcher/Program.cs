@@ -8,6 +8,8 @@ namespace VectorAccelerator.Launcher
     {
         static void Main(string[] args)
         {
+            RunInDevelopment();
+
             Console.WriteLine("Running demonstrations");
 
             RunDemonstrations();
@@ -42,8 +44,12 @@ namespace VectorAccelerator.Launcher
 
         static void RunInDevelopment()
         {
+            //var test = new NaNTest();
+            //test.TestNaNPerformance();
+
             var test = new MultiplyAggregateTests();
             test.TestPerformance();
+
         }
     }
 }

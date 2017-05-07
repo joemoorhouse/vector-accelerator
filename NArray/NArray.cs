@@ -5,12 +5,14 @@ using System.Text;
 using System.Threading.Tasks;
 using NArray.Interfaces;
 using NArray.Storage;
+using NArray.DeferredExecution.Expressions;
+using System.Collections;
 
 namespace NArray
 {
     public enum StorageType { Managed, None } 
     
-    public partial class NArray
+    public partial class NArray : IEnumerable<double>
     {
         INArrayStorage _storage;
 
@@ -34,19 +36,13 @@ namespace NArray
 
         public NArray(int rows, int columns, StorageType storageType = StorageType.Managed) 
         {
-            if (storageType == StorageType.Managed)
-            {
-                Storage = new NArrayStorage(rows, columns);
-            }
+            Storage = new NArrayStorage(rows, columns, storageType);
         }
 
         public NArray(double scalarValue, StorageType storageType = StorageType.Managed) 
         {
-            if (storageType == StorageType.Managed)
-            {
-                Storage = new NArrayStorage(1, 1);
-                Storage[0] = scalarValue;
-            }
+            Storage = new NArrayStorage(1, 1);
+            Storage[0] = scalarValue;
         }
 
         public NArray(StorageType storageType = StorageType.Managed) : this(0, storageType) { }
@@ -89,5 +85,39 @@ namespace NArray
         }
 
         #endregion
+
+        #region Relational Operators
+
+        public static NArrayBool operator <(NArray operand1, NArray operand2)
+        {
+            return ExecutionContext.Executor.RelativeElementWiseOperation(operand1, operand2, ExpressionType.LessThan);
+        }
+
+        public static NArrayBool operator <=(NArray operand1, NArray operand2)
+        {
+            return ExecutionContext.Executor.RelativeElementWiseOperation(operand1, operand2, ExpressionType.LessThanOrEqual);
+        }
+
+        public static NArrayBool operator >=(NArray operand1, NArray operand2)
+        {
+            return ExecutionContext.Executor.RelativeElementWiseOperation(operand1, operand2, ExpressionType.GreaterThanOrEqual);
+        }
+
+        public static NArrayBool operator >(NArray operand1, NArray operand2)
+        {
+            return ExecutionContext.Executor.RelativeElementWiseOperation(operand1, operand2, ExpressionType.GreaterThan);
+        }
+
+        #endregion
+
+        public IEnumerator<double> GetEnumerator()
+        {
+            foreach (var value in _storage.Data) yield return value;
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return this.GetEnumerator();
+        }
     }
 }

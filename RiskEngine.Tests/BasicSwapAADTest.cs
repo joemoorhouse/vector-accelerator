@@ -49,8 +49,22 @@ namespace VectorAccelerator.Tests
 
             foreach (var pricer in pricers) pricer.PrePrice();
 
-            Console.WriteLine(string.Format("Running calculation: deferred execution, {0} flows, no derivatives, single thread", pricers.Count));
             double averageTime;
+            //Console.WriteLine(string.Format("Running calculation: immediate execution, {0} flows, no derivatives, single thread", pricers.Count));
+            //TestHelpers.Timeit(() =>
+            //{
+            //    for (int i = 0; i < timePointCount; ++i)
+            //    {
+            //        foreach (var pricer in pricers)
+            //        {
+            //            NArray pv;
+            //            pricer.Price(i, out pv);
+            //            resultStorageSingle[i][0] += pv; 
+            //        }
+            //    }
+            //}, out averageTime, 1, 1);
+
+            Console.WriteLine(string.Format("Running calculation: deferred execution, {0} flows, no derivatives, single thread", pricers.Count));
             TestHelpers.Timeit(() =>
             {
                 for (int i = 0; i < timePointCount; ++i)

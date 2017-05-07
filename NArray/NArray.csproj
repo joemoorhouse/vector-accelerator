@@ -12,24 +12,25 @@
     <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
     <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
+    <OutputPath>bin\x64\Debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
+    <OutputPath>bin\x64\Release\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -50,6 +51,7 @@
     <Compile Include="DeferredExecution\ExecutionTimer.cs" />
     <Compile Include="DeferredExecution\Expressions\AssignBinaryExpression.cs" />
     <Compile Include="DeferredExecution\Expressions\BinaryExpression.cs" />
+    <Compile Include="DeferredExecution\Expressions\ConditionalExpression.cs" />
     <Compile Include="DeferredExecution\Expressions\ConstantExpression.cs" />
     <Compile Include="DeferredExecution\Expressions\Expression.cs" />
     <Compile Include="DeferredExecution\Expressions\ReferencingVectorParameterExpression.cs" />
@@ -65,6 +67,8 @@
     <Compile Include="ExecutionContext.cs" />
     <Compile Include="ImmediateNArrayOperationExecutor.cs" />
     <Compile Include="Interfaces\ILinearAlgebraProvider.cs" />
+    <Compile Include="Interfaces\ILocalNArray.cs" />
+    <Compile Include="Interfaces\INArrayBoolStorage.cs" />
     <Compile Include="Interfaces\INArrayFactory.cs" />
     <Compile Include="Interfaces\INArrayOperationExecutor.cs" />
     <Compile Include="Interfaces\INArrayShape.cs" />
@@ -73,6 +77,7 @@
     <Compile Include="LinearAlgebraProviders\ManagedLinearAlgebraProvider.cs" />
     <Compile Include="LinearAlgebraProviders\MKL\IntelMathKernelLibraryRandom.cs" />
     <Compile Include="LinearAlgebraProviders\MKL\IntelMKLRandomNumberStream.cs" />
+    <Compile Include="LinearAlgebraProviders\MKL\IntelMathKernelLibraryWrapper.cs" />
     <Compile Include="LinearAlgebraProviders\MKL\IntelVectorMathLibraryWrapper.cs" />
     <Compile Include="NArray.cs" />
     <Compile Include="DeferredExecution\NArrayFactory.cs" />
@@ -80,6 +85,7 @@
     <Compile Include="NMath.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Storage\ChunkyStorage.cs" />
+    <Compile Include="Storage\NArrayBoolStorage.cs" />
     <Compile Include="Storage\NArrayShape.cs" />
     <Compile Include="Storage\NArrayStorage.cs" />
     <Compile Include="Storage\SlicedStorage.cs" />

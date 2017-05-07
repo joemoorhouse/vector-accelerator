@@ -14,31 +14,9 @@
     <TargetFrameworkProfile>
     </TargetFrameworkProfile>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <UseVSHostingProcess>true</UseVSHostingProcess>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <Prefer32Bit>false</Prefer32Bit>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <Prefer32Bit>false</Prefer32Bit>
-  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
     <DebugSymbols>true</DebugSymbols>
-    <OutputPath>..\bin\x64\Debug\</OutputPath>
+    <OutputPath>bin\x64\Debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <DebugType>full</DebugType>
@@ -48,7 +26,7 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
-    <OutputPath>..\bin\x64\Release\</OutputPath>
+    <OutputPath>bin\x64\Release\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <Optimize>true</Optimize>
@@ -113,6 +91,7 @@
     <Compile Include="DeferredExecution\Expressions\ConstantExpression.cs" />
     <Compile Include="DeferredExecution\Expressions\CUDACodeBuilder.cs" />
     <Compile Include="DeferredExecution\Expressions\Expression.cs" />
+    <Compile Include="DeferredExecution\Expressions\ConditionalExpression.cs" />
     <Compile Include="DeferredExecution\Expressions\ReferencingVectorParameterExpression.cs" />
     <Compile Include="DeferredExecution\Expressions\ScaleInverseExpression.cs" />
     <Compile Include="DeferredExecution\Expressions\SimpleBinaryExpression.cs" />
@@ -132,7 +111,7 @@
     <Compile Include="ImmediateExecution\BaseExecutor.cs" />
     <Compile Include="ImmediateExecution\ImmediateExecutor.cs" />
     <Compile Include="ExecutionContext.cs" />
-    <Compile Include="IExecutor.cs" />
+    <Compile Include="NArrayStorage\IExecutor.cs" />
     <Compile Include="INArray.cs" />
     <Compile Include="INArrayStorage.cs" />
     <Compile Include="InputOutput\MatrixStringHelper.cs" />

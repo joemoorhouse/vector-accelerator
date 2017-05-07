@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace NArray
+namespace NArray.Interfaces
 {
-    public interface ILocalNCube 
+    public interface ILocalNArray
     {
         int Index { get; }
     }

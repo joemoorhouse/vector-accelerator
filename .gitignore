@@ -34,3 +34,14 @@
 /NArray/obj/Debug
 /NArray.Tests/bin/Debug
 /NArray.Tests/obj/Debug
+/NArray/bin/x64/Debug
+/NArray/obj/x64
+/NArray.Tests/obj/x64
+/RiskEngine/bin/x64/Debug
+/RiskEngine/obj/Debug
+/RiskEngine.Tests/obj/Debug
+/VectorAccelerator/bin/x64/Debug
+/VectorAccelerator/obj/Debug
+/VectorAccelerator.Launcher/bin/Debug
+/VectorAccelerator.Launcher/obj/Debug
+/VectorAccelerator.Tests/obj/Debug

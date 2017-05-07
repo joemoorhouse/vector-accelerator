@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using NArray.Interfaces;
 using NArray.DeferredExecution.Expressions;
 using NArray.LinearAlgebraProviders;
 
@@ -10,6 +11,9 @@ namespace NArray
 {
     class IntelMKLLinearAlgebraProvider : ILinearAlgebraProvider
     {
+        // where no MKL acceleration is available, we revert to managed
+        ILinearAlgebraProvider _managedProvider = new ManagedLinearAlgebraProvider();
+
         public void BinaryElementWiseOperation(INArrayStorage left, INArrayStorage right, ExpressionType operation, INArrayStorage result)
         {
             VectorVectorOperation vectorVectorOperation = null;
@@ -64,6 +68,16 @@ namespace NArray
         private static void VectorOperation(INArrayStorage operand, INArrayStorage result, VectorOperation operation)
         {
             operation(operand.Data, 0, result.Data, 0, result.TotalSize);
+        }
+
+        public void RelativeElementWiseOperation(INArrayStorage left, INArrayStorage right, ExpressionType operation, INArrayBoolStorage result)
+        {
+            _managedProvider.RelativeElementWiseOperation(left, right, operation, result);
+        }
+
+        public void RelativeElementWiseOperation(INArrayStorage left, double right, ExpressionType operation, INArrayBoolStorage result)
+        {
+            _managedProvider.RelativeElementWiseOperation(left, right, operation, result);
         }
     }
 

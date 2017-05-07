@@ -13,6 +13,8 @@ namespace NArray.Interfaces
 
         NArray NewNArrayLike(NArray other);
 
+        NArrayBool NewNArrayBoolLike(NArray other);
+
         NArray NewScalarNArray(double scalarValue);
 
         LocalNArray NewLocalNArray(int index, int rows, int columns, double value);

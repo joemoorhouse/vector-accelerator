@@ -12,7 +12,7 @@ namespace NArray.DeferredExecution
     {
         public NArray NewNArray(int rows, int columns, double value)
         {
-            var nArray = new NArray(rows, columns) { Storage = new NArrayStorage(rows, columns) };
+            var nArray = new NArray(rows, columns);
             if (value != 0)
             {
                 for (int i = 0; i < nArray.TotalSize; ++i) nArray.Storage.Data[i] = value;
@@ -22,7 +22,12 @@ namespace NArray.DeferredExecution
 
         public NArray NewNArrayLike(NArray other)
         {
-            return new NArray(other.Rows, other.Columns) { Storage = new NArrayStorage(other.Rows, other.Columns) };
+            return new NArray(other.Rows, other.Columns);
+        }
+
+        public NArrayBool NewNArrayBoolLike(NArray other)
+        {
+            return new NArrayBool(other.Rows, other.Columns);
         }
 
         public NArray NewScalarNArray(double scalarValue)

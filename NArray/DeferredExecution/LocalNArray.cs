@@ -4,10 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using NArray;
+using NArray.Interfaces;
 
 namespace NArray.DeferredExecution
 {
-    public class LocalNArray : NArray
+    public class LocalNArray : NArray, ILocalNArray
     {
         public int Index { get; set; }
 

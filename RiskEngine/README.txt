@@ -1,7 +1,1 @@
-﻿IEvolves
-Path
-Snapshot
-
-IProcess
-SingleFactorProces
-MultiFactorProcess
+﻿Simple engine for calculating financial counterparty and market risk. Aim of engine is to provide platform for examples.  

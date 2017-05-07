@@ -8,3 +8,5 @@ vector-accelerator is a maths library that provides high-performance vector oper
 In deferred-execution mode, it is also possible to evaluate the derivative of a function with respect to specified independent variables using the efficient adjoint algorithmic differentiation (AAD) technique.
 
 An example of how these techniques can be used to build a high-performance financial risk engine is provided.
+
+A generic version of the vector 'NArray' container was created in the VectorAccelerator project. A simpler, and potentially faster, version is being developed in the NArray project. This will support only double and boolean types.

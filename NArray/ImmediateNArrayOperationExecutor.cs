@@ -13,6 +13,7 @@ namespace NArray
         Func<double, NArray> _newScalarNArray;
         Func<int, int, double, NArray> _newNArray;
         Func<NArray, NArray> _newNArrayLike;
+        Func<NArray, NArrayBool> _newNArrayBoolLike;
         INArrayFactory _factory;
         ILinearAlgebraProvider _linearAlgebraProvider;
 
@@ -23,6 +24,7 @@ namespace NArray
             _newScalarNArray = factory.NewScalarNArray; 
             _newNArray = factory.NewNArray;
             _newNArrayLike = factory.NewNArrayLike;
+            _newNArrayBoolLike = factory.NewNArrayBoolLike;
             _linearAlgebraProvider = linearAlgebraProvider;
         }
 
@@ -104,6 +106,38 @@ namespace NArray
             var result = _newNArrayLike(operand);
             _linearAlgebraProvider.UnaryElementWiseOperation(operand.Storage, result.Storage, operation);
             return result;
+        }
+
+        public NArrayBool RelativeElementWiseOperation(NArray operand1, NArray operand2, ExpressionType operation)
+        {
+            var result = _newNArrayBoolLike(operand1.IsScalar ? operand2 : operand1);
+            if (operand2.IsScalar)
+            {
+                _linearAlgebraProvider.RelativeElementWiseOperation(operand1.Storage, operand2[0], operation, result.Storage);
+            }
+            else if (operand1.IsScalar)
+            {
+                _linearAlgebraProvider.RelativeElementWiseOperation(operand2.Storage, operand1[0], 
+                    ReverseOrderRelativeOperation(operation), result.Storage);
+            }
+            else
+            {
+                _linearAlgebraProvider.RelativeElementWiseOperation(operand1.Storage, operand2.Storage, operation, result.Storage);
+            }
+            return result;
+        }
+
+        private ExpressionType ReverseOrderRelativeOperation(ExpressionType operation)
+        {
+            switch (operation)
+            {
+                case ExpressionType.LessThan: return ExpressionType.GreaterThan;
+                case ExpressionType.LessThanOrEqual: return ExpressionType.GreaterThanOrEqual;
+                case ExpressionType.GreaterThan: return ExpressionType.LessThan;
+                case ExpressionType.GreaterThanOrEqual: return ExpressionType.LessThanOrEqual;
+                case ExpressionType.Equal: return ExpressionType.Equal;
+                default: throw new NotImplementedException();
+            }
         }
 
         private NArray ScaleOffset(NArray operand, double scale, double offset)

@@ -116,6 +116,13 @@ namespace NArray
             return result;
         }
 
+        public NArrayBool RelativeElementWiseOperation(NArray left, NArray right, ExpressionType type)
+        {
+            throw new NotImplementedException();
+            //var result = NewLocalLike(left);
+            //_builder.AddBinaryElementWiseOperation(operand1, operand2, result, type);
+        }
+
         private LocalNArray NewScalarLocal(double value, bool isIndependentVariable = false)
         {
             return _builder.CreateScalarLocal(value, isIndependentVariable);

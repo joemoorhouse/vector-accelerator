@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using NArray.DeferredExecution.Expressions;
 
 namespace NArray
 {
@@ -21,5 +22,9 @@ namespace NArray
         void InPlaceMultiply(NArray result, NArray left, NArray right);
 
         NArray UnaryElementWiseOperation(NArray operand, UnaryElementWiseOperations operation);
+
+        //NArrayBool LogicalOperation(NArrayBool operand1, NArrayBool operand2, LogicalBinaryElementWiseOperation op);
+
+        NArrayBool RelativeElementWiseOperation(NArray operand1, NArray operand2, ExpressionType operation);
     }
 }
